@@ -42,6 +42,10 @@
     entryStatus: document.querySelector('#entry-status'),
     entryJoke: document.querySelector('#entry-joke'),
     entryJokeYes: document.querySelector('#entry-joke-yes'),
+    rulesGate: document.querySelector('#rules-gate'),
+    rulesStart: document.querySelector('#rules-start'),
+    rulesBack: document.querySelector('#rules-back'),
+    rulesStatus: document.querySelector('#rules-status'),
   };
 
   let client;
@@ -98,18 +102,40 @@
   }
 
   function setEntryBusy(busy) {
-    [ui.entryYes, ui.entryNo, ui.entryJokeYes].forEach((button) => {
+    [ui.entryYes, ui.entryNo, ui.entryJokeYes, ui.rulesStart, ui.rulesBack].forEach((button) => {
       button.disabled = busy || !authReady;
     });
   }
 
-  function setEntryVisible(visible) {
-    ui.entryGate.hidden = !visible;
-    ui.appShell.inert = visible;
-    ui.appShell.setAttribute('aria-hidden', String(visible));
-    document.body.classList.toggle('entry-active', visible);
-    if (!visible) ui.entryJoke.hidden = true;
+  function setAppLocked(locked) {
+    ui.appShell.inert = locked;
+    ui.appShell.setAttribute('aria-hidden', String(locked));
+    document.body.classList.toggle('entry-active', locked);
+  }
+
+  function showEntry() {
+    ui.entryGate.hidden = false;
+    ui.rulesGate.hidden = true;
+    ui.entryJoke.hidden = true;
+    setAppLocked(true);
     setEntryBusy(false);
+  }
+
+  function showRules() {
+    ui.entryGate.hidden = true;
+    ui.entryJoke.hidden = true;
+    ui.rulesGate.hidden = false;
+    ui.rulesStatus.textContent = '';
+    setAppLocked(true);
+    setEntryBusy(false);
+    ui.rulesStart.focus();
+  }
+
+  function hideOnboardingGates() {
+    ui.entryGate.hidden = true;
+    ui.rulesGate.hidden = true;
+    ui.entryJoke.hidden = true;
+    setAppLocked(false);
   }
 
   function setSignedOut() {
@@ -122,11 +148,11 @@
     ui.historyLink.hidden = true;
     ui.adminLink.hidden = true;
     ui.homeHistoryCard.hidden = true;
-    setEntryVisible(true);
+    showEntry();
   }
 
   function setSignedIn(displayName) {
-    setEntryVisible(false);
+    hideOnboardingGates();
     ui.trigger.textContent = displayName ? `Hej, ${displayName}` : 'Välj namn';
     ui.trigger.title = displayName ? 'Öppna ditt konto' : 'Slutför din profil';
   }
@@ -340,7 +366,7 @@
       return;
     }
 
-    setEntryVisible(false);
+    hideOnboardingGates();
 
     try {
       profile = await getOrCreateProfile(session);
@@ -403,6 +429,7 @@
   async function startGoogleLogin() {
     ui.loginStatus.textContent = '';
     ui.entryStatus.textContent = '';
+    ui.rulesStatus.textContent = '';
     setBusy(ui.loginView, true);
     setEntryBusy(true);
 
@@ -415,17 +442,26 @@
       const message = 'Google-inloggningen kunde inte startas. Försök igen.';
       ui.loginStatus.textContent = message;
       ui.entryStatus.textContent = message;
+      ui.rulesStatus.textContent = message;
       setBusy(ui.loginView, false);
       setEntryBusy(false);
     }
   }
 
   ui.googleLogin.addEventListener('click', startGoogleLogin);
-  ui.entryYes.addEventListener('click', startGoogleLogin);
-  ui.entryJokeYes.addEventListener('click', startGoogleLogin);
+  ui.entryYes.addEventListener('click', showRules);
+  ui.entryJokeYes.addEventListener('click', showRules);
   ui.entryNo.addEventListener('click', () => {
     ui.entryJoke.hidden = false;
     ui.entryJokeYes.focus();
+  });
+  ui.rulesBack.addEventListener('click', showEntry);
+  ui.rulesStart.addEventListener('click', () => {
+    if (session) {
+      hideOnboardingGates();
+      return;
+    }
+    startGoogleLogin();
   });
 
   ui.form.addEventListener('submit', async (event) => {
