@@ -23,6 +23,9 @@
     totalPoints: document.querySelector('#total-points'),
     completedDays: document.querySelector('#completed-days'),
     saveStatus: document.querySelector('#save-status'),
+    leaderboardList: document.querySelector('#leaderboard-list'),
+    leaderboardSelf: document.querySelector('#leaderboard-self'),
+    leaderboardStatus: document.querySelector('#leaderboard-status'),
   };
 
   let client;
@@ -114,6 +117,67 @@
     renderResults(data || []);
   }
 
+  function renderLeaderboard(rows) {
+    ui.leaderboardList.replaceChildren();
+    ui.leaderboardStatus.textContent = '';
+    ui.leaderboardSelf.hidden = true;
+
+    if (!rows.length) {
+      const empty = document.createElement('li');
+      empty.className = 'leaderboard-empty';
+      empty.textContent = 'Topplistan vaknar när det första passet är sparat.';
+      ui.leaderboardList.appendChild(empty);
+      return;
+    }
+
+    rows.forEach((entry) => {
+      const rank = Number(entry.rank_position);
+      const days = Number(entry.completed_days);
+      const row = document.createElement('li');
+      row.className = `leaderboard-row${rank <= 3 ? ` top-${rank}` : ''}${entry.is_current_user ? ' is-current' : ''}`;
+
+      const rankBadge = document.createElement('span');
+      rankBadge.className = 'leaderboard-rank';
+      rankBadge.textContent = String(rank);
+
+      const name = document.createElement('span');
+      name.className = 'leaderboard-name';
+      name.textContent = entry.display_name;
+
+      if (entry.is_current_user) {
+        const you = document.createElement('span');
+        you.className = 'leaderboard-you';
+        you.textContent = 'Du';
+        name.appendChild(you);
+        ui.leaderboardSelf.textContent = `Din placering: ${rank}`;
+        ui.leaderboardSelf.hidden = false;
+      }
+
+      const points = document.createElement('span');
+      points.className = 'leaderboard-points';
+      points.textContent = `${pointsFormatter.format(Number(entry.total_points))} p`;
+
+      const completed = document.createElement('span');
+      completed.className = 'leaderboard-days';
+      completed.textContent = `${days} ${days === 1 ? 'dag' : 'dagar'}`;
+
+      row.append(rankBadge, name, points, completed);
+      ui.leaderboardList.appendChild(row);
+    });
+  }
+
+  async function refreshLeaderboard() {
+    const { data, error } = await client.rpc('get_leaderboard');
+
+    if (error) {
+      console.error('Kunde inte läsa topplistan', error);
+      ui.leaderboardStatus.textContent = 'Topplistan kunde inte laddas just nu.';
+      return;
+    }
+
+    renderLeaderboard(data || []);
+  }
+
   function setLevelBusy(busy) {
     ui.levelButtons.forEach((button) => {
       button.disabled = busy;
@@ -164,6 +228,7 @@
 
     try {
       await loadResults();
+      await refreshLeaderboard();
       ui.saveStatus.textContent = 'Dagens resultat är sparat.';
       window.celebrateLevel?.(multiplier);
     } catch (error) {
@@ -204,6 +269,7 @@
     if (!session) {
       setSignedOut();
       if (ui.overlay.classList.contains('open')) closeModal();
+      await refreshLeaderboard();
       return;
     }
 
@@ -224,11 +290,13 @@
         ui.accountName.textContent = `Hej, ${profile.display_name}!`;
         ui.accountEmail.textContent = session.user.email || '';
       }
+      await refreshLeaderboard();
     } catch (error) {
       console.error('Kunde inte läsa profilen', error);
       setSignedIn('');
       ui.nameStatus.textContent = 'Profilen kunde inte laddas. Försök igen om en stund.';
       openModal(ui.onboardingView);
+      await refreshLeaderboard();
     }
   }
 
@@ -302,6 +370,7 @@
     setSignedIn(profile.display_name);
     ui.accountName.textContent = `Hej, ${profile.display_name}!`;
     ui.accountEmail.textContent = session.user.email || '';
+    await refreshLeaderboard();
     closeModal();
   });
 
@@ -317,6 +386,7 @@
     }
 
     setSignedOut();
+    await refreshLeaderboard();
     closeModal();
   });
 
