@@ -57,6 +57,9 @@
     @media(max-width:700px){.shell{width:min(100% - 22px,560px);padding-top:14px}.topbar{gap:8px;margin-bottom:34px}.brand-text{display:none}.top-actions{gap:6px}.day-pill,.auth-trigger{padding:8px 10px;font-size:.7rem}.auth-trigger{max-width:108px}h1{font-size:clamp(3.55rem,19vw,5.4rem)}.intro{max-width:360px}.challenge-card{border-radius:28px}.levels{gap:8px}.level{min-height:86px;border-radius:17px}.level strong{font-size:1.15rem}.level span{font-size:.76rem}.score-summary{grid-template-columns:1.4fr 1fr}.score-item:first-child{grid-column:1/-1}.content-grid{grid-template-columns:1fr}.info-card,.leaderboard-card{border-radius:24px}.leaderboard-head{align-items:flex-start;flex-direction:column}.leaderboard-row{grid-template-columns:42px minmax(0,1fr) auto;gap:8px;padding-right:12px}.leaderboard-rank{width:36px;height:36px}.leaderboard-days{grid-column:2/4;text-align:left;color:var(--muted);font-size:.72rem}.leaderboard-points{font-size:.78rem}.auth-panel{padding:27px 22px;border-radius:24px}}
     @media(prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
   </style>
+  <style>
+    .history-link{display:flex;align-items:center;justify-content:center;width:100%;min-height:46px;margin-top:12px;border:1px solid rgba(23,63,50,.14);border-radius:15px;color:var(--forest);background:var(--white);font-size:.86rem;font-weight:900;text-decoration:none}.history-link:hover,.history-link:focus-visible{border-color:var(--orange);background:#fff3e0;outline:none}.history-link[hidden]{display:none}
+  </style>
 </head>
 <body>
   <div class="leaf one" aria-hidden="true"></div><div class="leaf two" aria-hidden="true"></div>
@@ -154,6 +157,7 @@
         <p class="auth-kicker">Ditt konto</p>
         <h2 class="auth-title" id="account-name">Du är med!</h2>
         <p class="auth-copy" id="account-email"></p>
+        <a class="history-link" id="history-link" href="/min-oktober/" hidden>Min oktober</a>
         <a class="admin-link" id="admin-link" href="/admin/" hidden>Hantera dagens pass</a>
         <button class="auth-secondary" id="sign-out" type="button">Logga ut</button>
         <p class="auth-status" id="account-status" role="status"></p>
