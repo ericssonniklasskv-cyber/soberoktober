@@ -49,6 +49,10 @@
     registeredLists: [...document.querySelectorAll('[data-registered-list]')],
     registeredCounts: [...document.querySelectorAll('[data-registered-count]')],
     registeredStatuses: [...document.querySelectorAll('[data-registered-status]')],
+    leaderboardPreviewLists: [...document.querySelectorAll('[data-leaderboard-preview-list]')],
+    leaderboardPreviewSelf: [...document.querySelectorAll('[data-leaderboard-preview-self]')],
+    leaderboardPreviewStatuses: [...document.querySelectorAll('[data-leaderboard-preview-status]')],
+    leaderboardPreviewLinks: [...document.querySelectorAll('[data-leaderboard-preview-link]')],
   };
 
   let client;
@@ -57,6 +61,7 @@
   let profile;
   let authReady = false;
   let sessionWork = Promise.resolve();
+  let latestLeaderboardRows = [];
   const validMultipliers = new Set([1, 2, 3]);
   const pointsFormatter = new Intl.NumberFormat('sv-SE', { maximumFractionDigits: 1 });
 
@@ -252,7 +257,102 @@
     renderRegistered(data || []);
   }
 
+  function createLeaderboardPreviewRow(entry) {
+    const rank = Number(entry.rank_position);
+    const days = Number(entry.completed_days);
+    const row = document.createElement('li');
+    row.className = `leaderboard-preview-row${rank <= 3 ? ` top-${rank}` : ''}${entry.is_current_user ? ' is-current' : ''}`;
+
+    const rankBadge = document.createElement('span');
+    rankBadge.className = 'leaderboard-preview-rank';
+    rankBadge.textContent = String(rank);
+
+    const info = document.createElement('span');
+    info.className = 'leaderboard-preview-info';
+    const name = document.createElement('span');
+    name.className = 'leaderboard-preview-name';
+
+    if (rank === 1) {
+      const crown = document.createElement('span');
+      crown.className = 'leaderboard-preview-crown';
+      crown.setAttribute('aria-hidden', 'true');
+      crown.textContent = '♛';
+      name.appendChild(crown);
+    }
+
+    const nameText = document.createElement('span');
+    nameText.className = 'leaderboard-preview-name-text';
+    nameText.textContent = entry.display_name;
+    name.appendChild(nameText);
+
+    if (entry.is_current_user) {
+      const you = document.createElement('span');
+      you.className = 'leaderboard-you';
+      you.textContent = 'Du';
+      name.appendChild(you);
+    }
+
+    const meta = document.createElement('span');
+    meta.className = 'leaderboard-preview-meta';
+    meta.textContent = `${pointsFormatter.format(Number(entry.total_points))} p · ${days} ${days === 1 ? 'dag' : 'dagar'}`;
+    info.append(name, meta);
+    row.append(rankBadge, info);
+    return row;
+  }
+
+  function fillLeaderboardPreviewList(list, rows) {
+    list.replaceChildren();
+    if (!rows.length) {
+      const empty = document.createElement('li');
+      empty.className = 'leaderboard-preview-empty';
+      empty.textContent = 'Topplistan vaknar när det första passet är sparat.';
+      list.appendChild(empty);
+      return;
+    }
+    rows.forEach((entry) => list.appendChild(createLeaderboardPreviewRow(entry)));
+  }
+
+  function renderLeaderboardPreviews(rows) {
+    latestLeaderboardRows = rows;
+    const topFive = rows.slice(0, 5);
+    const current = rows.find((entry) => entry.is_current_user);
+    const showOwnPlacement = current && Number(current.rank_position) > 5;
+
+    ui.leaderboardPreviewStatuses.forEach((status) => { status.textContent = ''; });
+    ui.leaderboardPreviewSelf.forEach((self) => {
+      self.hidden = !showOwnPlacement;
+      self.textContent = showOwnPlacement ? `Din placering: ${Number(current.rank_position)}` : '';
+    });
+    ui.leaderboardPreviewLists.forEach((list) => fillLeaderboardPreviewList(list, topFive));
+    ui.leaderboardPreviewLinks.forEach((link) => {
+      link.dataset.expanded = 'false';
+      link.textContent = 'Se hela topplistan';
+    });
+  }
+
+  function showLeaderboardPreviewError() {
+    latestLeaderboardRows = [];
+    ui.leaderboardPreviewSelf.forEach((self) => {
+      self.hidden = true;
+      self.textContent = '';
+    });
+    ui.leaderboardPreviewLinks.forEach((link) => {
+      link.dataset.expanded = 'false';
+      link.textContent = 'Se hela topplistan';
+    });
+    ui.leaderboardPreviewLists.forEach((list) => {
+      const empty = document.createElement('li');
+      empty.className = 'leaderboard-preview-empty';
+      empty.textContent = 'Topplistan kunde inte laddas.';
+      list.replaceChildren(empty);
+    });
+    ui.leaderboardPreviewStatuses.forEach((status) => {
+      status.textContent = 'Försök igen om en stund.';
+    });
+  }
+
   function renderLeaderboard(rows) {
+    renderLeaderboardPreviews(rows);
     ui.leaderboardList.replaceChildren();
     ui.leaderboardStatus.textContent = '';
     ui.leaderboardSelf.hidden = true;
@@ -273,7 +373,7 @@
 
       const rankBadge = document.createElement('span');
       rankBadge.className = 'leaderboard-rank';
-      rankBadge.textContent = String(rank);
+      rankBadge.textContent = rank === 1 ? `♛ ${rank}` : String(rank);
 
       const name = document.createElement('span');
       name.className = 'leaderboard-name';
@@ -307,6 +407,7 @@
     if (error) {
       console.error('Kunde inte läsa topplistan', error);
       ui.leaderboardStatus.textContent = 'Topplistan kunde inte laddas just nu.';
+      showLeaderboardPreviewError();
       return;
     }
 
@@ -454,6 +555,20 @@
 
   ui.levelButtons.forEach((button) => {
     button.addEventListener('click', () => saveDailyResult(Number(button.dataset.level)));
+  });
+
+  ui.leaderboardPreviewLinks.forEach((link) => {
+    link.addEventListener('click', (event) => {
+      const panel = link.closest('.entry-leaderboard-preview');
+      if (!panel || ui.entryGate.hidden) return;
+
+      event.preventDefault();
+      const expanded = link.dataset.expanded !== 'true';
+      const list = panel.querySelector('[data-leaderboard-preview-list]');
+      fillLeaderboardPreviewList(list, expanded ? latestLeaderboardRows : latestLeaderboardRows.slice(0, 5));
+      link.dataset.expanded = String(expanded);
+      link.textContent = expanded ? 'Visa topp 5' : 'Se hela topplistan';
+    });
   });
 
   ui.close.addEventListener('click', closeModal);
