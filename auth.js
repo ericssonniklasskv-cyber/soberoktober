@@ -16,14 +16,38 @@
     accountEmail: document.querySelector('#account-email'),
     accountStatus: document.querySelector('#account-status'),
     signOut: document.querySelector('#sign-out'),
+    levelButtons: [...document.querySelectorAll('.level[data-level]')],
+    scoreSummary: document.querySelector('#score-summary'),
+    dailyResult: document.querySelector('#daily-result'),
+    dailyPoints: document.querySelector('#daily-points'),
+    totalPoints: document.querySelector('#total-points'),
+    completedDays: document.querySelector('#completed-days'),
+    saveStatus: document.querySelector('#save-status'),
   };
 
   let client;
   let session;
   let profile;
+  let authReady = false;
   let sessionWork = Promise.resolve();
+  const validMultipliers = new Set([1, 2, 3]);
+  const pointsFormatter = new Intl.NumberFormat('sv-SE', { maximumFractionDigits: 1 });
 
   const cleanName = (value) => value.trim().replace(/\s+/g, ' ');
+
+  function stockholmDate() {
+    const parts = new Intl.DateTimeFormat('sv-SE', {
+      timeZone: 'Europe/Stockholm',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    }).formatToParts(new Date()).reduce((values, part) => {
+      if (part.type !== 'literal') values[part.type] = part.value;
+      return values;
+    }, {});
+
+    return `${parts.year}-${parts.month}-${parts.day}`;
+  }
 
   function showView(view) {
     [ui.loginView, ui.onboardingView, ui.accountView].forEach((item) => {
@@ -59,11 +83,95 @@
     profile = null;
     ui.trigger.textContent = 'Logga in';
     ui.trigger.title = 'Logga in med Google';
+    ui.scoreSummary.hidden = true;
+    ui.saveStatus.textContent = '';
   }
 
   function setSignedIn(displayName) {
     ui.trigger.textContent = displayName ? `Hej, ${displayName}` : 'Välj namn';
     ui.trigger.title = displayName ? 'Öppna ditt konto' : 'Slutför din profil';
+  }
+
+  function renderResults(results) {
+    const today = stockholmDate();
+    const todayResult = results.find((result) => result.result_date === today);
+    const totalPoints = results.reduce((total, result) => total + Number(result.points), 0);
+
+    ui.dailyResult.textContent = todayResult ? `${todayResult.multiplier}×` : 'Inte registrerat';
+    ui.dailyPoints.textContent = `${pointsFormatter.format(todayResult ? Number(todayResult.points) : 0)} poäng`;
+    ui.totalPoints.textContent = pointsFormatter.format(totalPoints);
+    ui.completedDays.textContent = String(results.length);
+    ui.scoreSummary.hidden = false;
+  }
+
+  async function loadResults() {
+    const { data, error } = await client
+      .from('daily_results')
+      .select('result_date, multiplier, points')
+      .order('result_date', { ascending: true });
+
+    if (error) throw error;
+    renderResults(data || []);
+  }
+
+  function setLevelBusy(busy) {
+    ui.levelButtons.forEach((button) => {
+      button.disabled = busy;
+    });
+  }
+
+  async function saveDailyResult(multiplier) {
+    if (!validMultipliers.has(multiplier)) return;
+
+    if (!authReady) {
+      ui.saveStatus.textContent = 'Inloggningen laddas. Försök igen om en sekund.';
+      return;
+    }
+
+    if (!session) {
+      ui.loginStatus.textContent = 'Logga in först för att spara dagens pass.';
+      openModal(ui.loginView);
+      return;
+    }
+
+    if (!profile?.display_name) {
+      ui.nameStatus.textContent = 'Välj ditt namn innan du sparar dagens pass.';
+      ui.email.textContent = session.user.email || '';
+      openModal(ui.onboardingView);
+      return;
+    }
+
+    ui.saveStatus.textContent = 'Sparar dagens resultat…';
+    setLevelBusy(true);
+
+    const { error } = await client
+      .from('daily_results')
+      .upsert(
+        {
+          user_id: session.user.id,
+          result_date: stockholmDate(),
+          multiplier,
+        },
+        { onConflict: 'user_id,result_date' },
+      );
+
+    if (error) {
+      console.error('Kunde inte spara dagens resultat', error);
+      ui.saveStatus.textContent = 'Resultatet kunde inte sparas. Försök igen.';
+      setLevelBusy(false);
+      return;
+    }
+
+    try {
+      await loadResults();
+      ui.saveStatus.textContent = 'Dagens resultat är sparat.';
+      window.celebrateLevel?.(multiplier);
+    } catch (error) {
+      console.error('Kunde inte uppdatera poängen', error);
+      ui.saveStatus.textContent = 'Resultatet sparades, men poängen kunde inte uppdateras.';
+    } finally {
+      setLevelBusy(false);
+    }
   }
 
   async function getOrCreateProfile(currentSession) {
@@ -102,6 +210,12 @@
     try {
       profile = await getOrCreateProfile(session);
       setSignedIn(profile.display_name);
+      try {
+        await loadResults();
+      } catch (error) {
+        console.error('Kunde inte läsa poängen', error);
+        ui.saveStatus.textContent = 'Poängen kunde inte laddas. Försök igen om en stund.';
+      }
 
       if (!profile.display_name) {
         ui.email.textContent = session.user.email || '';
@@ -129,6 +243,10 @@
       ui.accountEmail.textContent = session.user.email || '';
       openModal(ui.accountView);
     }
+  });
+
+  ui.levelButtons.forEach((button) => {
+    button.addEventListener('click', () => saveDailyResult(Number(button.dataset.level)));
   });
 
   ui.close.addEventListener('click', closeModal);
@@ -224,6 +342,7 @@
         },
       );
 
+      authReady = true;
       ui.trigger.disabled = false;
       const { data, error } = await client.auth.getSession();
       if (error) throw error;
