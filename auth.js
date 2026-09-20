@@ -46,9 +46,13 @@
     rulesStart: document.querySelector('#rules-start'),
     rulesBack: document.querySelector('#rules-back'),
     rulesStatus: document.querySelector('#rules-status'),
+    registeredLists: [...document.querySelectorAll('[data-registered-list]')],
+    registeredCounts: [...document.querySelectorAll('[data-registered-count]')],
+    registeredStatuses: [...document.querySelectorAll('[data-registered-status]')],
   };
 
   let client;
+  let publicClient;
   let session;
   let profile;
   let authReady = false;
@@ -208,6 +212,44 @@
     ui.challengeTitle.textContent = data.title;
     ui.challengeDescription.textContent = data.description?.trim() || generatedDescription;
     ui.challengeDescription.hidden = !ui.challengeDescription.textContent;
+  }
+
+  function renderRegistered(rows) {
+    const names = rows
+      .map((row) => typeof row.display_name === 'string' ? row.display_name.trim() : '')
+      .filter(Boolean);
+
+    ui.registeredCounts.forEach((count) => { count.textContent = String(names.length); });
+    ui.registeredStatuses.forEach((status) => { status.textContent = ''; });
+    ui.registeredLists.forEach((list) => {
+      list.replaceChildren();
+      if (!names.length) {
+        const empty = document.createElement('li');
+        empty.className = 'registered-empty';
+        empty.textContent = 'Inga anmälda ännu.';
+        list.appendChild(empty);
+        return;
+      }
+
+      names.forEach((displayName) => {
+        const item = document.createElement('li');
+        item.className = 'registered-name';
+        item.textContent = displayName;
+        list.appendChild(item);
+      });
+    });
+  }
+
+  async function loadRegistered() {
+    const { data, error } = await publicClient.rpc('get_registered_participants');
+    if (error) {
+      console.error('Kunde inte läsa anmälda', error);
+      ui.registeredStatuses.forEach((status) => {
+        status.textContent = 'Listan kunde inte laddas just nu.';
+      });
+      return;
+    }
+    renderRegistered(data || []);
   }
 
   function renderLeaderboard(rows) {
@@ -496,7 +538,7 @@
     ui.adminLink.hidden = !profile.is_admin;
     ui.accountName.textContent = `Hej, ${profile.display_name}!`;
     ui.accountEmail.textContent = session.user.email || '';
-    await refreshLeaderboard();
+    await Promise.all([refreshLeaderboard(), loadRegistered()]);
     closeModal();
   });
 
@@ -538,7 +580,20 @@
         },
       );
 
-      await loadTodayChallenge();
+      publicClient = window.supabase.createClient(
+        config.supabaseUrl,
+        config.supabasePublishableKey,
+        {
+          auth: {
+            persistSession: false,
+            autoRefreshToken: false,
+            detectSessionInUrl: false,
+            storageKey: 'soberoktober-public-participants',
+          },
+        },
+      );
+
+      await Promise.all([loadTodayChallenge(), loadRegistered()]);
       const { data, error } = await client.auth.getSession();
       if (error) throw error;
       authReady = true;
