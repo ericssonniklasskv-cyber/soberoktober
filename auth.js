@@ -25,6 +25,7 @@
     saveStatus: document.querySelector('#save-status'),
     challengeTitle: document.querySelector('#challenge-title'),
     challengeDescription: document.querySelector('#challenge-description'),
+    historyLink: document.querySelector('#history-link'),
     adminLink: document.querySelector('#admin-link'),
     leaderboardList: document.querySelector('#leaderboard-list'),
     leaderboardSelf: document.querySelector('#leaderboard-self'),
@@ -91,6 +92,7 @@
     ui.trigger.title = 'Logga in med Google';
     ui.scoreSummary.hidden = true;
     ui.saveStatus.textContent = '';
+    ui.historyLink.hidden = true;
     ui.adminLink.hidden = true;
   }
 
@@ -304,6 +306,7 @@
     try {
       profile = await getOrCreateProfile(session);
       setSignedIn(profile.display_name);
+      ui.historyLink.hidden = false;
       ui.adminLink.hidden = !profile.is_admin;
       try {
         await loadResults();
@@ -397,6 +400,7 @@
 
     profile = data;
     setSignedIn(profile.display_name);
+    ui.historyLink.hidden = false;
     ui.adminLink.hidden = !profile.is_admin;
     ui.accountName.textContent = `Hej, ${profile.display_name}!`;
     ui.accountEmail.textContent = session.user.email || '';
