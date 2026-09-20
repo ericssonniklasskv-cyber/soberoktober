@@ -95,7 +95,7 @@
       result.className = 'day-result';
       result.textContent = day.state === 'completed'
         ? `${day.result.multiplier}×`
-        : (day.state === 'missed' ? 'Missad' : (day.date === today ? 'Idag' : 'Framtida'));
+        : (day.state === 'missed' ? 'Missad' : (day.date === today ? 'Idag' : 'Senare'));
       cell.append(result);
 
       if (day.state === 'completed') {
