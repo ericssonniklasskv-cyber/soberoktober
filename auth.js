@@ -30,6 +30,11 @@
     leaderboardList: document.querySelector('#leaderboard-list'),
     leaderboardSelf: document.querySelector('#leaderboard-self'),
     leaderboardStatus: document.querySelector('#leaderboard-status'),
+    homeHistoryCard: document.querySelector('#home-history-card'),
+    homeTotalPoints: document.querySelector('#home-total-points'),
+    homeCompletedDays: document.querySelector('#home-completed-days'),
+    homeCurrentStreak: document.querySelector('#home-current-streak'),
+    homeHistoryStatus: document.querySelector('#home-history-status'),
   };
 
   let client;
@@ -94,6 +99,7 @@
     ui.saveStatus.textContent = '';
     ui.historyLink.hidden = true;
     ui.adminLink.hidden = true;
+    ui.homeHistoryCard.hidden = true;
   }
 
   function setSignedIn(displayName) {
@@ -105,12 +111,19 @@
     const today = stockholmDate();
     const todayResult = results.find((result) => result.result_date === today);
     const totalPoints = results.reduce((total, result) => total + Number(result.points), 0);
+    const october = window.SoberOctoberHistory.calculate(results, today);
+    const streakWord = october.currentStreak === 1 ? 'dag' : 'dagar';
 
     ui.dailyResult.textContent = todayResult ? `${todayResult.multiplier}×` : 'Inte registrerat';
     ui.dailyPoints.textContent = `${pointsFormatter.format(todayResult ? Number(todayResult.points) : 0)} poäng`;
     ui.totalPoints.textContent = pointsFormatter.format(totalPoints);
     ui.completedDays.textContent = String(results.length);
     ui.scoreSummary.hidden = false;
+    ui.homeTotalPoints.textContent = pointsFormatter.format(october.totalPoints);
+    ui.homeCompletedDays.textContent = String(october.completedDays);
+    ui.homeCurrentStreak.textContent = `${october.currentStreak} ${streakWord}`;
+    ui.homeHistoryStatus.textContent = '';
+    ui.homeHistoryCard.hidden = false;
   }
 
   async function loadResults() {
