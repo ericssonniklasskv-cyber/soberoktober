@@ -23,6 +23,9 @@
     totalPoints: document.querySelector('#total-points'),
     completedDays: document.querySelector('#completed-days'),
     saveStatus: document.querySelector('#save-status'),
+    challengeTitle: document.querySelector('#challenge-title'),
+    challengeDescription: document.querySelector('#challenge-description'),
+    adminLink: document.querySelector('#admin-link'),
     leaderboardList: document.querySelector('#leaderboard-list'),
     leaderboardSelf: document.querySelector('#leaderboard-self'),
     leaderboardStatus: document.querySelector('#leaderboard-status'),
@@ -88,6 +91,7 @@
     ui.trigger.title = 'Logga in med Google';
     ui.scoreSummary.hidden = true;
     ui.saveStatus.textContent = '';
+    ui.adminLink.hidden = true;
   }
 
   function setSignedIn(displayName) {
@@ -115,6 +119,30 @@
 
     if (error) throw error;
     renderResults(data || []);
+  }
+
+  async function loadTodayChallenge() {
+    const { data, error } = await client
+      .from('daily_challenges')
+      .select('title, description, unit, base_amount')
+      .eq('challenge_date', stockholmDate())
+      .maybeSingle();
+
+    if (error) {
+      console.error('Kunde inte läsa dagens pass', error);
+      return;
+    }
+
+    if (!data) {
+      ui.challengeTitle.textContent = 'Dagens pass kommer snart';
+      ui.challengeDescription.hidden = true;
+      return;
+    }
+
+    const generatedDescription = [data.base_amount, data.unit].filter(Boolean).join(' ');
+    ui.challengeTitle.textContent = data.title;
+    ui.challengeDescription.textContent = data.description?.trim() || generatedDescription;
+    ui.challengeDescription.hidden = !ui.challengeDescription.textContent;
   }
 
   function renderLeaderboard(rows) {
@@ -243,7 +271,7 @@
     const user = currentSession.user;
     const { data, error } = await client
       .from('profiles')
-      .select('id, email, display_name, created_at')
+      .select('id, email, display_name, is_admin, created_at')
       .eq('id', user.id)
       .maybeSingle();
 
@@ -253,7 +281,7 @@
     const { data: created, error: insertError } = await client
       .from('profiles')
       .insert({ id: user.id, email: user.email })
-      .select('id, email, display_name, created_at')
+      .select('id, email, display_name, is_admin, created_at')
       .single();
 
     if (insertError) throw insertError;
@@ -276,6 +304,7 @@
     try {
       profile = await getOrCreateProfile(session);
       setSignedIn(profile.display_name);
+      ui.adminLink.hidden = !profile.is_admin;
       try {
         await loadResults();
       } catch (error) {
@@ -356,7 +385,7 @@
       .from('profiles')
       .update({ display_name: displayName })
       .eq('id', session.user.id)
-      .select('id, email, display_name, created_at')
+      .select('id, email, display_name, is_admin, created_at')
       .single();
 
     setBusy(ui.onboardingView, false);
@@ -368,6 +397,7 @@
 
     profile = data;
     setSignedIn(profile.display_name);
+    ui.adminLink.hidden = !profile.is_admin;
     ui.accountName.textContent = `Hej, ${profile.display_name}!`;
     ui.accountEmail.textContent = session.user.email || '';
     await refreshLeaderboard();
@@ -412,6 +442,7 @@
         },
       );
 
+      await loadTodayChallenge();
       const { data, error } = await client.auth.getSession();
       if (error) throw error;
       await handleSession(data.session);
