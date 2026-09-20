@@ -35,6 +35,13 @@
     homeCompletedDays: document.querySelector('#home-completed-days'),
     homeCurrentStreak: document.querySelector('#home-current-streak'),
     homeHistoryStatus: document.querySelector('#home-history-status'),
+    appShell: document.querySelector('#app-shell'),
+    entryGate: document.querySelector('#entry-gate'),
+    entryYes: document.querySelector('#entry-yes'),
+    entryNo: document.querySelector('#entry-no'),
+    entryStatus: document.querySelector('#entry-status'),
+    entryJoke: document.querySelector('#entry-joke'),
+    entryJokeYes: document.querySelector('#entry-joke-yes'),
   };
 
   let client;
@@ -80,7 +87,7 @@
   function closeModal() {
     ui.overlay.classList.remove('open');
     ui.overlay.setAttribute('aria-hidden', 'true');
-    ui.trigger.focus();
+    (ui.entryGate.hidden ? ui.trigger : ui.entryYes).focus();
   }
 
   function setBusy(element, busy) {
@@ -88,6 +95,21 @@
     element.querySelectorAll('button, input').forEach((control) => {
       control.disabled = busy;
     });
+  }
+
+  function setEntryBusy(busy) {
+    [ui.entryYes, ui.entryNo, ui.entryJokeYes].forEach((button) => {
+      button.disabled = busy || !authReady;
+    });
+  }
+
+  function setEntryVisible(visible) {
+    ui.entryGate.hidden = !visible;
+    ui.appShell.inert = visible;
+    ui.appShell.setAttribute('aria-hidden', String(visible));
+    document.body.classList.toggle('entry-active', visible);
+    if (!visible) ui.entryJoke.hidden = true;
+    setEntryBusy(false);
   }
 
   function setSignedOut() {
@@ -100,9 +122,11 @@
     ui.historyLink.hidden = true;
     ui.adminLink.hidden = true;
     ui.homeHistoryCard.hidden = true;
+    setEntryVisible(true);
   }
 
   function setSignedIn(displayName) {
+    setEntryVisible(false);
     ui.trigger.textContent = displayName ? `Hej, ${displayName}` : 'Välj namn';
     ui.trigger.title = displayName ? 'Öppna ditt konto' : 'Slutför din profil';
   }
@@ -316,6 +340,8 @@
       return;
     }
 
+    setEntryVisible(false);
+
     try {
       profile = await getOrCreateProfile(session);
       setSignedIn(profile.display_name);
@@ -368,11 +394,17 @@
   });
   document.addEventListener('keydown', (event) => {
     if (event.key === 'Escape' && ui.overlay.classList.contains('open')) closeModal();
+    if (event.key === 'Escape' && !ui.entryJoke.hidden) {
+      ui.entryJoke.hidden = true;
+      ui.entryNo.focus();
+    }
   });
 
-  ui.googleLogin.addEventListener('click', async () => {
+  async function startGoogleLogin() {
     ui.loginStatus.textContent = '';
+    ui.entryStatus.textContent = '';
     setBusy(ui.loginView, true);
+    setEntryBusy(true);
 
     const { error } = await client.auth.signInWithOAuth({
       provider: 'google',
@@ -380,9 +412,20 @@
     });
 
     if (error) {
-      ui.loginStatus.textContent = 'Google-inloggningen kunde inte startas. Försök igen.';
+      const message = 'Google-inloggningen kunde inte startas. Försök igen.';
+      ui.loginStatus.textContent = message;
+      ui.entryStatus.textContent = message;
       setBusy(ui.loginView, false);
+      setEntryBusy(false);
     }
+  }
+
+  ui.googleLogin.addEventListener('click', startGoogleLogin);
+  ui.entryYes.addEventListener('click', startGoogleLogin);
+  ui.entryJokeYes.addEventListener('click', startGoogleLogin);
+  ui.entryNo.addEventListener('click', () => {
+    ui.entryJoke.hidden = false;
+    ui.entryJokeYes.focus();
   });
 
   ui.form.addEventListener('submit', async (event) => {
@@ -462,8 +505,8 @@
       await loadTodayChallenge();
       const { data, error } = await client.auth.getSession();
       if (error) throw error;
-      await handleSession(data.session);
       authReady = true;
+      await handleSession(data.session);
       ui.trigger.disabled = false;
 
       client.auth.onAuthStateChange((_event, nextSession) => {
@@ -475,6 +518,7 @@
       console.error('Supabase Auth kunde inte startas', error);
       ui.trigger.textContent = 'Login saknas';
       ui.trigger.title = 'Auth-konfigurationen kunde inte laddas';
+      ui.entryStatus.textContent = 'Inloggningen kunde inte startas just nu.';
     }
   }
 
