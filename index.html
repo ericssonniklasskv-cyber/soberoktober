@@ -30,6 +30,8 @@
     .challenge-label{margin:0;color:#f8c997;font-size:.78rem;font-weight:900;letter-spacing:.14em;text-transform:uppercase}
     h2{margin:8px 0 4px;font-size:clamp(2rem,6vw,3.9rem);letter-spacing:-.045em;line-height:1}.workout{margin:18px 0 32px;color:#fff0d4;font-size:clamp(2.7rem,9vw,5.8rem);font-weight:900;letter-spacing:-.06em;line-height:.95}
     .levels{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.level{min-height:94px;padding:15px 10px;border:1px solid rgba(255,255,255,.14);border-radius:20px;color:var(--white);background:rgba(255,255,255,.075);cursor:pointer;transition:transform .2s ease,background .2s ease,border-color .2s ease}.level:hover,.level:focus-visible{transform:translateY(-4px);border-color:rgba(248,201,151,.65);background:rgba(255,255,255,.13);outline:none}.level:active{transform:scale(.98)}.level strong{display:block;margin-bottom:5px;color:#ffd19a;font-size:1.35rem}.level span{font-size:.86rem;font-weight:750}
+    .level:disabled{cursor:wait;opacity:.58;transform:none}
+    .score-summary{display:grid;grid-template-columns:1.35fr repeat(2,.8fr);gap:9px;margin-top:18px}.score-item{min-width:0;padding:13px 14px;border:1px solid rgba(255,255,255,.12);border-radius:16px;background:rgba(255,255,255,.07)}.score-label{display:block;margin-bottom:4px;color:rgba(255,255,255,.62);font-size:.66rem;font-weight:850;letter-spacing:.08em;text-transform:uppercase}.score-value{display:block;color:#fff0d4;font-size:clamp(.86rem,2vw,1rem);font-weight:900;line-height:1.25}.score-points{display:block;margin-top:2px;color:#ffd19a;font-size:.76rem;font-weight:800}.save-status{min-height:1.2em;margin:9px 2px 0;color:#f8c997;font-size:.75rem;font-weight:750;text-align:center}
     .motivation{display:flex;align-items:center;justify-content:center;gap:9px;margin:22px 0 0;color:rgba(255,255,255,.72);font-size:.88rem}.motivation b{color:var(--orange)}
     .content-grid{display:grid;grid-template-columns:1.25fr .75fr;gap:18px;max-width:960px;margin:18px auto 0}.info-card{padding:clamp(24px,4vw,34px);border:1px solid rgba(23,63,50,.09);border-radius:28px;background:rgba(255,253,248,.78);box-shadow:0 12px 40px rgba(44,59,49,.07);backdrop-filter:blur(10px);animation:rise .7s .2s ease both}
     .card-heading{display:flex;align-items:center;gap:11px;margin:0 0 22px;color:var(--forest);font-size:1.12rem;font-weight:900;letter-spacing:-.02em}.icon{display:grid;place-items:center;flex:0 0 auto;width:38px;height:38px;border-radius:13px;color:var(--orange-dark);background:#fff0dc}.icon svg{width:19px;height:19px}
@@ -51,7 +53,7 @@
     .auth-form{display:grid;gap:12px}.auth-label{color:var(--forest);font-size:.8rem;font-weight:850}.auth-email{display:block;margin-top:4px;color:var(--muted);font-weight:600;overflow-wrap:anywhere}.auth-input{width:100%;height:52px;padding:0 16px;border:1px solid rgba(23,63,50,.18);border-radius:15px;color:var(--ink);background:var(--white);font:inherit;font-weight:750;outline:none}.auth-input:focus{border-color:var(--orange);box-shadow:0 0 0 4px rgba(242,138,56,.14)}
     .auth-primary{border:0;color:var(--white);background:var(--forest)}.auth-primary:hover,.auth-primary:focus-visible{transform:translateY(-2px);background:var(--deep);outline:none}.auth-secondary{margin-top:10px;border:0;color:var(--forest);background:transparent}.auth-secondary:hover,.auth-secondary:focus-visible{background:rgba(23,63,50,.07);outline:none}.auth-status{min-height:1.3em;margin:10px 0 0;color:#a64e1c;font-size:.8rem;font-weight:750;line-height:1.4}.auth-note{margin:16px 0 0;color:#85887f;font-size:.73rem;line-height:1.45}.auth-busy{opacity:.65;pointer-events:none}
     @keyframes rise{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}@keyframes confetti{0%{opacity:0;transform:translate(-50%,-50%) scale(.2) rotate(0)}12%{opacity:1;transform:translate(-50%,-50%) scale(1) rotate(35deg)}72%{opacity:1}100%{opacity:0;transform:translate(calc(-50% + var(--drift)),calc(-50% + var(--drop))) rotate(var(--r))}}
-    @media(max-width:700px){.shell{width:min(100% - 22px,560px);padding-top:14px}.topbar{gap:8px;margin-bottom:34px}.brand-text{display:none}.top-actions{gap:6px}.day-pill,.auth-trigger{padding:8px 10px;font-size:.7rem}.auth-trigger{max-width:108px}h1{font-size:clamp(3.55rem,19vw,5.4rem)}.intro{max-width:360px}.challenge-card{border-radius:28px}.levels{gap:8px}.level{min-height:86px;border-radius:17px}.level strong{font-size:1.15rem}.level span{font-size:.76rem}.content-grid{grid-template-columns:1fr}.info-card{border-radius:24px}.auth-panel{padding:27px 22px;border-radius:24px}}
+    @media(max-width:700px){.shell{width:min(100% - 22px,560px);padding-top:14px}.topbar{gap:8px;margin-bottom:34px}.brand-text{display:none}.top-actions{gap:6px}.day-pill,.auth-trigger{padding:8px 10px;font-size:.7rem}.auth-trigger{max-width:108px}h1{font-size:clamp(3.55rem,19vw,5.4rem)}.intro{max-width:360px}.challenge-card{border-radius:28px}.levels{gap:8px}.level{min-height:86px;border-radius:17px}.level strong{font-size:1.15rem}.level span{font-size:.76rem}.score-summary{grid-template-columns:1.4fr 1fr}.score-item:first-child{grid-column:1/-1}.content-grid{grid-template-columns:1fr}.info-card{border-radius:24px}.auth-panel{padding:27px 22px;border-radius:24px}}
     @media(prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
   </style>
 </head>
@@ -87,6 +89,12 @@
           <button class="level" type="button" data-level="2"><strong>2×</strong><span>1,5 poäng</span></button>
           <button class="level" type="button" data-level="3"><strong>3×</strong><span>2 poäng</span></button>
         </div>
+        <div class="score-summary" id="score-summary" hidden>
+          <div class="score-item"><span class="score-label">Dagens resultat</span><strong class="score-value" id="daily-result">Inte registrerat</strong><span class="score-points" id="daily-points">0 poäng</span></div>
+          <div class="score-item"><span class="score-label">Totalpoäng</span><strong class="score-value" id="total-points">0</strong></div>
+          <div class="score-item"><span class="score-label">Genomförda dagar</span><strong class="score-value" id="completed-days">0</strong></div>
+        </div>
+        <p class="save-status" id="save-status" role="status" aria-live="polite"></p>
         <p class="motivation"><b>●</b> Små segrar räknas också. Särskilt idag.</p>
       </section>
       <div class="content-grid">
@@ -151,14 +159,16 @@
     let feedbackTimer;
     const hideFeedback=()=>feedback.classList.remove('show');
     document.querySelector('#feedback-close').addEventListener('click',hideFeedback);
-    document.querySelectorAll('.level').forEach(button=>button.addEventListener('click',()=>{
-      const result=levelFeedback[button.dataset.level];
+    window.celebrateLevel=(level)=>{
+      const result=levelFeedback[level];
+      if(!result)return;
       feedbackText.textContent=result.text;feedback.classList.remove('show');requestAnimationFrame(()=>feedback.classList.add('show'));
       clearTimeout(feedbackTimer);feedbackTimer=setTimeout(hideFeedback,4200);
       confettiLayer.replaceChildren();
       for(let i=0;i<result.pieces;i++){const piece=document.createElement('i');piece.className='confetti';piece.style.background=colors[i%colors.length];piece.style.setProperty('--left',(2+Math.random()*96)+'%');piece.style.setProperty('--top',(5+Math.random()*82)+'%');piece.style.setProperty('--size',(5+Math.random()*7)+'px');piece.style.setProperty('--drift',((Math.random()-.5)*100)+'px');piece.style.setProperty('--drop',(45+Math.random()*120)+'px');piece.style.setProperty('--r',(Math.random()*900-450)+'deg');piece.style.setProperty('--duration',(result.duration+Math.random()*260)+'ms');piece.style.setProperty('--delay',(Math.random()*180)+'ms');confettiLayer.appendChild(piece);piece.addEventListener('animationend',()=>piece.remove())}
-      button.animate([{transform:'scale(1)'},{transform:'scale(1.05)'},{transform:'scale(1)'}],{duration:280,easing:'ease-out'});
-    }));
+      const button=document.querySelector('.level[data-level="'+level+'"]');
+      button?.animate([{transform:'scale(1)'},{transform:'scale(1.05)'},{transform:'scale(1)'}],{duration:280,easing:'ease-out'});
+    };
   </script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.js" defer></script>
   <script src="/auth.js" defer></script>
