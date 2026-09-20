@@ -15,12 +15,13 @@
     button{font:inherit}
     .leaf{position:fixed;z-index:-1;width:180px;height:90px;border-radius:100% 0 100% 0;background:rgba(242,138,56,.1);transform:rotate(30deg);pointer-events:none}.leaf.one{top:8%;left:-90px}.leaf.two{right:-95px;top:47%;transform:rotate(205deg);background:rgba(23,63,50,.08)}
     .shell{width:min(1120px,calc(100% - 32px));margin:auto;padding:22px 0 56px}
-    .topbar{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:38px}
+    .topbar{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:14px}
     .brand{display:flex;align-items:center;gap:10px;color:var(--forest);font-size:.78rem;font-weight:850;letter-spacing:.14em;text-transform:uppercase}
     .brand-mark{display:grid;place-items:center;width:34px;height:34px;border-radius:11px;color:var(--cream);background:var(--forest);box-shadow:0 8px 20px rgba(23,63,50,.18)}.brand-mark svg{width:18px}
     .top-actions{display:flex;align-items:center;gap:8px}
     .day-pill{padding:9px 13px;border:1px solid rgba(23,63,50,.12);border-radius:999px;color:var(--forest);background:rgba(255,253,248,.68);font-size:.78rem;font-weight:800;white-space:nowrap;backdrop-filter:blur(10px)}
     .auth-trigger{max-width:180px;overflow:hidden;padding:9px 13px;border:0;border-radius:999px;color:var(--cream);background:var(--forest);font-size:.78rem;font-weight:850;text-overflow:ellipsis;white-space:nowrap;cursor:pointer;box-shadow:0 8px 20px rgba(23,63,50,.14);transition:transform .2s ease,background .2s ease}.auth-trigger:hover,.auth-trigger:focus-visible{transform:translateY(-2px);background:var(--deep);outline:none}.auth-trigger:disabled{cursor:wait;opacity:.58;transform:none}
+    .main-nav{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;max-width:520px;margin:0 auto 38px;padding:5px;border:1px solid rgba(23,63,50,.1);border-radius:18px;background:rgba(255,253,248,.72);box-shadow:0 8px 28px rgba(31,55,43,.07);backdrop-filter:blur(10px)}.main-nav a{display:flex;align-items:center;justify-content:center;min-height:42px;padding:8px 12px;border-radius:13px;color:var(--forest);font-size:.78rem;font-weight:900;text-align:center;text-decoration:none;transition:color .2s ease,background .2s ease,transform .2s ease}.main-nav a:hover,.main-nav a:focus-visible{color:var(--deep);background:#fff0dc;outline:none;transform:translateY(-1px)}.main-nav .history-nav{color:var(--white);background:var(--orange-dark);box-shadow:0 6px 15px rgba(217,107,32,.2)}.main-nav .history-nav:hover,.main-nav .history-nav:focus-visible{color:var(--white);background:#bd591b}
     .hero{max-width:820px;margin:0 auto 34px;text-align:center;animation:rise .7s ease both}
     .eyebrow{display:inline-flex;align-items:center;gap:8px;margin:0 0 14px;color:var(--orange-dark);font-size:.78rem;font-weight:900;letter-spacing:.15em;text-transform:uppercase}.eyebrow:before,.eyebrow:after{content:"";width:22px;height:2px;border-radius:2px;background:currentColor;opacity:.45}
     h1{margin:0;color:var(--deep);font-size:clamp(3.4rem,12vw,7.8rem);font-weight:900;letter-spacing:-.075em;line-height:.86}h1 span{color:var(--orange)}
@@ -33,6 +34,7 @@
     .level:disabled{cursor:wait;opacity:.58;transform:none}
     .score-summary{display:grid;grid-template-columns:1.35fr repeat(2,.8fr);gap:9px;margin-top:18px}.score-summary[hidden]{display:none}.score-item{min-width:0;padding:13px 14px;border:1px solid rgba(255,255,255,.12);border-radius:16px;background:rgba(255,255,255,.07)}.score-label{display:block;margin-bottom:4px;color:rgba(255,255,255,.62);font-size:.66rem;font-weight:850;letter-spacing:.08em;text-transform:uppercase}.score-value{display:block;color:#fff0d4;font-size:clamp(.86rem,2vw,1rem);font-weight:900;line-height:1.25}.score-points{display:block;margin-top:2px;color:#ffd19a;font-size:.76rem;font-weight:800}.save-status{min-height:1.2em;margin:9px 2px 0;color:#f8c997;font-size:.75rem;font-weight:750;text-align:center}
     .motivation{display:flex;align-items:center;justify-content:center;gap:9px;margin:22px 0 0;color:rgba(255,255,255,.72);font-size:.88rem}.motivation b{color:var(--orange)}
+    .home-history-card{display:grid;grid-template-columns:minmax(150px,.7fr) minmax(300px,1.25fr) auto;align-items:center;gap:20px;max-width:820px;margin:18px auto 0;padding:20px 22px;border:1px solid rgba(23,63,50,.09);border-radius:24px;background:rgba(255,253,248,.88);box-shadow:0 12px 40px rgba(44,59,49,.08);backdrop-filter:blur(10px);animation:rise .55s ease both}.home-history-card[hidden]{display:none}.home-history-kicker{margin:0 0 4px;color:var(--orange-dark);font-size:.68rem;font-weight:900;letter-spacing:.12em;text-transform:uppercase}.home-history-title{margin:0;color:var(--deep);font-size:1.45rem;font-weight:950;letter-spacing:-.035em}.home-history-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.home-history-stat{min-width:0;padding:10px 11px;border-radius:15px;background:#f4efe3}.home-history-label{display:block;margin-bottom:3px;color:var(--muted);font-size:.61rem;font-weight:850;letter-spacing:.06em;text-transform:uppercase}.home-history-value{display:block;overflow:hidden;color:var(--forest);font-size:1.05rem;font-weight:950;text-overflow:ellipsis;white-space:nowrap}.home-history-link{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:11px 16px;border-radius:14px;color:var(--white);background:var(--forest);font-size:.78rem;font-weight:900;text-decoration:none;white-space:nowrap;transition:transform .2s ease,background .2s ease}.home-history-link:hover,.home-history-link:focus-visible{transform:translateY(-2px);background:var(--deep);outline:none}.home-history-status{grid-column:1/-1;min-height:0;margin:0;color:#a64e1c;font-size:.72rem;font-weight:750;text-align:center}.home-history-status:empty{display:none}
     .content-grid{display:grid;grid-template-columns:1.25fr .75fr;gap:18px;max-width:960px;margin:18px auto 0}.info-card{padding:clamp(24px,4vw,34px);border:1px solid rgba(23,63,50,.09);border-radius:28px;background:rgba(255,253,248,.78);box-shadow:0 12px 40px rgba(44,59,49,.07);backdrop-filter:blur(10px);animation:rise .7s .2s ease both}
     .card-heading{display:flex;align-items:center;gap:11px;margin:0 0 22px;color:var(--forest);font-size:1.12rem;font-weight:900;letter-spacing:-.02em}.icon{display:grid;place-items:center;flex:0 0 auto;width:38px;height:38px;border-radius:13px;color:var(--orange-dark);background:#fff0dc}.icon svg{width:19px;height:19px}
     .rules{display:grid;gap:14px;margin:0;padding:0;list-style:none}.rules li{display:flex;align-items:flex-start;gap:12px;color:#4f5b53;font-size:.93rem;line-height:1.45}.check{display:grid;place-items:center;flex:0 0 24px;width:24px;height:24px;margin-top:-1px;border-radius:50%;color:var(--white);background:var(--forest);font-size:.75rem;font-weight:900}
@@ -54,7 +56,7 @@
     .auth-form{display:grid;gap:12px}.auth-label{color:var(--forest);font-size:.8rem;font-weight:850}.auth-email{display:block;margin-top:4px;color:var(--muted);font-weight:600;overflow-wrap:anywhere}.auth-input{width:100%;height:52px;padding:0 16px;border:1px solid rgba(23,63,50,.18);border-radius:15px;color:var(--ink);background:var(--white);font:inherit;font-weight:750;outline:none}.auth-input:focus{border-color:var(--orange);box-shadow:0 0 0 4px rgba(242,138,56,.14)}
     .auth-primary{border:0;color:var(--white);background:var(--forest)}.auth-primary:hover,.auth-primary:focus-visible{transform:translateY(-2px);background:var(--deep);outline:none}.auth-secondary{margin-top:10px;border:0;color:var(--forest);background:transparent}.auth-secondary:hover,.auth-secondary:focus-visible{background:rgba(23,63,50,.07);outline:none}.admin-link{display:flex;align-items:center;justify-content:center;width:100%;min-height:46px;margin-top:12px;border-radius:15px;color:var(--white);background:var(--orange-dark);font-size:.86rem;font-weight:900;text-decoration:none}.admin-link:hover,.admin-link:focus-visible{background:#bd591b;outline:none}.admin-link[hidden]{display:none}.auth-status{min-height:1.3em;margin:10px 0 0;color:#a64e1c;font-size:.8rem;font-weight:750;line-height:1.4}.auth-note{margin:16px 0 0;color:#85887f;font-size:.73rem;line-height:1.45}.auth-busy{opacity:.65;pointer-events:none}
     @keyframes rise{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}@keyframes confetti{0%{opacity:0;transform:translate(-50%,-50%) scale(.2) rotate(0)}12%{opacity:1;transform:translate(-50%,-50%) scale(1) rotate(35deg)}72%{opacity:1}100%{opacity:0;transform:translate(calc(-50% + var(--drift)),calc(-50% + var(--drop))) rotate(var(--r))}}
-    @media(max-width:700px){.shell{width:min(100% - 22px,560px);padding-top:14px}.topbar{gap:8px;margin-bottom:34px}.brand-text{display:none}.top-actions{gap:6px}.day-pill,.auth-trigger{padding:8px 10px;font-size:.7rem}.auth-trigger{max-width:108px}h1{font-size:clamp(3.55rem,19vw,5.4rem)}.intro{max-width:360px}.challenge-card{border-radius:28px}.levels{gap:8px}.level{min-height:86px;border-radius:17px}.level strong{font-size:1.15rem}.level span{font-size:.76rem}.score-summary{grid-template-columns:1.4fr 1fr}.score-item:first-child{grid-column:1/-1}.content-grid{grid-template-columns:1fr}.info-card,.leaderboard-card{border-radius:24px}.leaderboard-head{align-items:flex-start;flex-direction:column}.leaderboard-row{grid-template-columns:42px minmax(0,1fr) auto;gap:8px;padding-right:12px}.leaderboard-rank{width:36px;height:36px}.leaderboard-days{grid-column:2/4;text-align:left;color:var(--muted);font-size:.72rem}.leaderboard-points{font-size:.78rem}.auth-panel{padding:27px 22px;border-radius:24px}}
+    @media(max-width:700px){.shell{width:min(100% - 22px,560px);padding-top:14px}.topbar{gap:8px;margin-bottom:10px}.brand-text{display:none}.top-actions{gap:6px}.day-pill,.auth-trigger{padding:8px 10px;font-size:.7rem}.auth-trigger{max-width:108px}.main-nav{margin-bottom:32px;border-radius:16px}.main-nav a{min-height:40px;padding:7px 5px;font-size:.7rem}h1{font-size:clamp(3.55rem,19vw,5.4rem)}.intro{max-width:360px}.challenge-card{border-radius:28px}.levels{gap:8px}.level{min-height:86px;border-radius:17px}.level strong{font-size:1.15rem}.level span{font-size:.76rem}.score-summary{grid-template-columns:1.4fr 1fr}.score-item:first-child{grid-column:1/-1}.home-history-card{grid-template-columns:1fr auto;gap:14px;padding:18px;border-radius:22px}.home-history-stats{grid-column:1/-1;grid-row:2}.home-history-link{grid-column:2;grid-row:1}.home-history-stat{padding:10px 8px}.home-history-label{font-size:.55rem}.home-history-value{font-size:.96rem}.content-grid{grid-template-columns:1fr}.info-card,.leaderboard-card{border-radius:24px}.leaderboard-head{align-items:flex-start;flex-direction:column}.leaderboard-row{grid-template-columns:42px minmax(0,1fr) auto;gap:8px;padding-right:12px}.leaderboard-rank{width:36px;height:36px}.leaderboard-days{grid-column:2/4;text-align:left;color:var(--muted);font-size:.72rem}.leaderboard-points{font-size:.78rem}.auth-panel{padding:27px 22px;border-radius:24px}}
     @media(prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
   </style>
   <style>
@@ -71,6 +73,11 @@
         <button class="auth-trigger" id="auth-trigger" type="button" disabled>Logga in</button>
       </div>
     </header>
+    <nav class="main-nav" aria-label="Huvudnavigation">
+      <a href="#dagens-pass">Dagens pass</a>
+      <a class="history-nav" href="/min-oktober/">Min oktober</a>
+      <a href="#topplista">Topplista</a>
+    </nav>
     <main>
       <section class="hero" aria-labelledby="page-title">
         <p class="eyebrow">Oktoberutmaningen</p>
@@ -78,7 +85,7 @@
         <p class="intro">En alkoholfri månad. Ett litet pass om dagen. Mycket skönare känsla än en söndag med ångest.</p>
         <div class="progress-wrap" aria-label="Oktobers framsteg"><div class="progress-meta"><span id="progress-day">Snart kör vi</span><span id="progress-percent">0%</span></div><div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div></div>
       </section>
-      <section class="challenge-card" aria-labelledby="challenge-title">
+      <section class="challenge-card" id="dagens-pass" aria-labelledby="challenge-title">
         <div class="feedback" id="feedback" role="status" aria-live="polite">
           <span class="feedback-icon" aria-hidden="true">✓</span>
           <p class="feedback-text" id="feedback-text"></p>
@@ -101,6 +108,19 @@
         <p class="save-status" id="save-status" role="status" aria-live="polite"></p>
         <p class="motivation"><b>●</b> Små segrar räknas också. Särskilt idag.</p>
       </section>
+      <section class="home-history-card" id="home-history-card" aria-labelledby="home-history-title" hidden>
+        <div>
+          <p class="home-history-kicker">Din utmaning</p>
+          <h2 class="home-history-title" id="home-history-title">Din oktober</h2>
+        </div>
+        <div class="home-history-stats">
+          <div class="home-history-stat"><span class="home-history-label">Totalpoäng</span><strong class="home-history-value" id="home-total-points">0</strong></div>
+          <div class="home-history-stat"><span class="home-history-label">Genomförda dagar</span><strong class="home-history-value" id="home-completed-days">0</strong></div>
+          <div class="home-history-stat"><span class="home-history-label">Nuvarande streak</span><strong class="home-history-value" id="home-current-streak">0 dagar</strong></div>
+        </div>
+        <a class="home-history-link" href="/min-oktober/">Se Min oktober</a>
+        <p class="home-history-status" id="home-history-status" role="status" aria-live="polite"></p>
+      </section>
       <div class="content-grid">
         <section class="info-card" aria-labelledby="rules-title">
           <h2 class="card-heading" id="rules-title"><span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></span>Reglerna är enkla</h2>
@@ -111,7 +131,7 @@
           <p class="steps-number">+5</p><p class="steps-copy">poäng väntar på månadens starkaste stegare. Varje promenad räknas.</p>
         </section>
       </div>
-      <section class="leaderboard-card" aria-labelledby="leaderboard-title">
+      <section class="leaderboard-card" id="topplista" aria-labelledby="leaderboard-title">
         <div class="leaderboard-head">
           <div class="leaderboard-title-wrap">
             <span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 21h8M12 17v4M7 4h10v4a5 5 0 0 1-10 0V4Z"/><path d="M7 6H4v2a4 4 0 0 0 4 4M17 6h3v2a4 4 0 0 1-4 4"/></svg></span>
@@ -190,6 +210,8 @@
     };
   </script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.js" defer></script>
+  <script src="/min-oktober/history-logic.js" defer></script>
+  <script src="/home-history.js" defer></script>
   <script src="/auth.js" defer></script>
 </body>
 </html>
