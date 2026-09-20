@@ -545,7 +545,8 @@
       if (error) throw error;
       await handleSession(data.session);
 
-      client.auth.onAuthStateChange((_event, session) => {
+      client.auth.onAuthStateChange((event, session) => {
+        if (event === 'INITIAL_SESSION' || event === 'TOKEN_REFRESHED') return;
         sessionWork = sessionWork
           .then(() => handleSession(session))
           .catch((sessionError) => console.error('Auth-status kunde inte uppdateras', sessionError));
