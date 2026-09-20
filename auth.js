@@ -342,11 +342,11 @@
         },
       );
 
-      authReady = true;
-      ui.trigger.disabled = false;
       const { data, error } = await client.auth.getSession();
       if (error) throw error;
       await handleSession(data.session);
+      authReady = true;
+      ui.trigger.disabled = false;
 
       client.auth.onAuthStateChange((_event, nextSession) => {
         sessionWork = sessionWork
