@@ -1,0 +1,152 @@
+.trump-quote-card {
+  position: relative;
+  isolation: isolate;
+  max-width: 960px;
+  margin: 18px auto 0;
+  overflow: hidden;
+  padding: clamp(18px, 4vw, 32px);
+  border: 3px solid #e8c989;
+  border-radius: 28px;
+  color: #fff;
+  background: #12294d url('/trump-quote-art.svg') center/cover no-repeat;
+  box-shadow: 0 16px 44px rgba(24, 45, 67, .16);
+}
+
+.trump-quote-card::before,
+.trump-quote-dialog::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  background: linear-gradient(115deg, rgba(10, 31, 61, .28), rgba(10, 31, 61, .56));
+}
+
+.trump-quote-content {
+  position: relative;
+  max-width: 760px;
+  margin: auto;
+  padding: clamp(23px, 4vw, 35px);
+  border: 1px solid rgba(255, 255, 255, .2);
+  border-radius: 22px;
+  background: rgba(13, 32, 62, .94);
+  box-shadow: 0 12px 36px rgba(4, 14, 37, .23);
+  text-align: center;
+}
+
+.trump-quote-stars {
+  margin: 0 0 8px;
+  color: #f2d388;
+  font-size: .82rem;
+  letter-spacing: .45em;
+}
+
+.trump-quote-title {
+  margin: 0 0 18px;
+  color: #fff7dc;
+  font-size: clamp(1.35rem, 3vw, 2.1rem);
+  font-weight: 950;
+  letter-spacing: -.04em;
+  line-height: 1.15;
+}
+
+.trump-quote-text {
+  margin: 0;
+  color: #fff;
+  font-size: clamp(1.18rem, 3.2vw, 1.85rem);
+  font-weight: 850;
+  line-height: 1.35;
+  text-wrap: balance;
+}
+
+.trump-quote-byline {
+  margin: 18px 0 0;
+  color: #f4d98f;
+  font-size: .87rem;
+  font-weight: 850;
+}
+
+.trump-quote-overlay {
+  position: fixed;
+  z-index: 70;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  overflow: auto;
+  padding: 18px;
+  background: rgba(9, 25, 41, .76);
+  backdrop-filter: blur(8px);
+}
+
+.trump-quote-overlay[hidden] { display: none; }
+body.trump-quote-open { overflow: hidden; }
+
+.trump-quote-dialog {
+  position: relative;
+  isolation: isolate;
+  width: min(100%, 690px);
+  max-height: calc(100dvh - 36px);
+  overflow: auto;
+  padding: clamp(20px, 4vw, 36px);
+  border: 3px solid #e8c989;
+  border-radius: 30px;
+  color: #fff;
+  background: #12294d url('/trump-quote-art.svg') center/cover no-repeat;
+  box-shadow: 0 30px 100px rgba(0, 0, 0, .4);
+  animation: trump-quote-appear .28s cubic-bezier(.2,.8,.2,1) both;
+}
+
+.trump-quote-dialog .trump-quote-content { padding: clamp(24px, 5vw, 42px); }
+.trump-quote-dialog .trump-quote-text { font-size: clamp(1.4rem, 4vw, 2.25rem); }
+
+.trump-quote-actions {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 27px;
+}
+
+.trump-quote-actions button {
+  min-height: 48px;
+  padding: 12px 19px;
+  border: 1px solid rgba(255,255,255,.4);
+  border-radius: 13px;
+  color: #fff;
+  background: rgba(255,255,255,.09);
+  font-size: .85rem;
+  font-weight: 900;
+  cursor: pointer;
+  transition: background .2s ease, transform .2s ease;
+}
+
+.trump-quote-actions button:last-child {
+  border-color: #dc3349;
+  background: #b9233b;
+}
+
+.trump-quote-actions button:hover,
+.trump-quote-actions button:focus-visible {
+  transform: translateY(-2px);
+  background: #9d2940;
+  outline: 2px solid #f4d98f;
+  outline-offset: 2px;
+}
+
+@keyframes trump-quote-appear {
+  from { opacity: 0; transform: translateY(18px) scale(.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@media (max-width: 600px) {
+  .trump-quote-card { padding: 12px; border-radius: 23px; }
+  .trump-quote-content { padding: 23px 18px; border-radius: 17px; }
+  .trump-quote-dialog { padding: 12px; border-radius: 23px; }
+  .trump-quote-dialog .trump-quote-content { padding: 26px 18px; }
+  .trump-quote-actions { display: grid; }
+  .trump-quote-actions button { width: 100%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .trump-quote-dialog { animation: none; }
+  .trump-quote-actions button { transition: none; }
+}
