@@ -423,3 +423,6 @@ body:has(.feedback.show) .mohv-egg { visibility: hidden; pointer-events: none; }
 .score-label, .home-history-label, .stat-label, .weekday, .identity { font-weight: 600; }
 .leaderboard-preview-name, .leaderboard-preview-link, .main-nav a, .day-pill,
 .auth-trigger, .day-date, .day-status, .progress-count, .dirty-count { font-weight: 750; }
+/* Decorative leaves stay inside the scrollable invitation viewport. */
+.entry-gate::before { top: 0; left: 0; width: 120px; height: 200px; border-radius: 0 0 100% 0; transform: none; }
+.entry-gate::after { bottom: 0; right: 0; width: 120px; height: 220px; border-radius: 100% 0 0 0; transform: none; }
