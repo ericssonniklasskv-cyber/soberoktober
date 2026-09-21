@@ -7,6 +7,7 @@
   <meta name="theme-color" content="#173f32">
   <title>Sober Oktober — Dagens pass</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='18' fill='%23173f32'/%3E%3Cpath d='M47 15C29 16 18 26 18 39c0 6 5 10 11 10 15 0 21-17 18-34Z' fill='%23f28a38'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="/trump-quote.css">
   <style>
     :root{--forest:#173f32;--deep:#0d2d24;--orange:#f28a38;--orange-dark:#d96b20;--cream:#fff8e9;--ink:#173128;--muted:#6b7067;--white:#fffdf8;--shadow:0 18px 60px rgba(31,55,43,.14)}
     *{box-sizing:border-box}
@@ -200,7 +201,29 @@
           <ul class="rules"><li><span class="check">✓</span><span>Ingen alkohol under oktober.</span></li><li><span class="check">✓</span><span>Missar man två dagsutmaningar i rad åker man ut.</span></li><li><span class="check">✓</span><span>Stegtävlingen pågår hela månaden och kan ge 5 poäng.</span></li></ul>
         </section>
       </div>
+      <section class="trump-quote-card" aria-labelledby="trump-quote-title">
+        <div class="trump-quote-content">
+          <p class="trump-quote-stars" aria-hidden="true">★ ★ ★</p>
+          <h2 class="trump-quote-title" id="trump-quote-title">Trump – Quote of the Day</h2>
+          <blockquote class="trump-quote-text" id="trump-quote-text"></blockquote>
+          <p class="trump-quote-byline">— Donald Trump</p>
+        </div>
+      </section>
     </main>
+  </div>
+  <div class="trump-quote-overlay" id="trump-quote-overlay" hidden>
+    <section class="trump-quote-dialog" role="dialog" aria-modal="true" aria-labelledby="trump-quote-modal-title" aria-describedby="trump-quote-modal-text">
+      <div class="trump-quote-content">
+        <p class="trump-quote-stars" aria-hidden="true">★ ★ ★</p>
+        <h2 class="trump-quote-title" id="trump-quote-modal-title">Trump – Quote of the Day</h2>
+        <blockquote class="trump-quote-text" id="trump-quote-modal-text"></blockquote>
+        <p class="trump-quote-byline">— Donald Trump</p>
+        <div class="trump-quote-actions">
+          <button type="button" data-trump-quote-close>Jesus Christ...</button>
+          <button type="button" data-trump-quote-close>Fortsätt</button>
+        </div>
+      </div>
+    </section>
   </div>
   <div class="auth-overlay" id="auth-overlay" aria-hidden="true">
     <section class="auth-panel" role="dialog" aria-modal="true" aria-labelledby="auth-title">
@@ -265,5 +288,6 @@
   <script src="/min-oktober/history-logic.js" defer></script>
   <script src="/auth.js" defer></script>
   <script src="/mohv-egg.js" defer></script>
+  <script src="/trump-quote.js" defer></script>
 </body>
 </html>
