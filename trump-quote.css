@@ -142,7 +142,7 @@ body.trump-quote-open { overflow: hidden; }
   .trump-quote-content { padding: 23px 18px; border-radius: 17px; }
   .trump-quote-dialog { padding: 12px; border-radius: 23px; }
   .trump-quote-dialog .trump-quote-content { padding: 26px 18px; }
-  .trump-quote-actions { display: grid; }
+  .trump-quote-actions { display: grid; justify-content: stretch; }
   .trump-quote-actions button { width: 100%; }
 }
 
