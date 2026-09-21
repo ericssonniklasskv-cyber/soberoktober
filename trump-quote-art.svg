@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 460" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <pattern id="stars" width="43" height="38" patternUnits="userSpaceOnUse">
+      <path d="m21.5 5 3.2 9.1h9.6l-7.8 5.8 3 9.1-8-5.6-8 5.6 3-9.1-7.8-5.8h9.6z" fill="#fff" opacity=".82"/>
+    </pattern>
+    <g id="revolver" fill="#101d36" opacity=".65">
+      <path d="M0 29h116l22-17h63l11 15h27v20h-37l-12 25h-49l-16-18H98L76 78 38 67 22 48H0z"/>
+      <path d="m93 59 25 10-30 76-39-15 12-30z"/>
+      <path d="M143 54h35l-10 24-14 9-13-9z"/>
+      <path d="M129 67q-11 34 25 38l8-9q-17 0-15-20z"/>
+    </g>
+  </defs>
+  <rect width="1000" height="460" fill="#fff8ee"/>
+  <path d="M0 0h1000v35H0z M0 70h1000v35H0z M0 140h1000v35H0z M0 210h1000v35H0z M0 280h1000v35H0z M0 350h1000v35H0z M0 420h1000v35H0z" fill="#c1273d"/>
+  <path d="M0 0h440v245H0z" fill="#183f78"/>
+  <path d="M0 0h440v245H0z" fill="url(#stars)"/>
+  <use href="#revolver" x="-18" y="296" transform="rotate(-12 90 360)"/>
+  <use href="#revolver" x="760" y="300" transform="rotate(14 875 370)"/>
+</svg>
