@@ -52,7 +52,8 @@
   }
 
   function nextLevelForAverage(average) {
-    if (!Number.isFinite(average) || average >= 12000) return null;
+    const highestMinimum = SCORE_LEVELS[SCORE_LEVELS.length - 1].minimum;
+    if (!Number.isFinite(average) || average >= highestMinimum) return null;
     const next = SCORE_LEVELS.find((level) => level.minimum > average);
     return next ? {
       minimum: next.minimum,
@@ -73,5 +74,19 @@
     };
   }
 
-  return Object.freeze({ PERIODS, SCORE_LEVELS, calculateWeightedAverage, pointsForAverage, nextLevelForAverage, createProjection });
+  function getScoreLadder(average) {
+    const hasAverage = Number.isFinite(average);
+    const currentPoints = hasAverage ? pointsForAverage(average) : null;
+    const nextLevel = hasAverage ? nextLevelForAverage(average) : null;
+    return SCORE_LEVELS.map((level, index) => ({
+      ...level,
+      isLowest: index === 0,
+      isHighest: index === SCORE_LEVELS.length - 1,
+      threshold: index === 0 ? SCORE_LEVELS[index + 1].minimum : level.minimum,
+      isCurrent: hasAverage && level.points === currentPoints,
+      isNext: nextLevel?.minimum === level.minimum,
+    }));
+  }
+
+  return Object.freeze({ PERIODS, SCORE_LEVELS, calculateWeightedAverage, pointsForAverage, nextLevelForAverage, createProjection, getScoreLadder });
 }));

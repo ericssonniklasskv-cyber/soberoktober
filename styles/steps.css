@@ -23,6 +23,24 @@
 .steps-score-panel .steps-next-level { margin-top:5px; color:#ffd19d; font-weight:850; }
 .steps-period-progress { display:flex; flex:0 0 auto; flex-direction:column; align-items:flex-end; gap:2px; padding-left:20px; border-left:1px solid #ffffff3b; color:#e0e5d8; font-size:.72rem; text-align:right; }
 .steps-period-progress strong { color:white; font-size:1.5rem; font-variant-numeric:tabular-nums; }
+.steps-ladder { margin-bottom:38px; padding:25px 28px 27px; border-radius:var(--radius-lg); background:var(--paper); }
+.steps-ladder-heading { display:flex; align-items:end; justify-content:space-between; gap:28px; margin-bottom:18px; }
+.steps-ladder-heading h2 { margin:0; color:var(--forest); font-size:clamp(1.45rem,3.6vw,1.9rem); font-weight:900; letter-spacing:-.045em; }
+.steps-ladder-heading .steps-kicker { margin-bottom:5px; }
+.steps-ladder-description { max-width:450px; margin:0 0 2px; color:var(--muted); font-size:.8rem; line-height:1.55; }
+.steps-score-ladder { display:grid; gap:5px; margin:0; padding:0; list-style:none; }
+.steps-score-level { display:grid; grid-template-columns:34px minmax(0,1fr) auto; align-items:center; gap:3px 12px; min-height:47px; padding:5px 12px; border:1px solid transparent; border-radius:13px; background:#f5f1e7; }
+.steps-level-marker { display:grid; grid-row:1 / span 2; width:27px; height:27px; place-items:center; border:1px solid #d7ddce; border-radius:50%; background:#fbfaf3; color:var(--forest); font-size:.68rem; font-weight:900; font-variant-numeric:tabular-nums; }
+.steps-level-threshold { min-width:0; color:var(--deep); font-size:.82rem; font-weight:760; font-variant-numeric:tabular-nums; }
+.steps-level-points { color:var(--forest); font-size:.83rem; font-weight:900; font-variant-numeric:tabular-nums; white-space:nowrap; }
+.steps-level-badge { grid-column:2 / 4; justify-self:start; margin-top:0; padding:3px 8px; border-radius:999px; background:#fce5cc; color:#93451c; font-size:.61rem; font-weight:900; letter-spacing:.015em; line-height:1.25; }
+.steps-score-level.is-current { border-color:#315e49; background:#e7eee2; box-shadow:inset 3px 0 #1c4d3d; }
+.steps-score-level.is-current .steps-level-marker { border-color:#1c4d3d; background:#1c4d3d; color:#fffaf0; }
+.steps-score-level.is-current .steps-level-badge { background:#1c4d3d; color:#fffaf0; }
+.steps-score-level.is-next { border-color:#e7b17b; background:#fff3e3; }
+.steps-score-level.is-next .steps-level-marker { border-color:var(--orange-dark); color:var(--orange-dark); }
+.steps-score-level.is-top-level .steps-level-marker { color:#a46a13; }
+.steps-score-level.is-top-level.is-current .steps-level-marker { color:#ffe6a3; }
 .steps-section-head { display:flex; align-items:end; justify-content:space-between; gap:18px; margin-bottom:16px; }
 .steps-section-head h2,.step-leaderboard-head h2 { margin:0; color:var(--forest); font-size:clamp(1.55rem,4vw,2rem); font-weight:900; letter-spacing:-.045em; }
 .steps-entry-note { margin:0 0 4px; color:var(--muted); font-size:.8rem; }
@@ -78,6 +96,15 @@
   .steps-coverage { max-width:220px; font-size:.72rem; line-height:1.45; }
   .steps-period-progress { padding-left:12px; font-size:.61rem; }
   .steps-period-progress strong { font-size:1.25rem; }
+  .steps-ladder { margin-bottom:29px; padding:19px 14px 20px; border-radius:21px; }
+  .steps-ladder-heading { align-items:flex-start; flex-direction:column; gap:7px; margin-bottom:14px; }
+  .steps-ladder-heading h2 { font-size:1.48rem; }
+  .steps-ladder-description { max-width:none; font-size:.76rem; }
+  .steps-score-ladder { gap:4px; }
+  .steps-score-level { grid-template-columns:30px minmax(0,1fr) auto; gap:2px 8px; min-height:45px; padding:5px 8px; border-radius:11px; }
+  .steps-level-marker { width:25px; height:25px; font-size:.63rem; }
+  .steps-level-threshold,.steps-level-points { font-size:.73rem; }
+  .steps-level-badge { font-size:.58rem; }
   .steps-section-head { align-items:flex-start; flex-direction:column; gap:4px; margin-bottom:12px; }
   .period-grid { grid-template-columns:1fr; gap:10px; }
   .period-card { padding:16px; border-radius:17px; }

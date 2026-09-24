@@ -1,5 +1,5 @@
 (() => {
-  const { PERIODS, calculateWeightedAverage, createProjection } = window.SoberOctoberSteps;
+  const { PERIODS, calculateWeightedAverage, createProjection, getScoreLadder } = window.SoberOctoberSteps;
   const periodKeys = new Set(PERIODS.map((period) => period.key));
   const ui = {
     average: document.querySelector('#steps-average'),
@@ -12,6 +12,7 @@
     scoreFill: document.querySelector('#steps-score-fill'),
     projection: document.querySelector('#steps-projection'),
     nextLevel: document.querySelector('#steps-next-level'),
+    ladder: document.querySelector('#steps-score-ladder'),
     cards: [...document.querySelectorAll('[data-period-card]')],
     forms: [...document.querySelectorAll('.period-form')],
     pageStatus: document.querySelector('#steps-page-status'),
@@ -28,9 +29,45 @@
     element.classList.toggle('is-error', isError);
   }
 
+  function renderScoreLadder(average) {
+    ui.ladder.replaceChildren();
+    getScoreLadder(average).forEach((level) => {
+      const row = document.createElement('li');
+      row.className = `steps-score-level${level.isCurrent ? ' is-current' : ''}${level.isNext ? ' is-next' : ''}${level.isHighest ? ' is-top-level' : ''}`;
+      if (level.isCurrent) row.setAttribute('aria-current', 'step');
+
+      const marker = document.createElement('span');
+      marker.className = 'steps-level-marker';
+      marker.setAttribute('aria-hidden', 'true');
+      marker.textContent = level.isHighest ? '★' : String(level.points);
+
+      const threshold = document.createElement('span');
+      threshold.className = 'steps-level-threshold';
+      threshold.textContent = level.isLowest
+        ? `Under ${stepFormatter.format(level.threshold)} steg/dag`
+        : `${stepFormatter.format(level.threshold)}+ steg/dag`;
+
+      const points = document.createElement('strong');
+      points.className = 'steps-level-points';
+      points.textContent = `${level.points} poäng`;
+
+      row.append(marker, threshold, points);
+      if (level.isCurrent || level.isNext) {
+        const badge = document.createElement('span');
+        badge.className = 'steps-level-badge';
+        badge.textContent = level.isHighest && level.isCurrent
+          ? 'Full pott · Din nivå just nu'
+          : level.isCurrent ? 'Din nivå just nu' : 'Nästa nivå';
+        row.appendChild(badge);
+      }
+      ui.ladder.appendChild(row);
+    });
+  }
+
   function renderSummary(results) {
     const projection = createProjection(results);
     const { average, includedDays, reportedPeriods: count } = projection;
+    renderScoreLadder(average);
     ui.average.textContent = average === null ? '–' : stepFormatter.format(average);
     ui.reported.textContent = `${count}/4`;
     ui.summaryTitle.textContent = projection.final ? 'Ditt slutliga snitt' : 'Ditt snitt hittills';
@@ -83,6 +120,7 @@
   }
 
   function renderSignedOut() {
+    renderScoreLadder(null);
     ui.reported.textContent = '–/4';
     ui.average.textContent = '–';
     ui.summaryTitle.textContent = 'Ditt snitt hittills';
