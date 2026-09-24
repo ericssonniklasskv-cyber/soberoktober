@@ -48,7 +48,7 @@
 
     if (projection.final) {
       ui.projection.textContent = `Stegpoäng: ${projection.points}/20. Resultatet är slutligt.`;
-      ui.nextLevel.textContent = 'Alla fyra perioder är rapporterade.';
+      ui.nextLevel.textContent = 'Samtliga perioder är rapporterade.';
     } else if (average === null) {
       ui.projection.textContent = 'Fyll i en period för att se din prognos.';
       ui.nextLevel.textContent = '';
