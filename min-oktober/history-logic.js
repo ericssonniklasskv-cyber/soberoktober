@@ -156,5 +156,130 @@
     };
   }
 
-  return Object.freeze({ OCTOBER_DATES, REPORT_PERIODS, calculate, closedReportPeriods, nextUnseenReport, buildPeriodReport });
+  function stockholmDateFromInstant(value) {
+    if (!value) return null;
+    const instant = new Date(value);
+    if (!Number.isFinite(instant.getTime())) return null;
+    const parts = new Intl.DateTimeFormat('sv-SE', {
+      timeZone: 'Europe/Stockholm',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    }).formatToParts(instant).reduce((values, part) => {
+      if (part.type !== 'literal') values[part.type] = part.value;
+      return values;
+    }, {});
+    return `${parts.year}-${parts.month}-${parts.day}`;
+  }
+
+  function isFinalReportAvailable({ today, results = [], stepResults = [], competitionStatus = null }) {
+    if (today >= '2026-11-01') return true;
+    if (today !== '2026-10-31') return false;
+    const finalStepPeriodReported = stepResults.some((row) => (
+      row.period_key === 'oct_22_31'
+      && Number.isSafeInteger(Number(row.avg_steps))
+      && Number(row.avg_steps) > 0
+    ));
+    const eliminated = competitionStatus?.status === 'eliminated';
+    const finalPassReported = results.some((row) => row.result_date === '2026-10-31');
+    return finalStepPeriodReported && (eliminated || finalPassReported);
+  }
+
+  function buildFinalReport({
+    results = [],
+    challenges = [],
+    stepResults = [],
+    today,
+    competitionStatus = null,
+    trainingLeaderboard = [],
+    stepLeaderboard = [],
+    displayName = '',
+    stepsLogic,
+  }) {
+    if (!isFinalReportAvailable({ today, results, stepResults, competitionStatus })) return null;
+
+    const isEliminated = competitionStatus?.status === 'eliminated';
+    const eliminationDate = isEliminated ? stockholmDateFromInstant(competitionStatus.eliminated_at) : null;
+    const cutoffDate = isEliminated && eliminationDate
+      ? (eliminationDate < OCTOBER_END ? eliminationDate : OCTOBER_END)
+      : OCTOBER_END;
+    const includedDates = OCTOBER_DATES.filter((date) => date <= cutoffDate);
+    const monthResults = results.filter((result) => (
+      result.result_date >= OCTOBER_START
+      && result.result_date <= cutoffDate
+      && [1, 2, 3].includes(Number(result.multiplier))
+    ));
+    const completedDates = new Set(monthResults.map((result) => result.result_date));
+    const challengeByDate = new Map(challenges.map((challenge) => [challenge.challenge_date, challenge]));
+    const totalsByUnit = new Map();
+    const multiplierCounts = { 1: 0, 2: 0, 3: 0 };
+
+    monthResults.forEach((result) => {
+      const multiplier = Number(result.multiplier);
+      multiplierCounts[multiplier] += 1;
+      const challenge = challengeByDate.get(result.result_date);
+      const baseAmount = Number(challenge?.base_amount);
+      const rawUnit = typeof challenge?.unit === 'string' && challenge.unit.trim()
+        ? challenge.unit.trim()
+        : (typeof challenge?.title === 'string' ? challenge.title.trim() : '');
+      if (!rawUnit || !Number.isFinite(baseAmount) || baseAmount <= 0) return;
+      const key = rawUnit.toLocaleLowerCase('sv-SE');
+      const current = totalsByUnit.get(key) || { unit: rawUnit, amount: 0 };
+      current.amount += baseAmount * multiplier;
+      totalsByUnit.set(key, current);
+    });
+
+    let longestStreak = 0;
+    let streak = 0;
+    includedDates.forEach((date) => {
+      if (completedDates.has(date)) {
+        streak += 1;
+        longestStreak = Math.max(longestStreak, streak);
+      } else {
+        streak = 0;
+      }
+    });
+
+    const trainingEntry = trainingLeaderboard.find((entry) => entry.is_current_user) || null;
+    const stepProjection = stepsLogic?.createProjection(stepResults) || {
+      average: null,
+      reportedPeriods: 0,
+      points: null,
+      final: false,
+    };
+    const stepMatches = stepProjection.average === null || !displayName
+      ? []
+      : stepLeaderboard.filter((entry) => (
+        entry.display_name === displayName
+        && Number(entry.reported_periods) === stepProjection.reportedPeriods
+        && Number(entry.average_steps) === stepProjection.average
+      ));
+
+    return {
+      cutoffDate,
+      completedDays: completedDates.size,
+      missedDays: Math.max(0, includedDates.length - completedDates.size),
+      totalTrainingPoints: monthResults.reduce((total, result) => total + (Number(result.points) || 0), 0),
+      longestStreak,
+      multiplierCounts,
+      mostUsedMultiplier: Object.values(multiplierCounts).some((count) => count > 0)
+        ? [1, 2, 3].reduce((best, level) => multiplierCounts[level] > multiplierCounts[best] ? level : best, 1)
+        : null,
+      exerciseTotals: [...totalsByUnit.values()].sort((a, b) => a.unit.localeCompare(b.unit, 'sv-SE')),
+      competition: {
+        status: isEliminated ? 'eliminated' : competitionStatus?.status === 'active' ? 'active' : 'unknown',
+        eliminationReason: isEliminated ? competitionStatus.elimination_reason || null : null,
+        eliminatedAt: isEliminated ? competitionStatus.eliminated_at || null : null,
+        eliminationDate,
+      },
+      trainingPlacement: trainingEntry ? Number(trainingEntry.rank_position) : null,
+      stepAverage: stepProjection.average,
+      stepReportedPeriods: stepProjection.reportedPeriods,
+      stepPoints: stepProjection.points,
+      stepPlacement: stepMatches.length === 1 ? Number(stepMatches[0].rank_position) : null,
+      stepPlacementAmbiguous: stepMatches.length > 1,
+    };
+  }
+
+  return Object.freeze({ OCTOBER_DATES, REPORT_PERIODS, calculate, closedReportPeriods, nextUnseenReport, buildPeriodReport, isFinalReportAvailable, buildFinalReport });
 }));

@@ -36,6 +36,16 @@
             <div class="weekly-reports-head"><div><p class="kicker">Tillbakablickar</p><h2 id="weekly-reports-title">Veckorapporter</h2></div><p>Små segrar, samlade på hög.</p></div>
             <div class="weekly-report-grid" id="weekly-report-list" aria-live="polite"></div>
           </section>
+          <section class="final-report-section" aria-labelledby="final-report-section-title">
+            <div class="final-report-card is-locked" id="final-report-card">
+              <div class="final-report-card-copy">
+                <p class="weekly-report-label">Säsongsfinal</p>
+                <h2 id="final-report-section-title">Din Sober Oktober 2026</h2>
+                <p class="weekly-report-summary" id="final-report-summary">Slutrapporten låses upp när oktober är över.</p>
+              </div>
+              <button class="weekly-report-action" id="final-report-action" type="button" hidden>Öppna slutrapport →</button>
+            </div>
+          </section>
           <p class="status" id="history-status" role="status"></p>
         </div>
       </section>
@@ -55,6 +65,30 @@
         <ul id="weekly-report-exercises"></ul>
       </section>
       <div class="report-steps" id="weekly-report-steps"></div>
+    </div>
+  </dialog>
+  <dialog class="detail-dialog report-dialog final-report-dialog" id="final-report-detail" aria-labelledby="final-report-title">
+    <div class="detail report-detail final-report-detail">
+      <div class="report-confetti" id="final-report-confetti" aria-hidden="true"></div>
+      <button class="detail-close" id="final-report-close" type="button" aria-label="Stäng slutrapporten">×</button>
+      <p class="detail-kicker" id="final-report-period"></p>
+      <h2 id="final-report-title">Din Sober Oktober 2026</h2>
+      <p class="report-pep" id="final-report-pep"></p>
+      <p class="final-report-status" id="final-report-status"></p>
+      <div class="report-stats final-report-stats" id="final-report-stats"></div>
+      <section class="report-exercises" id="final-report-exercise-section" aria-labelledby="final-report-exercise-title">
+        <h3 id="final-report-exercise-title">Allt du fick gjort</h3>
+        <ul id="final-report-exercises"></ul>
+      </section>
+      <div class="final-report-fun-stats" aria-label="Roliga oktoberfakta">
+        <div><span>Mest använda nivå</span><strong id="final-report-multiplier">–</strong></div>
+        <div><span>Antal 3×-dagar</span><strong id="final-report-threes">0</strong></div>
+      </div>
+      <section class="final-report-step-section" aria-labelledby="final-report-step-title">
+        <div class="final-report-section-head"><p class="kicker">Separat tävling</p><h3 id="final-report-step-title">Stegtävlingen</h3></div>
+        <p class="report-steps" id="final-report-steps"></p>
+        <div class="report-stats final-report-step-stats" id="final-report-step-stats"></div>
+      </section>
     </div>
   </dialog>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.js" defer></script>
