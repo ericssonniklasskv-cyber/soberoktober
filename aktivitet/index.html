@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="sv">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#173f32">
+  <meta name="description" content="Senaste aktiviteterna från Sober Oktober 2026.">
+  <title>Aktivitet · Sober Oktober</title>
+  <link rel="stylesheet" href="/styles/history.css">
+  <link rel="stylesheet" href="/styles/design-system.css">
+  <link rel="stylesheet" href="/styles/activity.css">
+</head>
+<body class="page-history page-activity">
+  <div class="shell">
+    <header class="topbar"><a class="brand" href="/"><span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 4C11 4.5 5 9.5 5 16c0 2.7 2.2 4.5 4.8 4.5C17.5 20.5 21.5 11.4 20 4Z"/></svg></span>Sober Oktober</a><a class="home-link" href="/">Till startsidan</a></header>
+    <nav class="main-nav" aria-label="Huvudnavigation"><a href="/#dagens-pass">Dagens pass</a><a href="/min-oktober/">Min oktober</a><a href="/#topplista">Topplista</a><a class="activity-nav" aria-current="page" href="/aktivitet/">Aktivitet</a></nav>
+    <main>
+      <section class="hero activity-hero"><p class="kicker">Små segrar sprider sig</p><h1>Aktivitet</h1><p class="intro">De senaste passen från hela gänget. En uppgradering håller ihop med dagens pass.</p></section>
+      <section class="panel activity-panel" aria-labelledby="activity-title">
+        <div class="activity-page-heading"><div><p class="kicker">Sober Oktober 2026</p><h2 id="activity-title">Senaste först</h2></div><span class="activity-live-mark"><i aria-hidden="true"></i>Gruppens flöde</span></div>
+        <ol class="activity-list" id="activity-list" aria-live="polite"><li class="activity-empty">Laddar aktivitet…</li></ol>
+        <p class="activity-page-status" id="activity-status" role="status"></p>
+        <button class="activity-more" id="activity-more" type="button" hidden>Visa äldre aktiviteter</button>
+      </section>
+    </main>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.js" defer></script>
+  <script src="/aktivitet/activity-logic.js" defer></script>
+  <script src="/aktivitet/activity-shared.js" defer></script>
+  <script src="/aktivitet/activity.js" defer></script>
+</body>
+</html>

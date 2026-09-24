@@ -10,6 +10,7 @@
   <link rel="stylesheet" href="/trump-quote.css">
   <link rel="stylesheet" href="/styles/home.css">
   <link rel="stylesheet" href="/styles/design-system.css">
+  <link rel="stylesheet" href="/styles/activity.css">
   <link rel="stylesheet" href="/styles/elimination.css">
 </head>
 <body class="page-home entry-active">
@@ -89,6 +90,7 @@
         <p class="leaderboard-preview-status" data-leaderboard-preview-status role="status"></p>
       </aside>
       </div>
+      <div class="challenge-layout">
       <section class="challenge-card" id="dagens-pass" aria-labelledby="challenge-title">
         <div class="feedback" id="feedback" role="status" aria-live="polite">
           <span class="feedback-icon" aria-hidden="true">✓</span>
@@ -112,6 +114,13 @@
         <p class="save-status" id="save-status" role="status" aria-live="polite"></p>
         <p class="motivation"><b>●</b> Små segrar räknas också. Särskilt idag.</p>
       </section>
+      <aside class="activity-preview" aria-labelledby="activity-preview-title">
+        <div class="activity-preview-head"><span class="activity-preview-icon" aria-hidden="true">↗</span><div><h2 id="activity-preview-title">Senaste aktivitet</h2><p>Små segrar sprider sig.</p></div></div>
+        <ol class="activity-preview-list" id="activity-preview-list" aria-live="polite"><li class="activity-empty">Laddar senaste passen…</li></ol>
+        <p class="activity-preview-status" id="activity-preview-status" role="status"></p>
+        <a class="activity-preview-link" href="/aktivitet/">Visa all aktivitet</a>
+      </aside>
+      </div>
       <section class="home-history-card" id="home-history-card" aria-labelledby="home-history-title" hidden>
         <div>
           <p class="home-history-kicker">Din utmaning</p>
@@ -221,6 +230,9 @@
     };
   </script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.js" defer></script>
+  <script src="/aktivitet/activity-logic.js" defer></script>
+  <script src="/aktivitet/activity-shared.js" defer></script>
+  <script src="/aktivitet/activity-preview.js" defer></script>
   <script src="/elimination.js" defer></script>
   <script src="/min-oktober/history-logic.js" defer></script>
   <script src="/auth.js" defer></script>
