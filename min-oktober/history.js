@@ -13,6 +13,7 @@
     longestStreak: document.querySelector('#longest-streak'),
     identity: document.querySelector('#history-identity'),
     calendar: document.querySelector('#history-calendar'),
+    weeklyReportList: document.querySelector('#weekly-report-list'),
     historyStatus: document.querySelector('#history-status'),
     detail: document.querySelector('#day-detail'),
     detailClose: document.querySelector('#detail-close'),
@@ -21,12 +22,46 @@
     detailDescription: document.querySelector('#detail-description'),
     detailLevel: document.querySelector('#detail-level'),
     detailPoints: document.querySelector('#detail-points'),
+    reportDetail: document.querySelector('#weekly-report-detail'),
+    reportDetailClose: document.querySelector('#report-detail-close'),
+    reportPeriod: document.querySelector('#weekly-report-period'),
+    reportTitle: document.querySelector('#weekly-report-detail-title'),
+    reportPep: document.querySelector('#weekly-report-pep'),
+    reportStats: document.querySelector('#weekly-report-stats'),
+    reportExerciseSection: document.querySelector('#weekly-report-exercise-section'),
+    reportExercises: document.querySelector('#weekly-report-exercises'),
+    reportSteps: document.querySelector('#weekly-report-steps'),
+    reportConfetti: document.querySelector('#report-confetti'),
   };
 
   let client;
   let sessionWork = Promise.resolve();
   let challengesByDate = new Map();
+  let weeklyReports = new Map();
+  let activeUserId = null;
   const pointsFormatter = new Intl.NumberFormat('sv-SE', { maximumFractionDigits: 1 });
+  const reportSeenStorageKey = (userId) => `soberoktober:weekly-reports-seen:${userId}`;
+
+  function seenReportKeys() {
+    try {
+      const saved = JSON.parse(localStorage.getItem(reportSeenStorageKey(activeUserId)) || '[]');
+      return new Set(Array.isArray(saved) ? saved.filter((key) => typeof key === 'string') : []);
+    } catch (_error) {
+      return new Set();
+    }
+  }
+
+  function markReportSeen(key) {
+    const seen = seenReportKeys();
+    const wasNew = !seen.has(key);
+    seen.add(key);
+    try {
+      localStorage.setItem(reportSeenStorageKey(activeUserId), JSON.stringify([...seen]));
+    } catch (_error) {
+      // The report remains available even when browser storage is unavailable.
+    }
+    return wasNew;
+  }
 
   function stockholmDate() {
     const parts = new Intl.DateTimeFormat('sv-SE', {
@@ -114,6 +149,148 @@
     ui.calendar.replaceChildren(...cells);
   }
 
+  function formatNumber(value) {
+    return pointsFormatter.format(value);
+  }
+
+  function createReportCard(period, report, seen) {
+    const card = document.createElement('article');
+    card.className = `weekly-report-card${report ? ' is-available' : ' is-locked'}`;
+
+    const eyebrow = document.createElement('p');
+    eyebrow.className = 'weekly-report-label';
+    eyebrow.textContent = period.label;
+
+    const title = document.createElement('h3');
+    title.textContent = period.title;
+
+    const summary = document.createElement('p');
+    summary.className = 'weekly-report-summary';
+    summary.textContent = report
+      ? `${report.completedDays} av ${period.days} dagar · ${formatNumber(report.trainingPoints)} träningspoäng`
+      : (period.start > stockholmDate() ? 'Låst tills perioden är avslutad' : 'Pågår fortfarande');
+
+    const action = document.createElement(report ? 'button' : 'span');
+    action.className = report ? 'weekly-report-action' : 'weekly-report-lock';
+    if (report) {
+      action.type = 'button';
+      action.dataset.periodKey = period.key;
+      action.textContent = seen.has(period.key) ? 'Öppna rapport →' : 'Ny rapport · öppna →';
+      action.addEventListener('click', () => openWeeklyReport(period.key));
+      action.setAttribute('aria-label', `${seen.has(period.key) ? 'Öppna' : 'Ny'} rapport: ${period.title}, ${period.label}`);
+    } else {
+      action.textContent = 'Kommer snart';
+      action.setAttribute('aria-label', `Rapporten för ${period.title} är låst`);
+    }
+
+    if (report && !seen.has(period.key)) {
+      const badge = document.createElement('span');
+      badge.className = 'weekly-report-new';
+      badge.textContent = 'Ny';
+      card.append(eyebrow, title, badge, summary, action);
+    } else {
+      card.append(eyebrow, title, summary, action);
+    }
+    return card;
+  }
+
+  function renderWeeklyReports(results, challenges, stepResults, today) {
+    const seen = seenReportKeys();
+    weeklyReports = new Map();
+    const cards = window.SoberOctoberHistory.REPORT_PERIODS.map((period) => {
+      const report = window.SoberOctoberHistory.buildPeriodReport({
+        results,
+        challenges,
+        stepResults,
+        periodKey: period.key,
+        today,
+        stepsLogic: window.SoberOctoberSteps,
+      });
+      if (report) weeklyReports.set(period.key, report);
+      return createReportCard(period, report, seen);
+    });
+    ui.weeklyReportList.replaceChildren(...cards);
+  }
+
+  function addReportConfetti() {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const colors = ['#ef8537', '#204b3b', '#e9b674', '#a8bd9b'];
+    ui.reportConfetti.replaceChildren();
+    for (let index = 0; index < 28; index += 1) {
+      const piece = document.createElement('i');
+      piece.style.setProperty('--confetti-x', `${Math.random() * 100}%`);
+      piece.style.setProperty('--confetti-color', colors[index % colors.length]);
+      piece.style.setProperty('--confetti-delay', `${Math.random() * 220}ms`);
+      piece.className = 'report-confetti-piece';
+      ui.reportConfetti.appendChild(piece);
+      piece.addEventListener('animationend', () => piece.remove(), { once: true });
+    }
+  }
+
+  function openWeeklyReport(periodKey) {
+    const report = weeklyReports.get(periodKey);
+    if (!report) return;
+    const wasNew = markReportSeen(periodKey);
+    ui.reportPeriod.textContent = report.label;
+    ui.reportTitle.textContent = `${report.title} är klar!`;
+    ui.reportPep.textContent = report.completedDays === report.days
+      ? 'Hela perioden avklarad. Du kan vara riktigt nöjd med den insatsen.'
+      : report.completedDays > 0
+        ? `Du var med ${report.completedDays} av ${report.days} dagar. Varje pass du gjorde räknas.`
+        : 'En period i backspegeln. Nästa chans väntar när du är redo.';
+
+    const stats = [
+      ['Genomförda dagar', `${report.completedDays} av ${report.days}`],
+      ['Missade dagar', String(report.missedDays)],
+      ['Träningspoäng', `${formatNumber(report.trainingPoints)} p`],
+      ['3×-dagar', String(report.multiplierCounts[3])],
+      ['Bästa streak', `${report.bestStreak} ${report.bestStreak === 1 ? 'dag' : 'dagar'}`],
+    ];
+    ui.reportStats.replaceChildren(...stats.map(([label, value]) => {
+      const item = document.createElement('div');
+      item.className = 'report-stat';
+      const name = document.createElement('span');
+      name.textContent = label;
+      const amount = document.createElement('strong');
+      amount.textContent = value;
+      item.append(name, amount);
+      return item;
+    }));
+
+    const exercises = report.exerciseTotals.map((total) => {
+      const item = document.createElement('li');
+      const amount = document.createElement('strong');
+      amount.textContent = `${formatNumber(total.amount)} ${total.unit}`;
+      item.appendChild(amount);
+      return item;
+    });
+    ui.reportExercises.replaceChildren(...exercises);
+    ui.reportExerciseSection.hidden = exercises.length === 0;
+
+    if (report.stepAverage === null) {
+      ui.reportSteps.textContent = 'Steg för perioden är inte rapporterade ännu.';
+      ui.reportSteps.classList.add('is-unreported');
+    } else {
+      ui.reportSteps.textContent = `${formatNumber(report.stepAverage)} steg/dag i snitt · ${report.stepPoints}/20 möjliga stegpoäng om du håller samma snitt.`;
+      ui.reportSteps.classList.remove('is-unreported');
+    }
+
+    ui.reportDetail.showModal();
+    if (wasNew) addReportConfetti();
+    renderWeeklyReportsFromCache();
+  }
+
+  function renderWeeklyReportsFromCache() {
+    const seen = seenReportKeys();
+    ui.weeklyReportList.querySelectorAll('.weekly-report-action').forEach((action) => {
+      const key = action.dataset.periodKey;
+      if (!seen.has(key)) return;
+      action.closest('.weekly-report-card')?.querySelector('.weekly-report-new')?.remove();
+      action.textContent = 'Öppna rapport →';
+      action.setAttribute('aria-label', `Öppna rapport: ${action.closest('.weekly-report-card')?.querySelector('h3')?.textContent}`);
+    });
+  }
+
   function renderHistory(results, displayName) {
     const today = stockholmDate();
     const history = window.SoberOctoberHistory.calculate(results, today);
@@ -135,10 +312,11 @@
 
   async function loadHistory(session) {
     ui.historyStatus.textContent = '';
-    const [resultsResponse, challengesResponse, profileResponse] = await Promise.all([
+    const [resultsResponse, challengesResponse, stepResultsResponse, profileResponse] = await Promise.all([
       client
         .from('daily_results')
         .select('result_date, multiplier, points')
+        .eq('user_id', session.user.id)
         .gte('result_date', '2026-10-01')
         .lte('result_date', '2026-10-31')
         .order('result_date'),
@@ -149,6 +327,10 @@
         .lte('challenge_date', '2026-10-31')
         .order('challenge_date'),
       client
+        .from('step_period_results')
+        .select('period_key, avg_steps')
+        .eq('user_id', session.user.id),
+      client
         .from('profiles')
         .select('display_name')
         .eq('id', session.user.id)
@@ -157,10 +339,22 @@
 
     if (resultsResponse.error) throw resultsResponse.error;
     if (challengesResponse.error) throw challengesResponse.error;
+    if (stepResultsResponse.error) throw stepResultsResponse.error;
     if (profileResponse.error) throw profileResponse.error;
 
-    challengesByDate = new Map((challengesResponse.data || []).map((challenge) => [challenge.challenge_date, challenge]));
-    renderHistory(resultsResponse.data || [], profileResponse.data?.display_name);
+    const results = resultsResponse.data || [];
+    const challenges = challengesResponse.data || [];
+    const stepResults = stepResultsResponse.data || [];
+    challengesByDate = new Map(challenges.map((challenge) => [challenge.challenge_date, challenge]));
+    activeUserId = session.user.id;
+    renderHistory(results, profileResponse.data?.display_name);
+    renderWeeklyReports(results, challenges, stepResults, stockholmDate());
+
+    const requestedReport = new URLSearchParams(window.location.search).get('rapport');
+    if (requestedReport && weeklyReports.has(requestedReport)) {
+      openWeeklyReport(requestedReport);
+      window.history.replaceState({}, '', `${window.location.pathname}${window.location.hash}`);
+    }
   }
 
   async function handleSession(session) {
@@ -196,6 +390,10 @@
   ui.detailClose.addEventListener('click', () => ui.detail.close());
   ui.detail.addEventListener('click', (event) => {
     if (event.target === ui.detail) ui.detail.close();
+  });
+  ui.reportDetailClose.addEventListener('click', () => ui.reportDetail.close());
+  ui.reportDetail.addEventListener('click', (event) => {
+    if (event.target === ui.reportDetail) ui.reportDetail.close();
   });
 
   async function init() {

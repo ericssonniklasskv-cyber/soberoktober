@@ -31,13 +31,33 @@
           <div class="weekdays" aria-hidden="true"><span class="weekday">Mån</span><span class="weekday">Tis</span><span class="weekday">Ons</span><span class="weekday">Tor</span><span class="weekday">Fre</span><span class="weekday">Lör</span><span class="weekday">Sön</span></div>
           <div class="calendar" id="history-calendar" aria-label="Din kalender för oktober 2026"></div>
           <div class="legend"><span><i class="done"></i>Genomförd</span><span><i class="lost"></i>Missad</span><span><i class="ahead"></i>Framtida</span></div>
+          <section class="weekly-reports" aria-labelledby="weekly-reports-title">
+            <div class="weekly-reports-head"><div><p class="kicker">Tillbakablickar</p><h2 id="weekly-reports-title">Veckorapporter</h2></div><p>Små segrar, samlade på hög.</p></div>
+            <div class="weekly-report-grid" id="weekly-report-list" aria-live="polite"></div>
+          </section>
           <p class="status" id="history-status" role="status"></p>
         </div>
       </section>
     </main>
   </div>
   <dialog class="detail-dialog" id="day-detail" aria-labelledby="detail-title"><div class="detail"><button class="detail-close" id="detail-close" type="button" aria-label="Stäng detaljvyn">×</button><p class="detail-kicker" id="detail-date"></p><h2 id="detail-title"></h2><p class="detail-description" id="detail-description"></p><div class="detail-result"><div><span>Nivå</span><strong id="detail-level"></strong></div><div><span>Poäng</span><strong id="detail-points"></strong></div></div></div></dialog>
+  <dialog class="detail-dialog report-dialog" id="weekly-report-detail" aria-labelledby="weekly-report-detail-title">
+    <div class="detail report-detail">
+      <div class="report-confetti" id="report-confetti" aria-hidden="true"></div>
+      <button class="detail-close" id="report-detail-close" type="button" aria-label="Stäng veckorapporten">×</button>
+      <p class="detail-kicker" id="weekly-report-period"></p>
+      <h2 id="weekly-report-detail-title">Veckan är klar!</h2>
+      <p class="report-pep" id="weekly-report-pep"></p>
+      <div class="report-stats" id="weekly-report-stats"></div>
+      <section class="report-exercises" id="weekly-report-exercise-section" aria-labelledby="weekly-report-exercise-title">
+        <h3 id="weekly-report-exercise-title">Det du fick gjort</h3>
+        <ul id="weekly-report-exercises"></ul>
+      </section>
+      <div class="report-steps" id="weekly-report-steps"></div>
+    </div>
+  </dialog>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.js" defer></script>
+  <script src="/stegtavling/steps-logic.js" defer></script>
   <script src="/min-oktober/history-logic.js" defer></script>
   <script src="/min-oktober/history.js" defer></script>
 </body>

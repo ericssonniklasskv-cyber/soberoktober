@@ -34,6 +34,7 @@
     homeTotalPoints: document.querySelector('#home-total-points'),
     homeCompletedDays: document.querySelector('#home-completed-days'),
     homeCurrentStreak: document.querySelector('#home-current-streak'),
+    homeWeeklyReport: document.querySelector('#home-weekly-report'),
     homeHistoryStatus: document.querySelector('#home-history-status'),
     appShell: document.querySelector('#app-shell'),
     entryGate: document.querySelector('#entry-gate'),
@@ -183,6 +184,24 @@
     ui.homeCurrentStreak.textContent = `${october.currentStreak} ${streakWord}`;
     ui.homeHistoryStatus.textContent = '';
     ui.homeHistoryCard.hidden = false;
+    renderWeeklyReportCta();
+  }
+
+  function renderWeeklyReportCta() {
+    if (!session?.user?.id || !window.SoberOctoberHistory?.nextUnseenReport) {
+      ui.homeWeeklyReport.hidden = true;
+      return;
+    }
+    let seenKeys = [];
+    try {
+      const saved = JSON.parse(localStorage.getItem(`soberoktober:weekly-reports-seen:${session.user.id}`) || '[]');
+      if (Array.isArray(saved)) seenKeys = saved;
+    } catch (_error) {
+      seenKeys = [];
+    }
+    const period = window.SoberOctoberHistory.nextUnseenReport(stockholmDate(), seenKeys);
+    ui.homeWeeklyReport.hidden = !period;
+    if (period) ui.homeWeeklyReport.href = `/min-oktober/?rapport=${encodeURIComponent(period.key)}`;
   }
 
   async function loadResults() {
