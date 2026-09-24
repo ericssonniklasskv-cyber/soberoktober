@@ -103,3 +103,10 @@ test('no reported periods produces no average or projected points', () => {
     nextLevel: null,
   });
 });
+
+test('score ladder is presented from highest to lowest points', () => {
+  const ladder = getScoreLadder(null);
+  assert.deepEqual(ladder.map((level) => level.points), [20, 18, 16, 14, 12, 10, 7, 4, 0]);
+  assert.equal(ladder[0].minimum, 12000);
+  assert.equal(ladder.at(-1).isLowest, true);
+});

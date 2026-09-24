@@ -85,7 +85,7 @@
       threshold: index === 0 ? SCORE_LEVELS[index + 1].minimum : level.minimum,
       isCurrent: hasAverage && level.points === currentPoints,
       isNext: nextLevel?.minimum === level.minimum,
-    }));
+    })).reverse();
   }
 
   return Object.freeze({ PERIODS, SCORE_LEVELS, calculateWeightedAverage, pointsForAverage, nextLevelForAverage, createProjection, getScoreLadder });
