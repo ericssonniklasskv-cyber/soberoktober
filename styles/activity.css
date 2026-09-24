@@ -20,6 +20,10 @@
   box-shadow:0 12px 36px rgba(44,59,49,.08);
   backdrop-filter:blur(10px)
 }
+@media(min-width:1271px) {
+  .hero-registered { top:-40px }
+  .activity-preview { top:-18px }
+}
 .activity-preview-head {
   display:flex;
   align-items:center;
