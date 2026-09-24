@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="sv">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#173f32">
+  <meta name="description" content="Rapportera dina periodssnitt och följ stegtävlingen i Sober Oktober.">
+  <title>Stegtävlingen · Sober Oktober</title>
+  <link rel="stylesheet" href="/styles/history.css">
+  <link rel="stylesheet" href="/styles/design-system.css">
+  <link rel="stylesheet" href="/styles/steps.css">
+</head>
+<body class="page-steps">
+  <div class="shell">
+    <header class="topbar">
+      <a class="brand" href="/" aria-label="Sober Oktober, startsida"><span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 4C11 4.5 5 9.5 5 16c0 2.7 2.2 4.5 4.8 4.5C17.5 20.5 21.5 11.4 20 4Z"/></svg></span>Sober Oktober</a>
+      <a class="home-link" href="/">Till startsidan</a>
+    </header>
+
+    <main class="steps-main">
+      <header class="steps-hero">
+        <p class="steps-kicker">Hela månaden, steg för steg</p>
+        <h1>Steg<span>tävlingen</span></h1>
+        <p class="steps-intro">Fyll i ditt genomsnitt för varje period. Vi väger ihop dagarna som faktiskt är rapporterade — saknade perioder räknas inte som noll.</p>
+      </header>
+
+      <section class="steps-summary panel" aria-labelledby="steps-summary-title">
+        <div class="steps-summary-main">
+          <p class="steps-summary-kicker" id="steps-summary-title">Ditt snitt hittills</p>
+          <p class="steps-average"><strong id="steps-average">–</strong><span>steg/dag</span></p>
+          <p class="steps-coverage" id="steps-coverage">Logga in för att se ditt snitt.</p>
+        </div>
+        <div class="steps-period-progress" aria-live="polite"><strong id="reported-count">0/4</strong><span>perioder rapporterade</span></div>
+      </section>
+
+      <section class="steps-entry-section" aria-labelledby="periods-title">
+        <div class="steps-section-head">
+          <div><p class="steps-kicker">Dina rapporter</p><h2 id="periods-title">Fyra perioder</h2></div>
+          <p class="steps-entry-note">Ett snitt per dag för hela perioden.</p>
+        </div>
+        <div class="steps-login-note" id="steps-login-note" hidden>
+          <p>Logga in för att fylla i och se dina egna perioder.</p>
+          <button class="steps-login-button" id="steps-login" type="button">Logga in med Google</button>
+          <p class="steps-status" id="login-status" role="status" aria-live="polite"></p>
+        </div>
+        <div class="period-grid" id="period-grid">
+          <article class="period-card" data-period-card="oct_01_07">
+            <div class="period-card-head"><span class="period-number">01</span><div><h3>1–7 oktober</h3><p>7 dagar</p></div><span class="period-status">Saknas</span></div>
+            <form class="period-form" data-period="oct_01_07">
+              <label for="steps-oct-01-07">Snittsteg per dag</label>
+              <div class="steps-input-row"><input id="steps-oct-01-07" name="avg_steps" type="text" inputmode="numeric" pattern="[0-9 ]*" autocomplete="off" placeholder="t.ex. 12 430" maxlength="8" aria-describedby="steps-oct-01-07-help"><span>steg/dag</span></div>
+              <p class="period-help" id="steps-oct-01-07-help">Heltal mellan 1 och 100 000.</p>
+              <button class="period-save" type="submit">Spara period</button>
+              <p class="period-feedback" role="status" aria-live="polite"></p>
+            </form>
+          </article>
+          <article class="period-card" data-period-card="oct_08_14">
+            <div class="period-card-head"><span class="period-number">02</span><div><h3>8–14 oktober</h3><p>7 dagar</p></div><span class="period-status">Saknas</span></div>
+            <form class="period-form" data-period="oct_08_14">
+              <label for="steps-oct-08-14">Snittsteg per dag</label>
+              <div class="steps-input-row"><input id="steps-oct-08-14" name="avg_steps" type="text" inputmode="numeric" pattern="[0-9 ]*" autocomplete="off" placeholder="t.ex. 12 430" maxlength="8" aria-describedby="steps-oct-08-14-help"><span>steg/dag</span></div>
+              <p class="period-help" id="steps-oct-08-14-help">Heltal mellan 1 och 100 000.</p>
+              <button class="period-save" type="submit">Spara period</button>
+              <p class="period-feedback" role="status" aria-live="polite"></p>
+            </form>
+          </article>
+          <article class="period-card" data-period-card="oct_15_21">
+            <div class="period-card-head"><span class="period-number">03</span><div><h3>15–21 oktober</h3><p>7 dagar</p></div><span class="period-status">Saknas</span></div>
+            <form class="period-form" data-period="oct_15_21">
+              <label for="steps-oct-15-21">Snittsteg per dag</label>
+              <div class="steps-input-row"><input id="steps-oct-15-21" name="avg_steps" type="text" inputmode="numeric" pattern="[0-9 ]*" autocomplete="off" placeholder="t.ex. 12 430" maxlength="8" aria-describedby="steps-oct-15-21-help"><span>steg/dag</span></div>
+              <p class="period-help" id="steps-oct-15-21-help">Heltal mellan 1 och 100 000.</p>
+              <button class="period-save" type="submit">Spara period</button>
+              <p class="period-feedback" role="status" aria-live="polite"></p>
+            </form>
+          </article>
+          <article class="period-card period-card-long" data-period-card="oct_22_31">
+            <div class="period-card-head"><span class="period-number">04</span><div><h3>22–31 oktober</h3><p>10 dagar</p></div><span class="period-status">Saknas</span></div>
+            <form class="period-form" data-period="oct_22_31">
+              <label for="steps-oct-22-31">Snittsteg per dag</label>
+              <div class="steps-input-row"><input id="steps-oct-22-31" name="avg_steps" type="text" inputmode="numeric" pattern="[0-9 ]*" autocomplete="off" placeholder="t.ex. 12 430" maxlength="8" aria-describedby="steps-oct-22-31-help"><span>steg/dag</span></div>
+              <p class="period-help" id="steps-oct-22-31-help">Heltal mellan 1 och 100 000.</p>
+              <button class="period-save" type="submit">Spara period</button>
+              <p class="period-feedback" role="status" aria-live="polite"></p>
+            </form>
+          </article>
+        </div>
+        <p class="steps-page-status" id="steps-page-status" role="status" aria-live="polite"></p>
+      </section>
+
+      <section class="step-leaderboard panel" aria-labelledby="step-leaderboard-title">
+        <div class="step-leaderboard-head"><div><p class="steps-kicker">Alla deltagares snitt</p><h2 id="step-leaderboard-title">Stegtopplista</h2></div><span class="step-leaderboard-mark" aria-hidden="true">👟</span></div>
+        <p class="step-leaderboard-copy">Snittet vägs efter antal dagar i rapporterade perioder. Antalet perioder visas så jämförelsen är tydlig.</p>
+        <ol class="step-leaderboard-list" id="step-leaderboard-list" aria-live="polite"><li class="step-leaderboard-empty">Laddar stegtopplistan…</li></ol>
+        <p class="step-leaderboard-status" id="step-leaderboard-status" role="status" aria-live="polite"></p>
+      </section>
+    </main>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.js" defer></script>
+  <script src="/stegtavling/steps.js" defer></script>
+</body>
+</html>

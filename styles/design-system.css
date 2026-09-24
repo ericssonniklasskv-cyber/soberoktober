@@ -54,9 +54,9 @@ h1, h2, h3 { text-wrap: balance; }
 .panel { border: 1px solid var(--line); border-radius: var(--radius-lg); background: var(--paper); box-shadow: none; backdrop-filter: none; }
 .main-nav {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 4px;
-  max-width: 490px;
+  max-width: 640px;
   margin: 0 auto 44px;
   padding: 5px;
   border: 1px solid var(--line);

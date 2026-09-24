@@ -93,9 +93,9 @@ button {
 }
 .main-nav {
   display:grid;
-  grid-template-columns:repeat(3,minmax(0,1fr));
+  grid-template-columns:repeat(4,minmax(0,1fr));
   gap:6px;
-  max-width:520px;
+  max-width:640px;
   margin:0 auto 38px;
   padding:5px;
   border:1px solid rgba(23,63,50,.1);
