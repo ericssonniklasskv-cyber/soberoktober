@@ -32,6 +32,23 @@
     reportExercises: document.querySelector('#weekly-report-exercises'),
     reportSteps: document.querySelector('#weekly-report-steps'),
     reportConfetti: document.querySelector('#report-confetti'),
+    finalReportCard: document.querySelector('#final-report-card'),
+    finalReportSummary: document.querySelector('#final-report-summary'),
+    finalReportAction: document.querySelector('#final-report-action'),
+    finalReportDetail: document.querySelector('#final-report-detail'),
+    finalReportClose: document.querySelector('#final-report-close'),
+    finalReportPeriod: document.querySelector('#final-report-period'),
+    finalReportTitle: document.querySelector('#final-report-title'),
+    finalReportPep: document.querySelector('#final-report-pep'),
+    finalReportStats: document.querySelector('#final-report-stats'),
+    finalReportStatus: document.querySelector('#final-report-status'),
+    finalReportExerciseSection: document.querySelector('#final-report-exercise-section'),
+    finalReportExercises: document.querySelector('#final-report-exercises'),
+    finalReportMultiplier: document.querySelector('#final-report-multiplier'),
+    finalReportThrees: document.querySelector('#final-report-threes'),
+    finalReportSteps: document.querySelector('#final-report-steps'),
+    finalReportStepStats: document.querySelector('#final-report-step-stats'),
+    finalReportConfetti: document.querySelector('#final-report-confetti'),
   };
 
   let client;
@@ -40,8 +57,10 @@
   let weeklyReports = new Map();
   let activeUserId = null;
   let stepResultsUnavailable = false;
+  let finalReportData = null;
   const pointsFormatter = new Intl.NumberFormat('sv-SE', { maximumFractionDigits: 1 });
   const reportSeenStorageKey = (userId) => `soberoktober:weekly-reports-seen:${userId}`;
+  const finalReportSeenStorageKey = (userId) => `soberoktober:final-report-seen:${userId}`;
 
   function seenReportKeys() {
     try {
@@ -62,6 +81,17 @@
       // The report remains available even when browser storage is unavailable.
     }
     return wasNew;
+  }
+
+  function markFinalReportSeen() {
+    try {
+      const key = finalReportSeenStorageKey(activeUserId);
+      const wasNew = localStorage.getItem(key) !== 'yes';
+      localStorage.setItem(key, 'yes');
+      return wasNew;
+    } catch (_error) {
+      return false;
+    }
   }
 
   function stockholmDate() {
@@ -213,17 +243,50 @@
     ui.weeklyReportList.replaceChildren(...cards);
   }
 
+  function renderFinalReportAccess(today, results, stepResults, competitionStatus) {
+    const unlocked = Boolean(finalReportData);
+    ui.finalReportCard.classList.toggle('is-available', unlocked);
+    ui.finalReportCard.classList.toggle('is-locked', !unlocked);
+    ui.finalReportAction.hidden = !unlocked;
+    if (unlocked) {
+      ui.finalReportSummary.textContent = 'Hela oktober samlad i en sista tillbakablick.';
+      return;
+    }
+    if (today < '2026-10-31') {
+      ui.finalReportSummary.textContent = competitionStatus?.status === 'eliminated'
+        ? 'Öppnar den 31 oktober när sista stegperioden är rapporterad.'
+        : 'Öppnar den 31 oktober när dagens pass och sista stegperioden är rapporterade.';
+      return;
+    }
+    const eliminated = competitionStatus?.status === 'eliminated';
+    const hasFinalPass = results.some((row) => row.result_date === '2026-10-31');
+    const hasFinalStepPeriod = stepResults.some((row) => row.period_key === 'oct_22_31');
+    if (!eliminated && !hasFinalPass && !hasFinalStepPeriod) {
+      ui.finalReportSummary.textContent = 'Registrera dagens pass och rapportera stegsnittet för 22–31 oktober för att låsa upp rapporten.';
+    } else if (!eliminated && !hasFinalPass) {
+      ui.finalReportSummary.textContent = 'Registrera dagens pass för att låsa upp rapporten.';
+    } else if (!hasFinalStepPeriod) {
+      ui.finalReportSummary.textContent = 'Rapportera stegsnittet för 22–31 oktober för att låsa upp rapporten.';
+    } else {
+      ui.finalReportSummary.textContent = 'Rapporten låses upp när dagens tävlingsstatus har synkroniserats.';
+    }
+  }
+
   function addReportConfetti() {
+    addReportConfettiTo(ui.reportConfetti);
+  }
+
+  function addReportConfettiTo(container) {
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     const colors = ['#ef8537', '#204b3b', '#e9b674', '#a8bd9b'];
-    ui.reportConfetti.replaceChildren();
+    container.replaceChildren();
     for (let index = 0; index < 28; index += 1) {
       const piece = document.createElement('i');
       piece.style.setProperty('--confetti-x', `${Math.random() * 100}%`);
       piece.style.setProperty('--confetti-color', colors[index % colors.length]);
       piece.style.setProperty('--confetti-delay', `${Math.random() * 220}ms`);
       piece.className = 'report-confetti-piece';
-      ui.reportConfetti.appendChild(piece);
+      container.appendChild(piece);
       piece.addEventListener('animationend', () => piece.remove(), { once: true });
     }
   }
@@ -295,6 +358,81 @@
     });
   }
 
+  function createReportStats(stats) {
+    return stats.map(([label, value]) => {
+      const item = document.createElement('div');
+      item.className = 'report-stat';
+      const name = document.createElement('span');
+      name.textContent = label;
+      const amount = document.createElement('strong');
+      amount.textContent = value;
+      item.append(name, amount);
+      return item;
+    });
+  }
+
+  function openFinalReport() {
+    if (!finalReportData) return;
+    const report = finalReportData;
+    const eliminated = report.competition.status === 'eliminated';
+    ui.finalReportPeriod.textContent = eliminated ? 'DIN TÄVLING TOG SLUT HÄR' : 'HELA OKTOBER · 1–31 OKTOBER';
+    ui.finalReportTitle.textContent = 'Din Sober Oktober 2026';
+    ui.finalReportPep.textContent = report.completedDays === 31
+      ? '31 dagar. En hel månad där du dök upp för dig själv. Starkt gjort.'
+      : report.completedDays > 0
+        ? `${report.completedDays} genomförda dagar. Varje pass blev en del av din oktober.`
+        : 'Oktober är i backspegeln. Här är allt som finns kvar från din utmaning.';
+    ui.finalReportStatus.className = `final-report-status${eliminated ? ' is-eliminated' : report.competition.status === 'active' ? ' is-active' : ' is-unknown'}`;
+    ui.finalReportStatus.textContent = eliminated
+      ? `UTSLAGEN${report.competition.eliminationReason ? ` · ${report.competition.eliminationReason}` : ''}${report.competition.eliminationDate ? ` · ${formatDate(report.competition.eliminationDate)}` : ''}`
+      : report.competition.status === 'active'
+        ? 'AKTIV · Du höll dig kvar i tävlingen hela oktober'
+        : 'Tävlingsstatusen kunde inte hämtas just nu.';
+
+    const trainingPlace = report.trainingPlacement === null ? 'Ej tillgänglig' : `${report.trainingPlacement}:e plats`;
+    ui.finalReportStats.replaceChildren(...createReportStats([
+      ['Total träningspoäng', `${formatNumber(report.totalTrainingPoints)} p`],
+      ['Genomförda dagar', `${report.completedDays} av ${report.completedDays + report.missedDays}`],
+      ['Missade dagar', String(report.missedDays)],
+      ['Längsta streak', `${report.longestStreak} ${report.longestStreak === 1 ? 'dag' : 'dagar'}`],
+      ['Träningsplacering', trainingPlace],
+    ]));
+    ui.finalReportMultiplier.textContent = report.mostUsedMultiplier === null ? '–' : `${report.mostUsedMultiplier}×`;
+    ui.finalReportThrees.textContent = String(report.multiplierCounts[3]);
+
+    const exercises = report.exerciseTotals.map((total) => {
+      const item = document.createElement('li');
+      const amount = document.createElement('strong');
+      amount.textContent = `${formatNumber(total.amount)} ${total.unit}`;
+      item.appendChild(amount);
+      return item;
+    });
+    ui.finalReportExercises.replaceChildren(...exercises);
+    ui.finalReportExerciseSection.hidden = exercises.length === 0;
+
+    if (stepResultsUnavailable) {
+      ui.finalReportSteps.textContent = 'Stegresultaten kunde inte hämtas just nu.';
+      ui.finalReportSteps.classList.add('is-unreported');
+    } else if (report.stepAverage === null) {
+      ui.finalReportSteps.textContent = 'Inga stegperioder rapporterades.';
+      ui.finalReportSteps.classList.add('is-unreported');
+    } else {
+      ui.finalReportSteps.textContent = `${formatNumber(report.stepAverage)} steg per dag i viktat snitt`;
+      ui.finalReportSteps.classList.remove('is-unreported');
+    }
+    const stepPlace = report.stepPlacement !== null
+      ? `${report.stepPlacement}:e plats`
+      : report.stepPlacementAmbiguous ? 'Kan inte särskiljas' : 'Ej tillgänglig';
+    ui.finalReportStepStats.replaceChildren(...createReportStats([
+      ['Rapporterade perioder', `${report.stepReportedPeriods}/4`],
+      ['Slutliga stegpoäng', report.stepPoints === null ? '–' : `${report.stepPoints}/20`],
+      ['Stegplacering', stepPlace],
+    ]));
+
+    ui.finalReportDetail.showModal();
+    if (markFinalReportSeen()) addReportConfettiTo(ui.finalReportConfetti);
+  }
+
   function renderHistory(results, displayName, competitionStatus) {
     const today = stockholmDate();
     const history = window.SoberOctoberHistory.calculate(results, today, competitionStatus);
@@ -315,7 +453,9 @@
 
   async function loadHistory(session) {
     ui.historyStatus.textContent = '';
-    const [resultsResponse, challengesResponse, stepResultsResponse, profileResponse] = await Promise.all([
+    const today = stockholmDate();
+    const reportUnlocked = today >= '2026-11-01';
+    const [resultsResponse, challengesResponse, stepResultsResponse, profileResponse, trainingLeaderboardResponse, stepLeaderboardResponse] = await Promise.all([
       client
         .from('daily_results')
         .select('result_date, multiplier, points')
@@ -338,6 +478,8 @@
         .select('display_name')
         .eq('id', session.user.id)
         .maybeSingle(),
+      reportUnlocked ? client.rpc('get_leaderboard') : Promise.resolve({ data: [], error: null }),
+      reportUnlocked ? client.rpc('get_step_leaderboard') : Promise.resolve({ data: [], error: null }),
     ]);
 
     if (resultsResponse.error) throw resultsResponse.error;
@@ -359,7 +501,21 @@
       profileResponse.data?.display_name,
     );
     renderHistory(results, profileResponse.data?.display_name, competitionStatus);
-    renderWeeklyReports(results, challenges, stepResults, stockholmDate());
+    renderWeeklyReports(results, challenges, stepResults, today);
+    finalReportData = window.SoberOctoberHistory.buildFinalReport({
+      results,
+      challenges,
+      stepResults,
+      today,
+      competitionStatus,
+      trainingLeaderboard: trainingLeaderboardResponse.error ? [] : (trainingLeaderboardResponse.data || []),
+      stepLeaderboard: stepLeaderboardResponse.error ? [] : (stepLeaderboardResponse.data || []),
+      displayName: profileResponse.data?.display_name || '',
+      stepsLogic: window.SoberOctoberSteps,
+    });
+    renderFinalReportAccess(today, results, stepResults, competitionStatus);
+    if (trainingLeaderboardResponse.error) console.warn('Träningsplaceringen kunde inte hämtas', trainingLeaderboardResponse.error);
+    if (stepLeaderboardResponse.error) console.warn('Stegplaceringen kunde inte hämtas', stepLeaderboardResponse.error);
     ui.historyStatus.textContent = stepResultsUnavailable
       ? 'Stegdata kunde inte hämtas just nu. Övrig historik visas ändå.'
       : '';
@@ -408,6 +564,11 @@
   ui.reportDetailClose.addEventListener('click', () => ui.reportDetail.close());
   ui.reportDetail.addEventListener('click', (event) => {
     if (event.target === ui.reportDetail) ui.reportDetail.close();
+  });
+  ui.finalReportAction.addEventListener('click', openFinalReport);
+  ui.finalReportClose.addEventListener('click', () => ui.finalReportDetail.close());
+  ui.finalReportDetail.addEventListener('click', (event) => {
+    if (event.target === ui.finalReportDetail) ui.finalReportDetail.close();
   });
 
   async function init() {

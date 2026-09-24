@@ -403,6 +403,56 @@ h1 {
   letter-spacing:.04em;
   text-transform:uppercase
 }
+.final-report-section {
+  margin-top:16px
+}
+.final-report-card {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:16px;
+  padding:18px;
+  border:1px solid rgba(23,63,50,.1);
+  border-radius:20px;
+  background:#f5f1e7
+}
+.final-report-card.is-available {
+  border-color:#e6b17f;
+  background:#fff1df
+}
+.final-report-card.is-locked {
+  color:#858980;
+  background:#f5f4ef
+}
+.final-report-card h2 {
+  margin:0;
+  color:var(--forest);
+  font-size:1.08rem;
+  font-weight:950;
+  letter-spacing:-.03em
+}
+.final-report-card .weekly-report-summary {
+  min-height:0;
+  margin:5px 0 0;
+  font-size:.72rem
+}
+.final-report-card .weekly-report-action {
+  flex:0 0 auto;
+  min-height:40px;
+  padding:9px 12px;
+  color:#fffaf0;
+  background:var(--forest);
+  cursor:pointer
+}
+.final-report-card .weekly-report-action:hover,.final-report-card .weekly-report-action:focus-visible {
+  color:var(--forest);
+  background:#f1c28f;
+  outline:2px solid var(--forest);
+  outline-offset:2px
+}
+.final-report-card .weekly-report-action[hidden] {
+  display:none
+}
 .status {
   min-height:1.3em;
   margin:12px 0 0;
@@ -488,6 +538,9 @@ h1 {
   width:min(620px,calc(100% - 24px));
   max-height:calc(100svh - 24px);
   overflow:hidden
+}
+.final-report-dialog {
+  width:min(760px,calc(100% - 20px))
 }
 .report-detail {
   max-height:calc(100svh - 24px);
@@ -592,6 +645,90 @@ h1 {
   background:var(--confetti-color);
   animation:report-confetti-fall 900ms cubic-bezier(.18,.62,.42,1) var(--confetti-delay) both
 }
+.final-report-detail {
+  padding:clamp(20px,5vw,38px)
+}
+.final-report-detail h2 {
+  max-width:620px;
+  font-size:clamp(1.9rem,7vw,3.1rem);
+  line-height:1.02
+}
+.final-report-detail .report-pep {
+  max-width:580px;
+  font-size:.95rem
+}
+.final-report-status {
+  display:inline-flex;
+  max-width:100%;
+  margin:0 0 16px;
+  padding:9px 12px;
+  border-radius:999px;
+  font-size:.68rem;
+  font-weight:950;
+  letter-spacing:.045em;
+  line-height:1.35
+}
+.final-report-status.is-active {
+  color:#164735;
+  background:#e3eee3
+}
+.final-report-status.is-eliminated {
+  color:#8d3028;
+  background:#ffe1dc
+}
+.final-report-status.is-unknown {
+  color:#666a62;
+  background:#efeee8
+}
+.final-report-stats {
+  grid-template-columns:repeat(2,minmax(0,1fr))
+}
+.final-report-fun-stats {
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  margin-top:9px
+}
+.final-report-fun-stats > div {
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding:9px 12px;
+  border:1px solid rgba(23,63,50,.09);
+  border-radius:12px;
+  background:#fffaf0
+}
+.final-report-fun-stats span {
+  color:var(--muted);
+  font-size:.67rem;
+  font-weight:800
+}
+.final-report-fun-stats strong {
+  color:var(--forest);
+  font-size:.82rem;
+  font-weight:950
+}
+.final-report-step-section {
+  margin-top:20px;
+  padding-top:17px;
+  border-top:1px solid rgba(23,63,50,.13)
+}
+.final-report-section-head .kicker {
+  margin:0 0 4px
+}
+.final-report-section-head h3 {
+  margin:0;
+  color:var(--deep);
+  font-size:1.2rem;
+  letter-spacing:-.035em
+}
+.final-report-step-section .report-steps {
+  margin-top:10px
+}
+.final-report-step-stats {
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  margin-top:8px
+}
 @keyframes report-confetti-fall {
   to { transform:translateY(130px) rotate(520deg); opacity:0 }
 }
@@ -634,6 +771,12 @@ h1 {
   .report-stats {
     grid-template-columns:repeat(5,minmax(0,1fr))
   }
+  .final-report-stats {
+    grid-template-columns:repeat(5,minmax(0,1fr))
+  }
+  .final-report-step-stats {
+    grid-template-columns:repeat(3,minmax(0,1fr))
+  }
   .report-stat {
     padding:11px 8px
   }
@@ -663,6 +806,20 @@ h1 {
   }
   .report-stats {
     grid-template-columns:repeat(2,minmax(0,1fr))
+  }
+  .final-report-card {
+    align-items:flex-start;
+    flex-direction:column
+  }
+  .final-report-card .weekly-report-action {
+    width:100%;
+    justify-content:center
+  }
+  .final-report-stats,.final-report-step-stats {
+    grid-template-columns:repeat(2,minmax(0,1fr))
+  }
+  .final-report-status {
+    border-radius:13px
   }
 }
 @media(prefers-reduced-motion:reduce) {
