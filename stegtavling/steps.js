@@ -1,5 +1,6 @@
 (() => {
   const { PERIODS, calculateWeightedAverage, createProjection } = window.SoberOctoberSteps;
+  const periodKeys = new Set(PERIODS.map((period) => period.key));
   const ui = {
     average: document.querySelector('#steps-average'),
     summaryTitle: document.querySelector('#steps-summary-title'),
@@ -13,9 +14,6 @@
     nextLevel: document.querySelector('#steps-next-level'),
     cards: [...document.querySelectorAll('[data-period-card]')],
     forms: [...document.querySelectorAll('.period-form')],
-    loginNote: document.querySelector('#steps-login-note'),
-    login: document.querySelector('#steps-login'),
-    loginStatus: document.querySelector('#login-status'),
     pageStatus: document.querySelector('#steps-page-status'),
     leaderboard: document.querySelector('#step-leaderboard-list'),
     leaderboardStatus: document.querySelector('#step-leaderboard-status'),
@@ -52,7 +50,7 @@
       ui.projection.textContent = `Stegpoäng: ${projection.points}/20. Resultatet är slutligt.`;
       ui.nextLevel.textContent = 'Alla fyra perioder är rapporterade.';
     } else if (average === null) {
-      ui.projection.textContent = 'Logga in och rapportera en period för att se din prognos.';
+      ui.projection.textContent = 'Fyll i en period för att se din prognos.';
       ui.nextLevel.textContent = '';
     } else {
       ui.projection.textContent = `Du snittar just nu ${stepFormatter.format(average)} steg per dag. Om du håller det här tempot slutar du på ${projection.points}/20 stegpoäng. ${projection.points >= 18 ? 'Snyggt jobbat!' : 'Bra kämpat — varje period räknas!'}`;
@@ -85,17 +83,15 @@
   }
 
   function renderSignedOut() {
-    ui.loginNote.hidden = false;
-    ui.login.disabled = false;
     ui.reported.textContent = '–/4';
     ui.average.textContent = '–';
     ui.summaryTitle.textContent = 'Ditt snitt hittills';
-    ui.coverage.textContent = 'Logga in för att se ditt snitt och dina rapporter.';
+    ui.coverage.textContent = 'Dina egna rapporter visas här.';
     ui.score.textContent = '–';
     ui.scoreKicker.textContent = 'Stegpoäng just nu';
     ui.scoreFill.style.width = '0%';
     ui.scoreTrack.setAttribute('aria-valuenow', '0');
-    ui.projection.textContent = 'Logga in och rapportera en period för att se din prognos.';
+    ui.projection.textContent = 'Ditt stegresultat visas här när du är inloggad.';
     ui.nextLevel.textContent = '';
     ui.cards.forEach((card) => {
       card.querySelector('input').value = '';
@@ -107,7 +103,6 @@
 
   async function loadOwnResults() {
     if (!session) return;
-    ui.loginNote.hidden = true;
     const { data, error } = await client
       .from('step_period_results')
       .select('period_key, avg_steps')
@@ -171,11 +166,10 @@
     const feedback = form.querySelector('.period-feedback');
     const cleaned = input.value.trim().replace(/\s+/g, '');
     if (!session) {
-      ui.loginNote.hidden = false;
-      ui.login.focus();
+      setStatus(ui.pageStatus, 'Logga in på startsidan för att rapportera perioder.', true);
       return;
     }
-    if (!byKey.has(periodKey) || !/^\d+$/.test(cleaned)) {
+    if (!periodKeys.has(periodKey) || !/^\d+$/.test(cleaned)) {
       setStatus(feedback, 'Ange ett positivt heltal mellan 1 och 100 000.', true);
       return;
     }
@@ -205,24 +199,10 @@
     await Promise.all([loadOwnResults(), loadLeaderboard()]);
   }
 
-  async function startLogin() {
-    ui.login.disabled = true;
-    setStatus(ui.loginStatus, '');
-    const { error } = await client.auth.signInWithOAuth({
-      provider: 'google',
-      options: { redirectTo: new URL('/stegtavling/', window.location.origin).href },
-    });
-    if (error) {
-      ui.login.disabled = false;
-      setStatus(ui.loginStatus, 'Google-inloggningen kunde inte startas. Försök igen.', true);
-    }
-  }
-
   ui.forms.forEach((form) => form.addEventListener('submit', (event) => {
     event.preventDefault();
     savePeriod(form);
   }));
-  ui.login.addEventListener('click', startLogin);
 
   async function init() {
     try {

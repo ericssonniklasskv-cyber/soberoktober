@@ -1,18 +1,3 @@
-.trump-quote-card {
-  position: relative;
-  isolation: isolate;
-  max-width: 960px;
-  margin: 18px auto 0;
-  overflow: hidden;
-  padding: clamp(18px, 4vw, 32px);
-  border: 3px solid #e8c989;
-  border-radius: 28px;
-  color: #fff;
-  background: #12294d url('/trump-quote-art.svg') center/cover no-repeat;
-  box-shadow: 0 16px 44px rgba(24, 45, 67, .16);
-}
-
-.trump-quote-card::before,
 .trump-quote-dialog::before {
   content: '';
   position: absolute;
@@ -138,8 +123,6 @@ body.trump-quote-open { overflow: hidden; }
 }
 
 @media (max-width: 600px) {
-  .trump-quote-card { padding: 12px; border-radius: 23px; }
-  .trump-quote-content { padding: 23px 18px; border-radius: 17px; }
   .trump-quote-dialog { padding: 12px; border-radius: 23px; }
   .trump-quote-dialog .trump-quote-content { padding: 26px 18px; }
   .trump-quote-actions { display: grid; justify-content: stretch; }

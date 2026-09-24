@@ -41,14 +41,11 @@
 .steps-input-row input { min-width:0; width:100%; height:46px; padding:0; border:0; outline:0; background:transparent; color:var(--deep); font-size:1.04rem; font-weight:850; font-variant-numeric:tabular-nums; }
 .steps-input-row span { flex:0 0 auto; color:var(--muted); font-size:.69rem; font-weight:700; }
 .period-help { min-height:1.2em; margin:5px 0 11px; color:var(--muted); font-size:.67rem; }
-.period-save,.steps-login-button { display:inline-flex; align-items:center; justify-content:center; min-height:44px; padding:9px 15px; border:0; border-radius:11px; background:var(--orange); color:var(--deep); font-size:.75rem; font-weight:900; cursor:pointer; }
-.period-save:hover,.steps-login-button:hover { background:#f59a56; transform:translateY(-1px); }
-.period-save:disabled,.steps-login-button:disabled { opacity:.55; cursor:wait; transform:none; }
+.period-save { display:inline-flex; align-items:center; justify-content:center; min-height:44px; padding:9px 15px; border:0; border-radius:11px; background:var(--orange); color:var(--deep); font-size:.75rem; font-weight:900; cursor:pointer; }
+.period-save:hover { background:#f59a56; transform:translateY(-1px); }
+.period-save:disabled { opacity:.55; cursor:wait; transform:none; }
 .period-feedback { min-height:1.3em; margin:7px 0 0; color:var(--muted); font-size:.7rem; }
 .period-feedback.is-error,.steps-page-status.is-error,.step-leaderboard-status.is-error { color:#a43f27; }
-.steps-login-note { display:flex; align-items:center; flex-wrap:wrap; gap:8px 16px; margin-bottom:14px; padding:15px 17px; border:1px solid #e7d3b8; border-radius:16px; background:#fff5e8; }
-.steps-login-note p { margin:0; color:var(--forest); font-size:.83rem; font-weight:700; }
-.steps-login-note .steps-status { flex-basis:100%; color:var(--muted); font-size:.73rem; }
 .steps-page-status,.step-leaderboard-status { min-height:1.3em; margin:10px 0 0; color:var(--muted); font-size:.78rem; }
 .step-leaderboard { margin-top:39px; padding:25px 28px; border-radius:var(--radius-lg); }
 .step-leaderboard-head { display:flex; align-items:center; justify-content:space-between; gap:18px; }

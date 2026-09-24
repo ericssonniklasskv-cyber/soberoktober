@@ -14,7 +14,6 @@
   const dayFormatter = new Intl.DateTimeFormat('en-CA', {
     timeZone: 'Europe/Stockholm', year: 'numeric', month: '2-digit', day: '2-digit',
   });
-  const sectionQuote = document.querySelector('#trump-quote-text');
   const modalQuote = document.querySelector('#trump-quote-modal-text');
   const overlay = document.querySelector('#trump-quote-overlay');
   const trigger = document.querySelector('#auth-trigger');
@@ -41,7 +40,6 @@
       activeDay = today.key;
       const firstOctoberDay = Math.floor(Date.UTC(2026, 9, 1) / 86400000);
       const index = ((today.number - firstOctoberDay) % quotes.length + quotes.length) % quotes.length;
-      sectionQuote.textContent = quotes[index];
       modalQuote.textContent = quotes[index];
     }
     return today.key;

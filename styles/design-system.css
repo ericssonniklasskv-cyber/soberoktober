@@ -196,8 +196,7 @@ h1, h2, h3 { text-wrap: balance; }
 .rules li { font-size: .88rem; }
 .check { width: 21px; height: 21px; flex-basis: 21px; font-size: .65rem; background: #dce2c9; color: var(--forest); }
 
-/* A deliberately absurd newspaper clipping, not another dashboard widget. */
-.trump-quote-card { max-width: 800px; margin-top: 36px; padding: 24px; border: 2px solid #d0b270; border-radius: 8px 24px 24px 24px; box-shadow: 0 5px 0 #d8d2bd; }
+/* The daily quote stays in its modal. */
 .trump-quote-content { border-radius: 8px; border-color: #c8c4b650; background: #102544f5; box-shadow: none; }
 .trump-quote-title { font-size: 1.2rem; letter-spacing: -.025em; }
 .trump-quote-text { font-family: var(--font-editorial); font-weight: 500; font-style: italic; font-size: clamp(1.3rem, 2.4vw, 1.9rem); line-height: 1.4; }
@@ -332,7 +331,6 @@ body:has(.auth-overlay.open) .mohv-egg { visibility: hidden; pointer-events: non
   .leaderboard-you { font-size: .55rem; margin-left: 4px; }
   .content-grid { margin-top: 28px; }
   .rules li { font-size: .83rem; }
-  .trump-quote-card { margin-top: 28px; padding: 13px; }
   .trump-quote-content { padding: 24px 16px; }
   .trump-quote-title { font-size: 1.12rem; }
   .trump-quote-dialog { padding: 12px; }
