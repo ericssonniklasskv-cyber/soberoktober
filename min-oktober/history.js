@@ -39,6 +39,7 @@
   let challengesByDate = new Map();
   let weeklyReports = new Map();
   let activeUserId = null;
+  let stepResultsUnavailable = false;
   const pointsFormatter = new Intl.NumberFormat('sv-SE', { maximumFractionDigits: 1 });
   const reportSeenStorageKey = (userId) => `soberoktober:weekly-reports-seen:${userId}`;
 
@@ -267,7 +268,10 @@
     ui.reportExercises.replaceChildren(...exercises);
     ui.reportExerciseSection.hidden = exercises.length === 0;
 
-    if (report.stepAverage === null) {
+    if (stepResultsUnavailable) {
+      ui.reportSteps.textContent = 'Stegdata kunde inte hämtas just nu.';
+      ui.reportSteps.classList.add('is-unreported');
+    } else if (report.stepAverage === null) {
       ui.reportSteps.textContent = 'Steg för perioden är inte rapporterade ännu.';
       ui.reportSteps.classList.add('is-unreported');
     } else {
@@ -339,16 +343,22 @@
 
     if (resultsResponse.error) throw resultsResponse.error;
     if (challengesResponse.error) throw challengesResponse.error;
-    if (stepResultsResponse.error) throw stepResultsResponse.error;
     if (profileResponse.error) throw profileResponse.error;
 
     const results = resultsResponse.data || [];
     const challenges = challengesResponse.data || [];
-    const stepResults = stepResultsResponse.data || [];
+    stepResultsUnavailable = Boolean(stepResultsResponse.error);
+    if (stepResultsUnavailable) {
+      console.warn('Stegresultaten kunde inte läsas; visar övrig historik ändå', stepResultsResponse.error);
+    }
+    const stepResults = stepResultsUnavailable ? [] : (stepResultsResponse.data || []);
     challengesByDate = new Map(challenges.map((challenge) => [challenge.challenge_date, challenge]));
     activeUserId = session.user.id;
     renderHistory(results, profileResponse.data?.display_name);
     renderWeeklyReports(results, challenges, stepResults, stockholmDate());
+    ui.historyStatus.textContent = stepResultsUnavailable
+      ? 'Stegdata kunde inte hämtas just nu. Övrig historik visas ändå.'
+      : '';
 
     const requestedReport = new URLSearchParams(window.location.search).get('rapport');
     if (requestedReport && weeklyReports.has(requestedReport)) {
