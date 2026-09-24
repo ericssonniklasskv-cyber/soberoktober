@@ -133,6 +133,7 @@ h1 {
   font-weight:900;
   line-height:1.4
 }
+.competition.eliminated { color:#9f4938; background:#f8e7df; border-color:rgba(159,73,56,.18); font-weight:850 }
 .competition.active {
   color:#174737;
   background:#e4eee1

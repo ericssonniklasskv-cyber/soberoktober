@@ -19,7 +19,7 @@
     return value.toISOString().slice(0, 10);
   }
 
-  function calculate(results, today) {
+  function calculate(results, today, competitionStatus = null) {
     const octoberResults = results.filter(({ result_date: date }) => date >= OCTOBER_START && date <= OCTOBER_END);
     const resultsByDate = new Map(octoberResults.map((result) => [result.result_date, result]));
     const days = OCTOBER_DATES.map((date) => ({
@@ -49,14 +49,6 @@
       }
     }
 
-    let eliminatedAt = null;
-    for (let index = 1; index < days.length; index += 1) {
-      if (days[index - 1].state === 'missed' && days[index].state === 'missed') {
-        eliminatedAt = days[index].date;
-        break;
-      }
-    }
-
     const yesterday = previousDate(today);
     const yesterdayMissed = days.some((day) => day.date === yesterday && day.state === 'missed');
     const todayCompleted = resultsByDate.has(today);
@@ -65,10 +57,11 @@
       text: 'Du är fortfarande med i tävlingen',
     };
 
-    if (eliminatedAt) {
+    const isEliminated = competitionStatus?.status === 'eliminated';
+    if (isEliminated) {
       competition = {
         tone: 'eliminated',
-        text: 'Du är utslagen enligt regeln om två missade dagar i rad',
+        text: `Du är utslagen ur tävlingen${competitionStatus.elimination_reason ? ` · ${competitionStatus.elimination_reason}` : ''}`,
       };
     } else if (today >= OCTOBER_START && today <= OCTOBER_END && yesterdayMissed && !todayCompleted) {
       competition = {
@@ -85,7 +78,7 @@
       currentStreak,
       longestStreak,
       competition,
-      eliminatedAt,
+      eliminatedAt: isEliminated ? competitionStatus.eliminated_at : null,
     };
   }
 

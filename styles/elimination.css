@@ -1,0 +1,43 @@
+.elimination-overlay {
+  position:fixed;
+  z-index:1000;
+  inset:0;
+  display:grid;
+  place-items:center;
+  overflow:auto;
+  padding:20px;
+  background:rgba(9,24,19,.82);
+  backdrop-filter:blur(7px);
+  animation:elimination-fade-in .2s ease-out
+}
+.elimination-overlay[hidden] { display:none }
+.elimination-dialog {
+  position:relative;
+  isolation:isolate;
+  width:min(560px,100%);
+  overflow:hidden;
+  padding:clamp(30px,7vw,58px) clamp(22px,6vw,52px) 34px;
+  border:2px solid #ef8537;
+  border-radius:30px;
+  color:#fff8e9;
+  background:#173f32;
+  box-shadow:0 30px 100px rgba(0,0,0,.42),0 0 0 8px rgba(239,133,55,.14);
+  text-align:center
+}
+.elimination-noise {
+  position:absolute;
+  z-index:-1;
+  inset:0;
+  opacity:.24;
+  background:radial-gradient(ellipse at 50% 110%,rgba(242,138,56,.65),transparent 54%),repeating-linear-gradient(135deg,transparent 0 20px,rgba(255,255,255,.04) 21px 22px)
+}
+.elimination-eyebrow { margin:0 0 22px; color:#ffc78e; font-size:.72rem; font-weight:950; letter-spacing:.17em; text-transform:uppercase }
+.elimination-stamp { display:grid; width:68px; height:68px; place-items:center; margin:0 auto 19px; border:3px solid #ef8537; border-radius:50%; color:#ff9a4d; font-size:1.1rem; font-weight:1000; letter-spacing:.08em; transform:rotate(-13deg) }
+.elimination-title { margin:0; color:#fff8e9; font-size:clamp(2rem,8vw,3.5rem); font-weight:1000; letter-spacing:-.06em; line-height:.98; overflow-wrap:anywhere }
+.elimination-reason { min-height:1.4em; margin:19px 0 26px; color:#e8d7bd; font-size:1rem }
+.elimination-close { min-height:50px; padding:12px 22px; border:0; border-radius:999px; color:#193d31; background:#f28a38; font-weight:950; cursor:pointer; transition:transform .15s ease,background .15s ease }
+.elimination-close:hover { transform:translateY(-2px); background:#ffa252 }
+.elimination-close:focus-visible { outline:3px solid #fff8e9; outline-offset:4px }
+body.elimination-open { overflow:hidden }
+@keyframes elimination-fade-in { from { opacity:0 } to { opacity:1 } }
+@media (prefers-reduced-motion:reduce) { .elimination-overlay,.elimination-close { animation:none; transition:none } }

@@ -295,9 +295,9 @@
     });
   }
 
-  function renderHistory(results, displayName) {
+  function renderHistory(results, displayName, competitionStatus) {
     const today = stockholmDate();
-    const history = window.SoberOctoberHistory.calculate(results, today);
+    const history = window.SoberOctoberHistory.calculate(results, today, competitionStatus);
     const points = pointsFormatter.format(history.totalPoints);
     const dayWord = history.completedDays === 1 ? 'dag' : 'dagar';
     const streakWord = history.currentStreak === 1 ? 'dag' : 'dagar';
@@ -310,7 +310,6 @@
     ui.identity.textContent = displayName || '';
     ui.competition.className = `competition ${history.competition.tone}`;
     ui.competition.textContent = history.competition.text;
-    if (history.eliminatedAt) ui.competition.textContent += ` (${formatDate(history.eliminatedAt)})`;
     renderCalendar(history, today);
   }
 
@@ -354,7 +353,12 @@
     const stepResults = stepResultsUnavailable ? [] : (stepResultsResponse.data || []);
     challengesByDate = new Map(challenges.map((challenge) => [challenge.challenge_date, challenge]));
     activeUserId = session.user.id;
-    renderHistory(results, profileResponse.data?.display_name);
+    const competitionStatus = await window.SoberOctoberEliminations?.refresh(
+      client,
+      session.user.id,
+      profileResponse.data?.display_name,
+    );
+    renderHistory(results, profileResponse.data?.display_name, competitionStatus);
     renderWeeklyReports(results, challenges, stepResults, stockholmDate());
     ui.historyStatus.textContent = stepResultsUnavailable
       ? 'Stegdata kunde inte hämtas just nu. Övrig historik visas ändå.'

@@ -63,6 +63,7 @@
   let authReady = false;
   let sessionWork = Promise.resolve();
   let latestLeaderboardRows = [];
+  let competitionStatus = null;
   const validMultipliers = new Set([1, 2, 3]);
   const pointsFormatter = new Intl.NumberFormat('sv-SE', { maximumFractionDigits: 1 });
 
@@ -149,8 +150,10 @@
   }
 
   function setSignedOut() {
+    window.SoberOctoberEliminations?.resetOnLogout(session?.user?.id);
     session = null;
     profile = null;
+    competitionStatus = null;
     ui.trigger.textContent = 'Logga in';
     ui.trigger.title = 'Logga in med Google';
     ui.scoreSummary.hidden = true;
@@ -239,15 +242,18 @@
   }
 
   function renderRegistered(rows) {
-    const names = rows
-      .map((row) => typeof row.display_name === 'string' ? row.display_name.trim() : '')
-      .filter(Boolean);
+    const participants = rows
+      .map((row) => ({
+        displayName: typeof row.display_name === 'string' ? row.display_name.trim() : '',
+        eliminated: row.is_eliminated === true,
+      }))
+      .filter((row) => row.displayName);
 
-    ui.registeredCounts.forEach((count) => { count.textContent = String(names.length); });
+    ui.registeredCounts.forEach((count) => { count.textContent = String(participants.length); });
     ui.registeredStatuses.forEach((status) => { status.textContent = ''; });
     ui.registeredLists.forEach((list) => {
       list.replaceChildren();
-      if (!names.length) {
+      if (!participants.length) {
         const empty = document.createElement('li');
         empty.className = 'registered-empty';
         empty.textContent = 'Inga anmälda ännu.';
@@ -255,10 +261,18 @@
         return;
       }
 
-      names.forEach((displayName) => {
+      participants.forEach(({ displayName, eliminated }) => {
         const item = document.createElement('li');
         item.className = 'registered-name';
-        item.textContent = displayName;
+        const name = document.createElement('span');
+        name.textContent = displayName;
+        item.appendChild(name);
+        if (eliminated) {
+          const badge = document.createElement('span');
+          badge.className = 'registered-eliminated';
+          badge.textContent = 'Utslagen';
+          item.appendChild(badge);
+        }
         list.appendChild(item);
       });
     });
@@ -280,7 +294,7 @@
     const rank = Number(entry.rank_position);
     const days = Number(entry.completed_days);
     const row = document.createElement('li');
-    row.className = `leaderboard-preview-row${rank <= 3 ? ` top-${rank}` : ''}${entry.is_current_user ? ' is-current' : ''}`;
+    row.className = `leaderboard-preview-row${rank <= 3 ? ` top-${rank}` : ''}${entry.is_current_user ? ' is-current' : ''}${entry.is_eliminated ? ' is-eliminated' : ''}`;
 
     const rankBadge = document.createElement('span');
     rankBadge.className = 'leaderboard-preview-rank';
@@ -315,6 +329,12 @@
     meta.className = 'leaderboard-preview-meta';
     meta.textContent = `${pointsFormatter.format(Number(entry.total_points))} p · ${days} ${days === 1 ? 'dag' : 'dagar'}`;
     info.append(name, meta);
+    if (entry.is_eliminated) {
+      const eliminated = document.createElement('span');
+      eliminated.className = 'leaderboard-eliminated';
+      eliminated.textContent = 'UTSLAGEN';
+      info.appendChild(eliminated);
+    }
     row.append(rankBadge, info);
     return row;
   }
@@ -388,7 +408,7 @@
       const rank = Number(entry.rank_position);
       const days = Number(entry.completed_days);
       const row = document.createElement('li');
-      row.className = `leaderboard-row${rank <= 3 ? ` top-${rank}` : ''}${entry.is_current_user ? ' is-current' : ''}`;
+      row.className = `leaderboard-row${rank <= 3 ? ` top-${rank}` : ''}${entry.is_current_user ? ' is-current' : ''}${entry.is_eliminated ? ' is-eliminated' : ''}`;
 
       const rankBadge = document.createElement('span');
       rankBadge.className = 'leaderboard-rank';
@@ -396,7 +416,9 @@
 
       const name = document.createElement('span');
       name.className = 'leaderboard-name';
-      name.textContent = entry.display_name;
+      const nameText = document.createElement('span');
+      nameText.textContent = entry.display_name;
+      name.appendChild(nameText);
 
       if (entry.is_current_user) {
         const you = document.createElement('span');
@@ -405,6 +427,13 @@
         name.appendChild(you);
         ui.leaderboardSelf.textContent = `Din placering: ${rank}`;
         ui.leaderboardSelf.hidden = false;
+      }
+
+      if (entry.is_eliminated) {
+        const eliminated = document.createElement('span');
+        eliminated.className = 'leaderboard-eliminated';
+        eliminated.textContent = 'UTSLAGEN';
+        name.appendChild(eliminated);
       }
 
       const points = document.createElement('span');
@@ -460,6 +489,11 @@
       return;
     }
 
+    if (competitionStatus?.status === 'eliminated') {
+      ui.saveStatus.textContent = 'Du är utslagen ur tävlingen.';
+      return;
+    }
+
     ui.saveStatus.textContent = 'Sparar dagens resultat…';
     setLevelBusy(true);
 
@@ -476,7 +510,9 @@
 
     if (error) {
       console.error('Kunde inte spara dagens resultat', error);
-      ui.saveStatus.textContent = 'Resultatet kunde inte sparas. Försök igen.';
+      ui.saveStatus.textContent = error.code === '42501' && /utslagen/i.test(error.message || '')
+        ? 'Du är utslagen ur tävlingen.'
+        : 'Resultatet kunde inte sparas. Försök igen.';
       setLevelBusy(false);
       return;
     }
@@ -516,6 +552,9 @@
   }
 
   async function handleSession(nextSession) {
+    if (!nextSession && session?.user?.id) {
+      window.SoberOctoberEliminations?.resetOnLogout(session.user.id);
+    }
     session = nextSession;
     ui.loginStatus.textContent = '';
     ui.nameStatus.textContent = '';
@@ -532,6 +571,7 @@
 
     try {
       profile = await getOrCreateProfile(session);
+      competitionStatus = await window.SoberOctoberEliminations?.refresh(client, session.user.id, profile.display_name) || null;
       setSignedIn(profile.display_name);
       ui.historyLink.hidden = false;
       ui.adminLink.hidden = !profile.is_admin;

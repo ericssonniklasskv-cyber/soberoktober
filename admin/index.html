@@ -7,6 +7,7 @@
   <title>Admin · Sober Oktober</title>
   <link rel="stylesheet" href="/styles/admin.css">
   <link rel="stylesheet" href="/styles/design-system.css">
+  <link rel="stylesheet" href="/styles/elimination.css">
 </head>
 <body class="page-admin">
   <div class="shell">
@@ -51,14 +52,23 @@
             </div>
             <div class="bulk-actions"><button class="primary bulk-save" id="bulk-save" type="button" disabled>Spara alla ändringar</button><p class="status bulk-status" id="bulk-status" role="status"></p></div>
           </section>
+          <section class="participants-section" aria-labelledby="participants-title">
+            <div class="participants-head"><div><p class="kicker">Tävlingsstatus</p><h2 id="participants-title">Deltagare</h2></div><button class="day-nav" id="refresh-participants" type="button">Uppdatera lista</button></div>
+            <ul class="participants-list" id="participants-list" aria-live="polite"><li>Laddar deltagare…</li></ul>
+            <p class="status participants-status" id="participants-status" role="status" aria-live="polite"></p>
+          </section>
           <dialog class="delete-dialog" id="delete-confirmation" aria-labelledby="delete-title">
             <div class="delete-content"><h2 id="delete-title">Ta bort sparade pass?</h2><p>Du har tömt alla fält för tidigare sparade dagar. Vill du ta bort passen?</p><ul class="delete-list" id="delete-list"></ul><div class="dialog-actions"><button class="secondary" id="cancel-delete" type="button">Avbryt</button><button class="primary danger" id="confirm-delete" type="button">Ta bort och spara</button></div></div>
+          </dialog>
+          <dialog class="delete-dialog participant-dialog" id="participant-confirmation" aria-labelledby="participant-confirm-title">
+            <div class="delete-content"><h2 id="participant-confirm-title">Bekräfta ändring</h2><p id="participant-confirm-copy"></p><div class="dialog-actions"><button class="secondary" id="cancel-participant-action" type="button">Avbryt</button><button class="primary danger" id="confirm-participant-action" type="button">Bekräfta</button></div></div>
           </dialog>
         </div>
       </section>
     </main>
   </div>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.js" defer></script>
+  <script src="/elimination.js" defer></script>
   <script src="/admin/admin.js" defer></script>
 </body>
 </html>

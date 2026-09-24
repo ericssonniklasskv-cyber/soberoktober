@@ -65,3 +65,22 @@ test('locked and unknown report periods cannot be calculated early', () => {
   assert.equal(history.buildPeriodReport({ periodKey: 'oct_01_07', today: '2026-10-07' }), null);
   assert.equal(history.buildPeriodReport({ periodKey: 'unknown', today: '2026-11-01' }), null);
 });
+
+test('competition status comes from the saved status, not local missed-day inference', () => {
+  const results = [
+    { result_date: '2026-10-01', multiplier: 1, points: 1 },
+    { result_date: '2026-10-04', multiplier: 1, points: 1 },
+  ];
+  const active = history.calculate(results, '2026-10-05', { status: 'active' });
+  assert.equal(active.competition.tone, 'active');
+  assert.equal(active.eliminatedAt, null);
+
+  const eliminated = history.calculate(results, '2026-10-05', {
+    status: 'eliminated',
+    eliminated_at: '2026-10-03T16:00:00Z',
+    elimination_reason: 'Två missade dagar i rad',
+  });
+  assert.equal(eliminated.competition.tone, 'eliminated');
+  assert.match(eliminated.competition.text, /Två missade dagar i rad/);
+  assert.equal(eliminated.eliminatedAt, '2026-10-03T16:00:00Z');
+});

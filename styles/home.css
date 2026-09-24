@@ -208,6 +208,19 @@ button {
   text-overflow:ellipsis;
   white-space:nowrap
 }
+.registered-name { display:flex; align-items:center; justify-content:space-between; gap:8px }
+.registered-name > span:first-child { min-width:0; overflow:hidden; text-overflow:ellipsis }
+.registered-eliminated,.leaderboard-eliminated {
+  flex:none;
+  padding:3px 7px;
+  border-radius:999px;
+  color:#9f4938;
+  background:#f7e4db;
+  font-size:.58rem;
+  font-weight:1000;
+  letter-spacing:.06em;
+  text-transform:uppercase
+}
 .registered-empty {
   padding:5px 2px;
   color:var(--muted);
@@ -299,6 +312,11 @@ button {
   border-color:var(--orange);
   box-shadow:inset 3px 0 var(--orange)
 }
+.leaderboard-preview-row.is-eliminated,.leaderboard-row.is-eliminated { opacity:.68 }
+.leaderboard-row.is-eliminated { background:#f5eee8 }
+.leaderboard-row.is-eliminated .leaderboard-name { text-decoration:line-through; text-decoration-color:rgba(159,73,56,.5) }
+.leaderboard-preview-row.is-eliminated .leaderboard-preview-name-text { text-decoration:line-through; text-decoration-color:rgba(159,73,56,.5) }
+.leaderboard-eliminated { grid-column:2/-1; justify-self:start }
 .leaderboard-preview-rank {
   display:grid;
   place-items:center;
@@ -897,6 +915,9 @@ h2 {
   background:#e8b18d
 }
 .leaderboard-name {
+  display:flex;
+  align-items:center;
+  gap:7px;
   min-width:0;
   overflow:hidden;
   color:var(--deep);
@@ -905,6 +926,8 @@ h2 {
   text-overflow:ellipsis;
   white-space:nowrap
 }
+.leaderboard-name > span:first-child { min-width:0; overflow:hidden; text-overflow:ellipsis }
+.leaderboard-name .leaderboard-you { flex:none }
 .leaderboard-you {
   display:inline-block;
   margin-left:7px;

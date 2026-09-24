@@ -36,6 +36,14 @@
     deleteList: document.querySelector('#delete-list'),
     cancelDelete: document.querySelector('#cancel-delete'),
     confirmDelete: document.querySelector('#confirm-delete'),
+    participants: document.querySelector('#participants-list'),
+    participantsStatus: document.querySelector('#participants-status'),
+    refreshParticipants: document.querySelector('#refresh-participants'),
+    participantConfirmation: document.querySelector('#participant-confirmation'),
+    participantConfirmTitle: document.querySelector('#participant-confirm-title'),
+    participantConfirmCopy: document.querySelector('#participant-confirm-copy'),
+    cancelParticipantAction: document.querySelector('#cancel-participant-action'),
+    confirmParticipantAction: document.querySelector('#confirm-participant-action'),
   };
 
   let client;
@@ -46,6 +54,7 @@
   let bulkOriginals = new Map();
   let bulkDrafts = new Map();
   let bulkSaving = false;
+  let participantAction = null;
 
   function stockholmDate() {
     const parts = new Intl.DateTimeFormat('sv-SE', {
@@ -73,6 +82,89 @@
     [ui.loading, ui.signedOut, ui.denied, ui.admin].forEach((state) => {
       state.hidden = state !== active;
     });
+  }
+
+  function renderParticipants(rows) {
+    ui.participants.replaceChildren();
+    if (!rows.length) {
+      const empty = document.createElement('li');
+      empty.className = 'participant-empty';
+      empty.textContent = 'Inga deltagare har valt namn ännu.';
+      ui.participants.appendChild(empty);
+      return;
+    }
+
+    rows.forEach((participant) => {
+      const item = document.createElement('li');
+      item.className = `participant-row${participant.status === 'eliminated' ? ' is-eliminated' : ''}`;
+      const details = document.createElement('div');
+      details.className = 'participant-details';
+      const name = document.createElement('strong');
+      name.textContent = participant.display_name;
+      const status = document.createElement('span');
+      status.className = 'participant-state';
+      status.textContent = participant.status === 'eliminated'
+        ? `Utslagen${participant.elimination_reason ? ` · ${participant.elimination_reason}` : ''}`
+        : 'Aktiv';
+      details.append(name, status);
+
+      const action = document.createElement('button');
+      action.type = 'button';
+      action.className = participant.status === 'eliminated' ? 'secondary participant-action' : 'primary danger participant-action';
+      action.dataset.participantId = participant.participant_id;
+      action.dataset.participantName = participant.display_name;
+      action.dataset.action = participant.status === 'eliminated' ? 'restore' : 'eliminate';
+      action.textContent = participant.status === 'eliminated' ? 'Återställ till Aktiv' : 'Slå ut deltagare';
+      action.addEventListener('click', () => confirmParticipantAction(action));
+      item.append(details, action);
+      ui.participants.appendChild(item);
+    });
+  }
+
+  async function loadCompetitionParticipants() {
+    ui.participantsStatus.textContent = '';
+    const { data, error } = await client.rpc('get_admin_competition_participants');
+    if (error) {
+      console.error('Deltagarlistan kunde inte laddas', error);
+      ui.participantsStatus.textContent = 'Deltagarlistan kunde inte laddas just nu.';
+      return;
+    }
+    renderParticipants(data || []);
+  }
+
+  function confirmParticipantAction(button) {
+    participantAction = {
+      id: button.dataset.participantId,
+      name: button.dataset.participantName,
+      action: button.dataset.action,
+    };
+    const restore = participantAction.action === 'restore';
+    ui.participantConfirmTitle.textContent = restore ? 'Återställa deltagare?' : 'Slå ut deltagare?';
+    ui.participantConfirmCopy.textContent = restore
+      ? `Vill du återställa ${participantAction.name} till Aktiv? Den gamla utslagsnotisen avaktiveras.`
+      : `Vill du slå ut ${participantAction.name} ur tävlingen med anledning Alkohol?`;
+    ui.confirmParticipantAction.textContent = restore ? 'Återställ till Aktiv' : 'Slå ut deltagare';
+    ui.participantConfirmation.showModal();
+  }
+
+  async function applyParticipantAction() {
+    if (!participantAction) return;
+    const current = participantAction;
+    participantAction = null;
+    ui.confirmParticipantAction.disabled = true;
+    const rpc = current.action === 'restore' ? 'admin_restore_participant' : 'admin_eliminate_participant';
+    const { error } = await client.rpc(rpc, { p_user_id: current.id });
+    ui.confirmParticipantAction.disabled = false;
+    ui.participantConfirmation.close();
+    if (error) {
+      console.error('Tävlingsstatusen kunde inte uppdateras', error);
+      ui.participantsStatus.textContent = 'Tävlingsstatusen kunde inte uppdateras. Kontrollera behörighet och försök igen.';
+      return;
+    }
+    ui.participantsStatus.textContent = current.action === 'restore'
+      ? `${current.name} är återställd till Aktiv.`
+      : `${current.name} är utslagen med anledning Alkohol.`;
+    await loadCompetitionParticipants();
   }
 
   function setBusy(busy) {
@@ -310,6 +402,9 @@
   }
 
   async function handleSession(session) {
+    if (!session && activeSession?.user?.id) {
+      window.SoberOctoberEliminations?.resetOnLogout(activeSession.user.id);
+    }
     activeSession = session;
     ui.loginStatus.textContent = '';
 
@@ -329,9 +424,11 @@
       return;
     }
 
+    await window.SoberOctoberEliminations?.refresh(client, session.user.id, profile.display_name);
+
     ui.identity.textContent = `Inloggad som ${profile.display_name || session.user.email || 'admin'}`;
     showState(ui.admin);
-    await loadOctoberChallenges();
+    await Promise.all([loadOctoberChallenges(), loadCompetitionParticipants()]);
   }
 
   ui.googleLogin.addEventListener('click', async () => {
@@ -518,9 +615,17 @@
     ui.deleteConfirmation.close();
     saveBulkChanges(true);
   });
+  ui.refreshParticipants.addEventListener('click', loadCompetitionParticipants);
+  ui.cancelParticipantAction.addEventListener('click', () => {
+    participantAction = null;
+    ui.participantConfirmation.close();
+  });
+  ui.confirmParticipantAction.addEventListener('click', applyParticipantAction);
 
   async function signOut() {
+    const previousUserId = activeSession?.user?.id;
     await client.auth.signOut();
+    window.SoberOctoberEliminations?.resetOnLogout(previousUserId);
     activeSession = null;
     challenges = new Map();
     bulkOriginals = new Map();

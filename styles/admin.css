@@ -573,7 +573,32 @@ h1 {
   color:#fff;
   background:#b64a35
 }
+.participants-section {
+  margin-top:26px;
+  padding:22px;
+  border:1px solid rgba(23,63,50,.12);
+  border-radius:22px;
+  background:rgba(255,253,248,.78)
+}
+.participants-head { display:flex; align-items:center; justify-content:space-between; gap:14px; margin-bottom:14px }
+.participants-head h2 { margin:0; color:var(--deep); font-size:1.45rem; letter-spacing:-.04em }
+.participants-head .kicker { margin-bottom:4px }
+.participants-list { display:grid; gap:8px; margin:0; padding:0; list-style:none }
+.participant-row { display:flex; align-items:center; justify-content:space-between; gap:14px; padding:12px 14px; border:1px solid rgba(23,63,50,.1); border-radius:14px; background:var(--white) }
+.participant-row.is-eliminated { border-color:rgba(182,74,53,.2); background:#fbf1ed }
+.participant-details { display:grid; gap:3px; min-width:0 }
+.participant-details strong { overflow-wrap:anywhere; color:var(--forest) }
+.participant-state { color:var(--muted); font-size:.75rem }
+.participant-row.is-eliminated .participant-state { color:#a44333; font-weight:800 }
+.participant-action { flex:none; margin:0; padding:9px 12px; font-size:.75rem }
+.participant-empty { padding:20px; color:var(--muted); text-align:center }
+.participant-dialog { width:min(540px,calc(100% - 28px)) }
+.participant-dialog::backdrop { background:rgba(12,30,23,.6); backdrop-filter:blur(4px) }
 @media(max-width:720px) {
+  .participants-section { padding:16px }
+  .participants-head { align-items:flex-start; flex-direction:column }
+  .participant-row { align-items:flex-start; flex-direction:column }
+  .participant-action { width:100% }
   .bulk-head {
     align-items:flex-start;
     flex-direction:column;
