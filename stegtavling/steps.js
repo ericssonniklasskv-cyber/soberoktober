@@ -1,15 +1,16 @@
 (() => {
-  const PERIODS = [
-    { key: 'oct_01_07', days: 7 },
-    { key: 'oct_08_14', days: 7 },
-    { key: 'oct_15_21', days: 7 },
-    { key: 'oct_22_31', days: 10 },
-  ];
-  const byKey = new Map(PERIODS.map((period) => [period.key, period]));
+  const { PERIODS, calculateWeightedAverage, createProjection } = window.SoberOctoberSteps;
   const ui = {
     average: document.querySelector('#steps-average'),
+    summaryTitle: document.querySelector('#steps-summary-title'),
     coverage: document.querySelector('#steps-coverage'),
     reported: document.querySelector('#reported-count'),
+    score: document.querySelector('#steps-score'),
+    scoreKicker: document.querySelector('#steps-score-kicker'),
+    scoreTrack: document.querySelector('.steps-score-track'),
+    scoreFill: document.querySelector('#steps-score-fill'),
+    projection: document.querySelector('#steps-projection'),
+    nextLevel: document.querySelector('#steps-next-level'),
     cards: [...document.querySelectorAll('[data-period-card]')],
     forms: [...document.querySelectorAll('.period-form')],
     loginNote: document.querySelector('#steps-login-note'),
@@ -29,29 +30,40 @@
     element.classList.toggle('is-error', isError);
   }
 
-  function ownAverage(results) {
-    let weightedTotal = 0;
-    let includedDays = 0;
-    results.forEach((result) => {
-      const period = byKey.get(result.period_key);
-      if (!period) return;
-      weightedTotal += Number(result.avg_steps) * period.days;
-      includedDays += period.days;
-    });
-    return { average: includedDays ? weightedTotal / includedDays : null, includedDays };
-  }
-
   function renderSummary(results) {
-    const { average, includedDays } = ownAverage(results);
-    const count = results.length;
+    const projection = createProjection(results);
+    const { average, includedDays, reportedPeriods: count } = projection;
     ui.average.textContent = average === null ? '–' : stepFormatter.format(average);
     ui.reported.textContent = `${count}/4`;
+    ui.summaryTitle.textContent = projection.final ? 'Ditt slutliga snitt' : 'Ditt snitt hittills';
+    ui.score.textContent = projection.points === null ? '–' : String(projection.points);
+    ui.scoreKicker.textContent = projection.final ? 'Slutliga stegpoäng' : 'Stegpoäng just nu';
+    ui.scoreFill.style.width = `${projection.points === null ? 0 : projection.points / 20 * 100}%`;
+    ui.scoreTrack.setAttribute('aria-valuenow', String(projection.points ?? 0));
     if (!count) {
       ui.coverage.textContent = 'Fyll i en period så räknar vi ditt snitt hittills.';
     } else if (count === PERIODS.length) {
       ui.coverage.textContent = `${includedDays} av 31 dagar medräknade · alla perioder rapporterade.`;
     } else {
       ui.coverage.textContent = `${includedDays} av 31 dagar medräknade · ${PERIODS.length - count} ${PERIODS.length - count === 1 ? 'period kvar' : 'perioder kvar'}.`;
+    }
+
+    if (projection.final) {
+      ui.projection.textContent = `Stegpoäng: ${projection.points}/20. Resultatet är slutligt.`;
+      ui.nextLevel.textContent = 'Alla fyra perioder är rapporterade.';
+    } else if (average === null) {
+      ui.projection.textContent = 'Logga in och rapportera en period för att se din prognos.';
+      ui.nextLevel.textContent = '';
+    } else {
+      ui.projection.textContent = `Du snittar just nu ${stepFormatter.format(average)} steg per dag. Om du håller det här tempot slutar du på ${projection.points}/20 stegpoäng. ${projection.points >= 18 ? 'Snyggt jobbat!' : 'Bra kämpat — varje period räknas!'}`;
+      if (projection.nextLevel) {
+        const { stepsRemaining, points } = projection.nextLevel;
+        ui.nextLevel.textContent = points === 20
+          ? `${stepFormatter.format(stepsRemaining)} steg/dag till full pott!`
+          : `${stepFormatter.format(stepsRemaining)} steg/dag till nästa nivå: ${points} poäng`;
+      } else {
+        ui.nextLevel.textContent = 'Du ligger på 20/20 möjliga stegpoäng. Full pott!';
+      }
     }
   }
 
@@ -77,7 +89,14 @@
     ui.login.disabled = false;
     ui.reported.textContent = '–/4';
     ui.average.textContent = '–';
+    ui.summaryTitle.textContent = 'Ditt snitt hittills';
     ui.coverage.textContent = 'Logga in för att se ditt snitt och dina rapporter.';
+    ui.score.textContent = '–';
+    ui.scoreKicker.textContent = 'Stegpoäng just nu';
+    ui.scoreFill.style.width = '0%';
+    ui.scoreTrack.setAttribute('aria-valuenow', '0');
+    ui.projection.textContent = 'Logga in och rapportera en period för att se din prognos.';
+    ui.nextLevel.textContent = '';
     ui.cards.forEach((card) => {
       card.querySelector('input').value = '';
       card.querySelector('input').disabled = true;
