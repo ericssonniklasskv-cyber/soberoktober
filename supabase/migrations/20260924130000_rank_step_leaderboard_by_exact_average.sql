@@ -1,7 +1,3 @@
-create schema if not exists private;
-revoke all on schema private from public;
-grant usage on schema private to anon, authenticated;
-
 create or replace function private.get_step_leaderboard_data()
 returns table (
   rank_position bigint,
@@ -53,26 +49,3 @@ as $$
   from ranked_averages
   order by rank_position;
 $$;
-
-revoke all on function private.get_step_leaderboard_data() from public;
-grant execute on function private.get_step_leaderboard_data() to anon, authenticated;
-
-create or replace function public.get_step_leaderboard()
-returns table (
-  rank_position bigint,
-  display_name text,
-  average_steps numeric,
-  reported_periods integer
-)
-language sql
-stable
-security invoker
-set search_path = ''
-as $$
-  select rank_position, display_name, average_steps, reported_periods
-  from private.get_step_leaderboard_data()
-  order by rank_position;
-$$;
-
-revoke all on function public.get_step_leaderboard() from public;
-grant execute on function public.get_step_leaderboard() to anon, authenticated;

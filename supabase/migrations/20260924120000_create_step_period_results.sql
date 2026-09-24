@@ -86,11 +86,8 @@ as $$
     select
       profiles.id,
       profiles.display_name,
-      round(
-        sum(weighted_periods.avg_steps::numeric * weighted_periods.period_days)
-        / sum(weighted_periods.period_days),
-        1
-      ) as average_steps,
+      sum(weighted_periods.avg_steps::numeric * weighted_periods.period_days)
+        / sum(weighted_periods.period_days) as average_steps,
       count(*)::integer as reported_periods
     from weighted_periods
     inner join public.profiles
