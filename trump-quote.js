@@ -9,6 +9,15 @@
     `"I could stand in the middle of 5th Avenue and shoot somebody and I wouldn't lose voters."`,
     `"Nobody knew health care could be so complicated."`,
     `"I’m the least racist person you have ever interviewed."`,
+    `"My IQ is one of the highest — and you all know it! Please don't feel so stupid or insecure; it's not your fault."`,
+    `"God created Trump, and then he said, 'I think I'll do a good job.'"`,
+    `"My fingers are long and beautiful, as, it has been well documented, are various other parts of my body."`,
+    `"I could stand in the middle of Fifth Avenue and shoot somebody, and I wouldn’t lose any voters."`,
+    `"It’s freezing and snowing in New York — we need global warming!"`,
+    `"When you’re a star, they let you do it. You can do anything."`,
+    `"We will have so much winning if I get elected that you may get bored with winning."`,
+    `"I’m the king of debt. I love debt."`,
+    `"I think that I’m a very nice person."`,
   ];
   const storageKey = 'soberoktober-trump-quote-seen-date';
   const dayFormatter = new Intl.DateTimeFormat('en-CA', {
