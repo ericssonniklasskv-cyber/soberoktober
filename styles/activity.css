@@ -29,6 +29,9 @@
     min-height:195px
   }
 }
+@media(min-width:1271px) and (max-width:1299px) {
+  .challenge-layout .challenge-card { max-width:calc(100vw - 500px) }
+}
 .activity-preview-head {
   display:flex;
   align-items:center;
