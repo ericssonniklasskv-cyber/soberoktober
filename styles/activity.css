@@ -22,7 +22,12 @@
 }
 @media(min-width:1271px) {
   .hero-registered { top:-40px }
-  .activity-preview { top:-18px; width:210px; min-height:195px }
+  .activity-preview {
+    top:-18px;
+    left:calc((1240px - min(1280px,100vw - 64px))/2);
+    width:210px;
+    min-height:195px
+  }
 }
 .activity-preview-head {
   display:flex;
