@@ -46,7 +46,7 @@
   }
 
   function refreshObstacles() {
-    obstacles = [...appShell.querySelectorAll('a, button:not(#mohv-egg), input, select, textarea')]
+    obstacles = [...appShell.querySelectorAll('a, button:not(#mohv-egg), input, select, textarea, #page-title')]
       .filter((element) => {
         const style = getComputedStyle(element);
         return style.visibility !== 'hidden' && style.display !== 'none' && element.getClientRects().length;
