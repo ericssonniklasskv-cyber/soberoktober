@@ -49,7 +49,7 @@ h1, h2, h3 { text-wrap: balance; }
 .brand-mark { border-radius: 50% 50% 50% 8px; background: var(--forest); }
 .brand-mark svg { width: 19px; height: 19px; }
 .home-link, .back { border: 1px solid var(--line); background: transparent; min-height: 44px; display: inline-flex; align-items: center; }
-.kicker, .eyebrow, .home-history-kicker, .auth-kicker, .rules-onboarding-kicker { color: var(--orange-dark); font-weight: 800; letter-spacing: .13em; }
+.kicker, .eyebrow, .auth-kicker, .rules-onboarding-kicker { color: var(--orange-dark); font-weight: 800; letter-spacing: .13em; }
 .intro { font-size: 1rem; line-height: 1.6; }
 .panel { border: 1px solid var(--line); border-radius: var(--radius-lg); background: var(--paper); box-shadow: none; backdrop-filter: none; }
 .main-nav {
@@ -70,7 +70,7 @@ h1, h2, h3 { text-wrap: balance; }
 .main-nav .history-nav { background: transparent; color: var(--forest); box-shadow: none; }
 .main-nav .history-nav:hover { background: var(--paper-dark); color: var(--deep); }
 .main-nav a[aria-current="page"] { color: var(--paper); background: var(--forest); }
-.primary, .google, .secondary, .day-nav, .google-button, .auth-primary, .auth-secondary, .admin-link, .history-link, .entry-button, .rules-start, .rules-back, .home-history-link {
+.primary, .google, .secondary, .day-nav, .google-button, .auth-primary, .auth-secondary, .admin-link, .history-link, .entry-button, .rules-start, .rules-back {
   border-radius: var(--radius-sm);
   min-height: 48px;
   font-weight: 800;
@@ -171,14 +171,6 @@ h1, h2, h3 { text-wrap: balance; }
 .motivation { margin-top: 14px; color: #ced8c6; font-size: .79rem; }
 .feedback { top: 18px; border: 2px solid #eab175; border-radius: 14px; background: var(--paper); box-shadow: 0 5px 0 #122f2466; }
 .feedback-icon { background: var(--forest); border-radius: 50%; }
-.home-history-card { max-width: 800px; grid-template-columns: 130px minmax(0, 1fr) auto; gap: 16px; margin-top: 24px; padding: 20px 0 24px; border: 0; border-bottom: 1px solid #c8ceb7; border-radius: 0; background: transparent; box-shadow: none; backdrop-filter: none; }
-.home-history-title { font-size: 1.25rem; }
-.home-history-kicker { font-size: .6rem; }
-.home-history-stat { padding: 8px; border-radius: 0; background: transparent; border-left: 1px solid var(--line); }
-.home-history-label { font-size: .57rem; letter-spacing: .015em; }
-.home-history-value { font-size: 1.18rem; }
-.home-history-link { min-height: 44px; padding: 10px 13px; background: transparent; border: 1px solid #a8b399; color: var(--forest); font-size: .72rem; }
-.home-history-link:hover { color: var(--paper); }
 .leaderboard-card { max-width: 800px; margin-top: 40px; padding: 28px; border: 1px solid var(--line); border-radius: 24px; background: var(--paper); box-shadow: none; backdrop-filter: none; }
 .leaderboard-title { font-size: 2rem; letter-spacing: -.04em; }
 .leaderboard-copy { font-size: .8rem; line-height: 1.5; }
@@ -315,12 +307,6 @@ body:has(.auth-overlay.open) .mohv-egg { visibility: hidden; pointer-events: non
   .score-item:first-child { grid-column: 1/-1; border-right: 0; border-bottom: 1px solid #56715f; }
   .score-item:nth-child(2) { padding-left: 0; }
   .motivation { font-size: .71rem; align-items: flex-start; }
-  .home-history-card { grid-template-columns: 1fr auto; gap: 14px; padding: 17px 0 21px; }
-  .home-history-stats { grid-row: 2; grid-column: 1/-1; gap: 0; }
-  .home-history-stat { padding: 4px 10px; }
-  .home-history-stat:first-child { border-left: 0; padding-left: 0; }
-  .home-history-label { font-size: .58rem; white-space: normal; line-height: 1.4; min-height: 2.8em; }
-  .home-history-link { grid-row: 1; grid-column: 2; }
   .leaderboard-card { margin-top: 28px; padding: 22px 18px; border-radius: 20px; }
   .leaderboard-title { font-size: 1.8rem; }
   .leaderboard-head { gap: 12px; }
@@ -392,8 +378,6 @@ body:has(.auth-overlay.open) .mohv-egg { visibility: hidden; pointer-events: non
   .day-pill { padding: 9px; font-size: .62rem; }
   .auth-trigger { max-width: 130px; padding: 10px; font-size: .7rem; }
   .challenge-card { padding: 22px 16px; }
-  .home-history-link { padding: 9px; font-size: .67rem; }
-  .home-history-label { font-size: .53rem; }
   .calendar-day { padding: 5px 3px; min-height: 67px; }
   .day-result { font-size: .56rem; font-weight: 600; }
   .day-points { font-size: .55rem; font-weight: 600; }
@@ -418,7 +402,7 @@ body:has(.feedback.show) .mohv-egg { visibility: hidden; pointer-events: none; }
 /* Utility text supports, rather than competes with, display typography. */
 .registered-name, .leaderboard-preview-meta, .leaderboard-days, .rules-onboarding-card p,
 .day-description, .day-meta, .field label, .bulk-copy, .auth-copy,
-.score-label, .home-history-label, .stat-label, .weekday, .identity { font-weight: 600; }
+.score-label, .stat-label, .weekday, .identity { font-weight: 600; }
 .leaderboard-preview-name, .leaderboard-preview-link, .main-nav a, .day-pill,
 .auth-trigger, .day-date, .day-status, .progress-count, .dirty-count { font-weight: 750; }
 /* Decorative leaves stay inside the scrollable invitation viewport. */
