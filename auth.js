@@ -61,6 +61,7 @@
   let competitionStatus = null;
   let loadedChallengeDate = null;
   let availableChallengeDate = null;
+  let levelBusy = false;
   const validMultipliers = new Set([1, 2, 3]);
   const pointsFormatter = new Intl.NumberFormat('sv-SE', { maximumFractionDigits: 1 });
 
@@ -212,7 +213,7 @@
     const today = stockholmDate();
     loadedChallengeDate = today;
     availableChallengeDate = null;
-    setLevelBusy(false);
+    refreshLevelButtons();
 
     if (!isCompetitionDay(today)) {
       ui.challengeTitle.textContent = 'Dagens pass kommer snart';
@@ -242,7 +243,7 @@
     ui.challengeDescription.textContent = data.description?.trim() || generatedDescription;
     ui.challengeDescription.hidden = !ui.challengeDescription.textContent;
     availableChallengeDate = today;
-    setLevelBusy(false);
+    refreshLevelButtons();
   }
 
   function renderRegistered(rows) {
@@ -466,10 +467,15 @@
     renderLeaderboard(data || []);
   }
 
-  function setLevelBusy(busy) {
+  function refreshLevelButtons() {
     ui.levelButtons.forEach((button) => {
-      button.disabled = busy || availableChallengeDate !== stockholmDate();
+      button.disabled = levelBusy || availableChallengeDate !== stockholmDate();
     });
+  }
+
+  function setLevelBusy(busy) {
+    levelBusy = busy;
+    refreshLevelButtons();
   }
 
   async function saveDailyResult(multiplier) {
