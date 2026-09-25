@@ -59,6 +59,8 @@
   let sessionWork = Promise.resolve();
   let latestLeaderboardRows = [];
   let competitionStatus = null;
+  let loadedChallengeDate = null;
+  let availableChallengeDate = null;
   const validMultipliers = new Set([1, 2, 3]);
   const pointsFormatter = new Intl.NumberFormat('sv-SE', { maximumFractionDigits: 1 });
 
@@ -77,6 +79,8 @@
 
     return `${parts.year}-${parts.month}-${parts.day}`;
   }
+
+  const isCompetitionDay = (date) => date >= '2026-10-01' && date <= '2026-10-31';
 
   function showView(view) {
     [ui.loginView, ui.onboardingView, ui.accountView].forEach((item) => {
@@ -205,10 +209,21 @@
   }
 
   async function loadTodayChallenge() {
+    const today = stockholmDate();
+    loadedChallengeDate = today;
+    availableChallengeDate = null;
+    setLevelBusy(false);
+
+    if (!isCompetitionDay(today)) {
+      ui.challengeTitle.textContent = 'Dagens pass kommer snart';
+      ui.challengeDescription.hidden = true;
+      return;
+    }
+
     const { data, error } = await client
       .from('daily_challenges')
       .select('title, description, unit, base_amount')
-      .eq('challenge_date', stockholmDate())
+      .eq('challenge_date', today)
       .maybeSingle();
 
     if (error) {
@@ -226,6 +241,8 @@
     ui.challengeTitle.textContent = data.title;
     ui.challengeDescription.textContent = data.description?.trim() || generatedDescription;
     ui.challengeDescription.hidden = !ui.challengeDescription.textContent;
+    availableChallengeDate = today;
+    setLevelBusy(false);
   }
 
   function renderRegistered(rows) {
@@ -451,7 +468,7 @@
 
   function setLevelBusy(busy) {
     ui.levelButtons.forEach((button) => {
-      button.disabled = busy;
+      button.disabled = busy || availableChallengeDate !== stockholmDate();
     });
   }
 
@@ -478,6 +495,12 @@
 
     if (competitionStatus?.status === 'eliminated') {
       ui.saveStatus.textContent = 'Du är utslagen ur tävlingen.';
+      return;
+    }
+
+    if (loadedChallengeDate !== stockholmDate()) await loadTodayChallenge();
+    if (availableChallengeDate !== stockholmDate()) {
+      ui.saveStatus.textContent = 'Dagens pass är inte publicerat ännu.';
       return;
     }
 
@@ -601,6 +624,10 @@
 
   ui.levelButtons.forEach((button) => {
     button.addEventListener('click', () => saveDailyResult(Number(button.dataset.level)));
+  });
+
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden && loadedChallengeDate !== stockholmDate()) void loadTodayChallenge();
   });
 
   ui.leaderboardPreviewLinks.forEach((link) => {
