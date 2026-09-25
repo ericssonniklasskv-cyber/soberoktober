@@ -22,7 +22,7 @@
 }
 @media(min-width:1271px) {
   .hero-registered { top:-40px }
-  .activity-preview { top:-18px }
+  .activity-preview { top:-18px; width:210px; min-height:195px }
 }
 .activity-preview-head {
   display:flex;
