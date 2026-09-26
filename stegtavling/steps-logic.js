@@ -11,15 +11,10 @@
   ]);
   const PERIOD_BY_KEY = new Map(PERIODS.map((period) => [period.key, period]));
   const SCORE_LEVELS = Object.freeze([
-    Object.freeze({ minimum: 0, points: 0 }),
-    Object.freeze({ minimum: 4000, points: 4 }),
-    Object.freeze({ minimum: 5000, points: 7 }),
-    Object.freeze({ minimum: 6000, points: 10 }),
-    Object.freeze({ minimum: 7000, points: 12 }),
-    Object.freeze({ minimum: 8000, points: 14 }),
-    Object.freeze({ minimum: 9000, points: 16 }),
-    Object.freeze({ minimum: 10000, points: 18 }),
-    Object.freeze({ minimum: 12000, points: 20 }),
+    Object.freeze({ minimum: 8000, points: 15 }),
+    Object.freeze({ minimum: 10000, points: 20 }),
+    Object.freeze({ minimum: 12000, points: 25 }),
+    Object.freeze({ minimum: 14000, points: 30 }),
   ]);
 
   function calculateWeightedAverage(results) {
@@ -43,7 +38,7 @@
   }
 
   function pointsForAverage(average) {
-    if (!Number.isFinite(average) || average < 0) return 0;
+    if (!Number.isFinite(average) || average < SCORE_LEVELS[0].minimum) return 0;
     let level = SCORE_LEVELS[0];
     SCORE_LEVELS.forEach((candidate) => {
       if (average >= candidate.minimum) level = candidate;
@@ -82,11 +77,11 @@
       ...level,
       isLowest: index === 0,
       isHighest: index === SCORE_LEVELS.length - 1,
-      threshold: index === 0 ? SCORE_LEVELS[index + 1].minimum : level.minimum,
-      isCurrent: hasAverage && level.points === currentPoints,
+      threshold: level.minimum,
+      isCurrent: hasAverage && currentPoints > 0 && level.points === currentPoints,
       isNext: nextLevel?.minimum === level.minimum,
     })).reverse();
   }
 
-  return Object.freeze({ PERIODS, SCORE_LEVELS, calculateWeightedAverage, pointsForAverage, nextLevelForAverage, createProjection, getScoreLadder });
+  return Object.freeze({ PERIODS, SCORE_LEVELS, MAX_POINTS: SCORE_LEVELS[SCORE_LEVELS.length - 1].points, calculateWeightedAverage, pointsForAverage, nextLevelForAverage, createProjection, getScoreLadder });
 }));
