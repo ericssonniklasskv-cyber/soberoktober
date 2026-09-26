@@ -49,14 +49,14 @@ test('next level and full-points gaps are calculated from the exact average', ()
 
 test('score ladder marks the correct current and next level at every boundary', () => {
   const cases = [
-    [7999, 0, 15], [8000, 15, 20], [9999, 15, 20], [10000, 20, 25],
+    [7999, null, 15], [8000, 15, 20], [9999, 15, 20], [10000, 20, 25],
     [11999, 20, 25], [12000, 25, 30], [13999, 25, 30], [14000, 30, null],
   ];
 
   for (const [average, currentPoints, nextPoints] of cases) {
     const ladder = getScoreLadder(average);
-    assert.equal(ladder.filter((level) => level.isCurrent).length, 1, `${average}: one current level`);
-    assert.equal(ladder.find((level) => level.isCurrent).points, currentPoints, `${average}: current`);
+    assert.equal(ladder.filter((level) => level.isCurrent).length, currentPoints === null ? 0 : 1, `${average}: current count`);
+    if (currentPoints !== null) assert.equal(ladder.find((level) => level.isCurrent).points, currentPoints, `${average}: current`);
     assert.equal(ladder.filter((level) => level.isNext).length, nextPoints === null ? 0 : 1, `${average}: next count`);
     if (nextPoints !== null) assert.equal(ladder.find((level) => level.isNext).points, nextPoints, `${average}: next`);
   }
