@@ -1,5 +1,5 @@
 (() => {
-  const { PERIODS, calculateWeightedAverage, createProjection, getScoreLadder } = window.SoberOctoberSteps;
+  const { PERIODS, MAX_POINTS, calculateWeightedAverage, createProjection, getScoreLadder } = window.SoberOctoberSteps;
   const periodKeys = new Set(PERIODS.map((period) => period.key));
   const ui = {
     average: document.querySelector('#steps-average'),
@@ -43,9 +43,7 @@
 
       const threshold = document.createElement('span');
       threshold.className = 'steps-level-threshold';
-      threshold.textContent = level.isLowest
-        ? `Under ${stepFormatter.format(level.threshold)} steg/dag`
-        : `${stepFormatter.format(level.threshold)}+ steg/dag`;
+      threshold.textContent = `${stepFormatter.format(level.minimum)}+ steg/dag`;
 
       const points = document.createElement('strong');
       points.className = 'steps-level-points';
@@ -73,7 +71,7 @@
     ui.summaryTitle.textContent = projection.final ? 'Ditt slutliga snitt' : 'Ditt snitt hittills';
     ui.score.textContent = projection.points === null ? '–' : String(projection.points);
     ui.scoreKicker.textContent = projection.final ? 'Slutliga stegpoäng' : 'Stegpoäng just nu';
-    ui.scoreFill.style.width = `${projection.points === null ? 0 : projection.points / 20 * 100}%`;
+    ui.scoreFill.style.width = `${projection.points === null ? 0 : projection.points / MAX_POINTS * 100}%`;
     ui.scoreTrack.setAttribute('aria-valuenow', String(projection.points ?? 0));
     if (!count) {
       ui.coverage.textContent = 'Fyll i en period så räknar vi ditt snitt hittills.';
@@ -84,20 +82,20 @@
     }
 
     if (projection.final) {
-      ui.projection.textContent = `Stegpoäng: ${projection.points}/20. Resultatet är slutligt.`;
+      ui.projection.textContent = `Stegpoäng: ${projection.points}/${MAX_POINTS}. Resultatet är slutligt.`;
       ui.nextLevel.textContent = 'Samtliga perioder är rapporterade.';
     } else if (average === null) {
       ui.projection.textContent = 'Fyll i en period för att se din prognos.';
       ui.nextLevel.textContent = '';
     } else {
-      ui.projection.textContent = `Du snittar just nu ${stepFormatter.format(average)} steg per dag. Om du håller det här tempot slutar du på ${projection.points}/20 stegpoäng. ${projection.points >= 18 ? 'Snyggt jobbat!' : 'Bra kämpat — varje period räknas!'}`;
+      ui.projection.textContent = `Du snittar just nu ${stepFormatter.format(average)} steg per dag. Om du håller det här tempot slutar du på ${projection.points}/${MAX_POINTS} stegpoäng. ${projection.points >= MAX_POINTS - 5 ? 'Snyggt jobbat!' : 'Bra kämpat — varje period räknas!'}`;
       if (projection.nextLevel) {
         const { stepsRemaining, points } = projection.nextLevel;
-        ui.nextLevel.textContent = points === 20
+        ui.nextLevel.textContent = points === MAX_POINTS
           ? `${stepFormatter.format(stepsRemaining)} steg/dag till full pott!`
           : `${stepFormatter.format(stepsRemaining)} steg/dag till nästa nivå: ${points} poäng`;
       } else {
-        ui.nextLevel.textContent = 'Du ligger på 20/20 möjliga stegpoäng. Full pott!';
+        ui.nextLevel.textContent = `Du ligger på ${MAX_POINTS}/${MAX_POINTS} möjliga stegpoäng. Full pott!`;
       }
     }
   }
