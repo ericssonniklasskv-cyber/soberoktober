@@ -338,7 +338,7 @@
       ui.reportSteps.textContent = 'Steg för perioden är inte rapporterade ännu.';
       ui.reportSteps.classList.add('is-unreported');
     } else {
-      ui.reportSteps.textContent = `${formatNumber(report.stepAverage)} steg/dag i snitt · ${report.stepPoints}/20 möjliga stegpoäng om du håller samma snitt.`;
+      ui.reportSteps.textContent = `${formatNumber(report.stepAverage)} steg/dag i snitt · ${report.stepPoints}/${window.SoberOctoberSteps.MAX_POINTS} möjliga stegpoäng om du håller samma snitt.`;
       ui.reportSteps.classList.remove('is-unreported');
     }
 
@@ -425,7 +425,7 @@
       : report.stepPlacementAmbiguous ? 'Kan inte särskiljas' : 'Ej tillgänglig';
     ui.finalReportStepStats.replaceChildren(...createReportStats([
       ['Rapporterade perioder', `${report.stepReportedPeriods}/4`],
-      ['Slutliga stegpoäng', report.stepPoints === null ? '–' : `${report.stepPoints}/20`],
+      ['Slutliga stegpoäng', report.stepPoints === null ? '–' : `${report.stepPoints}/${window.SoberOctoberSteps.MAX_POINTS}`],
       ['Stegplacering', stepPlace],
     ]));
 
