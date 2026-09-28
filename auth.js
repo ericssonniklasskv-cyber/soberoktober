@@ -20,11 +20,20 @@
     scoreSummary: document.querySelector('#score-summary'),
     dailyResult: document.querySelector('#daily-result'),
     dailyPoints: document.querySelector('#daily-points'),
+    dailyBonus: document.querySelector('#daily-bonus'),
     totalPoints: document.querySelector('#total-points'),
     completedDays: document.querySelector('#completed-days'),
     saveStatus: document.querySelector('#save-status'),
     challengeTitle: document.querySelector('#challenge-title'),
     challengeDescription: document.querySelector('#challenge-description'),
+    challengeParts: document.querySelector('#challenge-parts'),
+    challengePartsHint: document.querySelector('#challenge-parts-hint'),
+    challengePartsList: document.querySelector('#challenge-parts-list'),
+    bonusChallenge: document.querySelector('#bonus-challenge'),
+    bonusDescription: document.querySelector('#bonus-description'),
+    bonusValue: document.querySelector('#bonus-value'),
+    bonusButton: document.querySelector('#bonus-button'),
+    bonusStatus: document.querySelector('#bonus-status'),
     historyLink: document.querySelector('#history-link'),
     adminLink: document.querySelector('#admin-link'),
     leaderboardList: document.querySelector('#leaderboard-list'),
@@ -61,7 +70,11 @@
   let competitionStatus = null;
   let loadedChallengeDate = null;
   let availableChallengeDate = null;
+  let currentChallenge = null;
+  let currentTodayResult = null;
+  let currentTodayBonus = null;
   let levelBusy = false;
+  let bonusBusy = false;
   const validMultipliers = new Set([1, 2, 3]);
   const pointsFormatter = new Intl.NumberFormat('sv-SE', { maximumFractionDigits: 1 });
 
@@ -170,15 +183,80 @@
     ui.trigger.title = displayName ? 'Öppna ditt konto' : 'Slutför din profil';
   }
 
-  function renderResults(results) {
+  function renderChallengeParts() {
+    const challenge = currentChallenge;
+    const mode = challenge?.completion_mode || 'single';
+    ui.challengePartsList.replaceChildren();
+    if (!challenge || mode === 'single') {
+      ui.challengeParts.hidden = true;
+      return;
+    }
+
+    const firstDescription = window.SoberOctoberChallengeLogic?.describePart(challenge, 'first') || '';
+    const secondDescription = window.SoberOctoberChallengeLogic?.describePart(challenge, 'second') || '';
+    const savedParts = new Set(currentTodayResult?.completed_parts || []);
+    const defaultParts = new Set(savedParts);
+    if (!defaultParts.size && mode === 'or') defaultParts.add('first');
+    ui.challengePartsHint.textContent = mode === 'and'
+      ? 'Båda delarna ingår i varje nivå.'
+      : 'Välj en eller båda delarna. Nivån gäller för alla valda delar.';
+
+    const addPart = (key, description) => {
+      if (mode === 'and') {
+        const item = document.createElement('p');
+        item.className = 'challenge-part-display';
+        item.textContent = description;
+        ui.challengePartsList.appendChild(item);
+        return;
+      }
+      const label = document.createElement('label');
+      label.className = 'challenge-part-choice';
+      const input = document.createElement('input');
+      input.type = 'checkbox';
+      input.name = 'completed-part';
+      input.value = key;
+      input.checked = defaultParts.has(key);
+      input.disabled = (Boolean(currentTodayResult) && savedParts.has(key)) || levelBusy;
+      const text = document.createElement('span');
+      text.textContent = description;
+      label.append(input, text);
+      ui.challengePartsList.appendChild(label);
+    };
+
+    addPart('first', firstDescription);
+    if (mode === 'and') {
+      const separator = document.createElement('span');
+      separator.className = 'challenge-part-separator';
+      separator.textContent = 'och';
+      ui.challengePartsList.appendChild(separator);
+    }
+    addPart('second', secondDescription);
+    ui.challengeParts.hidden = false;
+  }
+
+  function refreshBonusButton() {
+    const configured = Boolean(currentChallenge?.bonus_description && Number(currentChallenge?.bonus_points) > 0);
+    ui.bonusChallenge.hidden = !configured;
+    ui.bonusButton.disabled = bonusBusy || levelBusy || availableChallengeDate !== stockholmDate() || Boolean(currentTodayBonus);
+  }
+
+  function renderResults(results, bonusClaims) {
     const today = stockholmDate();
-    const todayResult = results.find((result) => result.result_date === today);
-    const totalPoints = results.reduce((total, result) => total + Number(result.points), 0);
-    ui.dailyResult.textContent = todayResult ? `${todayResult.multiplier}×` : 'Inte registrerat';
-    ui.dailyPoints.textContent = `${pointsFormatter.format(todayResult ? Number(todayResult.points) : 0)} poäng`;
+    currentTodayResult = results.find((result) => result.result_date === today) || null;
+    currentTodayBonus = bonusClaims.find((claim) => claim.challenge_date === today) || null;
+    const totalPoints = results.reduce((total, result) => total + Number(result.points || 0), 0)
+      + bonusClaims.reduce((total, claim) => total + Number(claim.points || 0), 0);
+    ui.dailyResult.textContent = currentTodayResult ? `${currentTodayResult.multiplier}×` : 'Inte registrerat';
+    ui.dailyPoints.textContent = `${pointsFormatter.format(currentTodayResult ? Number(currentTodayResult.points) : 0)} poäng`;
+    ui.dailyBonus.hidden = !currentChallenge?.bonus_description;
+    ui.dailyBonus.textContent = ui.dailyBonus.hidden
+      ? ''
+      : (currentTodayBonus ? `${pointsFormatter.format(Number(currentTodayBonus.points))} bonuspoäng` : 'Bonus ej registrerad');
     ui.totalPoints.textContent = pointsFormatter.format(totalPoints);
     ui.completedDays.textContent = String(results.length);
     ui.scoreSummary.hidden = false;
+    renderChallengeParts();
+    refreshBonusButton();
     renderWeeklyReportCta();
   }
 
@@ -200,30 +278,34 @@
   }
 
   async function loadResults() {
-    const { data, error } = await client
-      .from('daily_results')
-      .select('result_date, multiplier, points')
-      .order('result_date', { ascending: true });
-
-    if (error) throw error;
-    renderResults(data || []);
+    const [resultsResponse, bonusResponse] = await Promise.all([
+      client.from('daily_results').select('result_date, multiplier, points, completed_parts').order('result_date', { ascending: true }),
+      client.from('daily_bonus_claims').select('challenge_date, points').order('challenge_date', { ascending: true }),
+    ]);
+    if (resultsResponse.error) throw resultsResponse.error;
+    if (bonusResponse.error) throw bonusResponse.error;
+    renderResults(resultsResponse.data || [], bonusResponse.data || []);
   }
 
   async function loadTodayChallenge() {
     const today = stockholmDate();
     loadedChallengeDate = today;
     availableChallengeDate = null;
+    currentChallenge = null;
     refreshLevelButtons();
+    refreshBonusButton();
 
     if (!isCompetitionDay(today)) {
       ui.challengeTitle.textContent = 'Dagens pass kommer snart';
       ui.challengeDescription.hidden = true;
+      ui.challengeParts.hidden = true;
+      ui.bonusChallenge.hidden = true;
       return;
     }
 
     const { data, error } = await client
       .from('daily_challenges')
-      .select('title, description, unit, base_amount')
+      .select('title, description, unit, base_amount, completion_mode, second_description, second_base_amount, second_unit, bonus_description, bonus_points')
       .eq('challenge_date', today)
       .maybeSingle();
 
@@ -235,15 +317,32 @@
     if (!data) {
       ui.challengeTitle.textContent = 'Dagens pass kommer snart';
       ui.challengeDescription.hidden = true;
+      ui.challengeParts.hidden = true;
+      ui.bonusChallenge.hidden = true;
       return;
     }
 
-    const generatedDescription = [data.base_amount, data.unit].filter(Boolean).join(' ');
+    currentChallenge = data;
     ui.challengeTitle.textContent = data.title;
-    ui.challengeDescription.textContent = data.description?.trim() || generatedDescription;
-    ui.challengeDescription.hidden = !ui.challengeDescription.textContent;
+    const mode = data.completion_mode || 'single';
+    const firstDescription = window.SoberOctoberChallengeLogic?.describePart(data, 'first')
+      || data.description?.trim()
+      || [data.base_amount, data.unit].filter(Boolean).join(' ');
+    ui.challengeDescription.textContent = firstDescription;
+    ui.challengeDescription.hidden = mode !== 'single' || !firstDescription;
+    if (mode !== 'single') renderChallengeParts();
+    if (data.bonus_description && Number(data.bonus_points) > 0) {
+      ui.bonusDescription.textContent = data.bonus_description;
+      ui.bonusValue.textContent = `+${pointsFormatter.format(Number(data.bonus_points))} poäng`;
+    }
+    ui.dailyBonus.hidden = !data.bonus_description;
+    ui.dailyBonus.textContent = data.bonus_description
+      ? (currentTodayBonus ? `${pointsFormatter.format(Number(currentTodayBonus.points))} bonuspoäng` : 'Bonus ej registrerad')
+      : '';
     availableChallengeDate = today;
     refreshLevelButtons();
+    refreshBonusButton();
+    if (currentTodayResult) renderChallengeParts();
   }
 
   function renderRegistered(rows) {
@@ -471,6 +570,10 @@
     ui.levelButtons.forEach((button) => {
       button.disabled = levelBusy || availableChallengeDate !== stockholmDate();
     });
+    ui.challengePartsList.querySelectorAll('input').forEach((input) => {
+      input.disabled = levelBusy || Boolean(currentTodayResult?.completed_parts?.includes(input.value));
+    });
+    refreshBonusButton();
   }
 
   function setLevelBusy(busy) {
@@ -510,6 +613,18 @@
       return;
     }
 
+    const mode = currentChallenge?.completion_mode || 'single';
+    const selectedParts = mode === 'single'
+      ? ['first']
+      : mode === 'and'
+        ? ['first', 'second']
+        : [...ui.challengePartsList.querySelectorAll('input[name="completed-part"]:checked')].map((input) => input.value);
+    const completedParts = [...new Set([...(currentTodayResult?.completed_parts || []), ...selectedParts])];
+    if (!completedParts.length) {
+      ui.saveStatus.textContent = 'Välj minst en del av dagens pass.';
+      return;
+    }
+
     ui.saveStatus.textContent = 'Sparar dagens resultat…';
     setLevelBusy(true);
 
@@ -520,6 +635,7 @@
           user_id: session.user.id,
           result_date: stockholmDate(),
           multiplier,
+          completed_parts: completedParts,
         },
         { onConflict: 'user_id,result_date' },
       );
@@ -543,6 +659,65 @@
       ui.saveStatus.textContent = 'Resultatet sparades, men poängen kunde inte uppdateras.';
     } finally {
       setLevelBusy(false);
+    }
+  }
+
+  async function saveBonusClaim() {
+    if (bonusBusy || !currentChallenge?.bonus_description || !Number(currentChallenge.bonus_points)) return;
+    if (!authReady) {
+      ui.bonusStatus.textContent = 'Inloggningen laddas. Försök igen om en sekund.';
+      return;
+    }
+    if (!session) {
+      ui.loginStatus.textContent = 'Logga in först för att spara bonuspoäng.';
+      openModal(ui.loginView);
+      return;
+    }
+    if (!profile?.display_name) {
+      ui.nameStatus.textContent = 'Välj ditt namn innan du sparar bonuspoäng.';
+      ui.email.textContent = session.user.email || '';
+      openModal(ui.onboardingView);
+      return;
+    }
+    if (competitionStatus?.status === 'eliminated') {
+      ui.bonusStatus.textContent = 'Du är utslagen ur tävlingen.';
+      return;
+    }
+    if (loadedChallengeDate !== stockholmDate()) await loadTodayChallenge();
+    if (availableChallengeDate !== stockholmDate()) {
+      ui.bonusStatus.textContent = 'Dagens pass är inte publicerat ännu.';
+      return;
+    }
+
+    bonusBusy = true;
+    refreshBonusButton();
+    ui.bonusStatus.textContent = 'Sparar bonuspoängen…';
+    const { data: awardedPoints, error } = await client.rpc('claim_daily_bonus');
+
+    if (error) {
+      console.error('Bonuspoängen kunde inte sparas', error);
+      ui.bonusStatus.textContent = error.code === '23505'
+        ? 'Dagens bonuspoäng är redan sparade.'
+        : error.code === '42501' && /utslagen/i.test(error.message || '')
+          ? 'Du är utslagen ur tävlingen.'
+          : 'Bonuspoängen kunde inte sparas. Kontrollera att bonusuppgiften är klar och försök igen.';
+      if (error.code === '23505') await loadResults().catch((loadError) => console.error('Poängen kunde inte uppdateras', loadError));
+      bonusBusy = false;
+      refreshBonusButton();
+      return;
+    }
+
+    try {
+      await loadResults();
+      await refreshLeaderboard();
+      ui.bonusStatus.textContent = `Snyggt! ${pointsFormatter.format(Number(awardedPoints || currentTodayBonus?.points || currentChallenge.bonus_points))} bonuspoäng tillagda.`;
+      window.celebrateLevel?.(1);
+    } catch (error) {
+      console.error('Bonuspoängen sparades men summeringen kunde inte uppdateras', error);
+      ui.bonusStatus.textContent = 'Bonuspoängen sparades, men summeringen kunde inte uppdateras.';
+    } finally {
+      bonusBusy = false;
+      refreshBonusButton();
     }
   }
 
@@ -631,6 +806,7 @@
   ui.levelButtons.forEach((button) => {
     button.addEventListener('click', () => saveDailyResult(Number(button.dataset.level)));
   });
+  ui.bonusButton.addEventListener('click', saveBonusClaim);
 
   document.addEventListener('visibilitychange', () => {
     if (!document.hidden && loadedChallengeDate !== stockholmDate()) void loadTodayChallenge();

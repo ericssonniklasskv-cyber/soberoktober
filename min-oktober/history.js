@@ -22,6 +22,7 @@
     detailDescription: document.querySelector('#detail-description'),
     detailLevel: document.querySelector('#detail-level'),
     detailPoints: document.querySelector('#detail-points'),
+    detailBonus: document.querySelector('#detail-bonus'),
     reportDetail: document.querySelector('#weekly-report-detail'),
     reportDetailClose: document.querySelector('#report-detail-close'),
     reportPeriod: document.querySelector('#weekly-report-period'),
@@ -55,6 +56,7 @@
   let sessionWork = Promise.resolve();
   let challengesByDate = new Map();
   let weeklyReports = new Map();
+  let bonusClaimsByDate = new Map();
   let activeUserId = null;
   let stepResultsUnavailable = false;
   let finalReportData = null;
@@ -118,19 +120,24 @@
     });
   }
 
-  function challengeDescription(challenge) {
+  function completedChallengeDescription(challenge, result) {
     if (!challenge) return 'Passinformationen saknas';
-    const generated = [challenge.base_amount, challenge.unit].filter((value) => value !== null && value !== '').join(' ');
-    return challenge.description?.trim() || generated || challenge.title;
+    const logic = window.SoberOctoberChallengeLogic;
+    const parts = logic?.completedParts(result, challenge) || ['first'];
+    const descriptions = parts.map((part) => logic?.describePart(challenge, part) || '').filter(Boolean);
+    return descriptions.join(challenge.completion_mode === 'and' ? ' och ' : ' eller ') || challenge.title;
   }
 
   function openDetail(day) {
     const challenge = challengesByDate.get(day.date);
     ui.detailDate.textContent = formatDate(day.date);
     ui.detailTitle.textContent = challenge?.title || 'Dagens pass';
-    ui.detailDescription.textContent = challengeDescription(challenge);
+    ui.detailDescription.textContent = completedChallengeDescription(challenge, day.result);
     ui.detailLevel.textContent = `${day.result.multiplier}×`;
     ui.detailPoints.textContent = `${pointsFormatter.format(Number(day.result.points))} poäng`;
+    const bonus = bonusClaimsByDate.get(day.date);
+    ui.detailBonus.hidden = !bonus;
+    ui.detailBonus.textContent = bonus ? `Bonuspoäng: ${pointsFormatter.format(Number(bonus.points))}` : '';
     ui.detail.showModal();
   }
 
@@ -170,7 +177,8 @@
         points.textContent = `${pointsFormatter.format(Number(day.result.points))} p`;
         cell.append(points);
         const challenge = challengesByDate.get(day.date);
-        cell.setAttribute('aria-label', `${formatDate(day.date)}, genomförd ${day.result.multiplier} gånger, ${pointsFormatter.format(Number(day.result.points))} poäng, ${challengeDescription(challenge)}`);
+        const bonus = bonusClaimsByDate.get(day.date);
+        cell.setAttribute('aria-label', `${formatDate(day.date)}, genomförd ${day.result.multiplier} gånger, ${pointsFormatter.format(Number(day.result.points))} poäng${bonus ? `, ${pointsFormatter.format(Number(bonus.points))} bonuspoäng` : ''}, ${completedChallengeDescription(challenge, day.result)}`);
       } else {
         cell.setAttribute('aria-label', `${formatDate(day.date)}, ${day.state === 'missed' ? 'missad' : 'framtida'}`);
       }
@@ -198,7 +206,7 @@
     const summary = document.createElement('p');
     summary.className = 'weekly-report-summary';
     summary.textContent = report
-      ? `${report.completedDays} av ${period.days} dagar · ${formatNumber(report.trainingPoints)} träningspoäng`
+      ? `${report.completedDays} av ${period.days} dagar · ${formatNumber(report.totalPoints)} poäng totalt`
       : (period.start > stockholmDate() ? 'Låst tills perioden är avslutad' : 'Pågår fortfarande');
 
     const action = document.createElement(report ? 'button' : 'span');
@@ -225,7 +233,7 @@
     return card;
   }
 
-  function renderWeeklyReports(results, challenges, stepResults, today) {
+  function renderWeeklyReports(results, challenges, stepResults, bonusClaims, today) {
     const seen = seenReportKeys();
     weeklyReports = new Map();
     const cards = window.SoberOctoberHistory.REPORT_PERIODS.map((period) => {
@@ -233,6 +241,7 @@
         results,
         challenges,
         stepResults,
+        bonusClaims,
         periodKey: period.key,
         today,
         stepsLogic: window.SoberOctoberSteps,
@@ -307,6 +316,8 @@
       ['Genomförda dagar', `${report.completedDays} av ${report.days}`],
       ['Missade dagar', String(report.missedDays)],
       ['Träningspoäng', `${formatNumber(report.trainingPoints)} p`],
+      ['Bonuspoäng', `${formatNumber(report.bonusPoints)} p`],
+      ['Totalt', `${formatNumber(report.totalPoints)} p`],
       ['3×-dagar', String(report.multiplierCounts[3])],
       ['Bästa streak', `${report.bestStreak} ${report.bestStreak === 1 ? 'dag' : 'dagar'}`],
     ];
@@ -392,6 +403,8 @@
     const trainingPlace = report.trainingPlacement === null ? 'Ej tillgänglig' : `${report.trainingPlacement}:e plats`;
     ui.finalReportStats.replaceChildren(...createReportStats([
       ['Total träningspoäng', `${formatNumber(report.totalTrainingPoints)} p`],
+      ['Bonuspoäng', `${formatNumber(report.bonusPoints)} p`],
+      ['Totalt', `${formatNumber(report.totalPoints)} p`],
       ['Genomförda dagar', `${report.completedDays} av ${report.completedDays + report.missedDays}`],
       ['Missade dagar', String(report.missedDays)],
       ['Längsta streak', `${report.longestStreak} ${report.longestStreak === 1 ? 'dag' : 'dagar'}`],
@@ -433,9 +446,9 @@
     if (markFinalReportSeen()) addReportConfettiTo(ui.finalReportConfetti);
   }
 
-  function renderHistory(results, displayName, competitionStatus) {
+  function renderHistory(results, bonusClaims, displayName, competitionStatus) {
     const today = stockholmDate();
-    const history = window.SoberOctoberHistory.calculate(results, today, competitionStatus);
+    const history = window.SoberOctoberHistory.calculate(results, today, competitionStatus, bonusClaims);
     const points = pointsFormatter.format(history.totalPoints);
     const dayWord = history.completedDays === 1 ? 'dag' : 'dagar';
     const streakWord = history.currentStreak === 1 ? 'dag' : 'dagar';
@@ -455,17 +468,17 @@
     ui.historyStatus.textContent = '';
     const today = stockholmDate();
     const reportUnlocked = today >= '2026-11-01';
-    const [resultsResponse, challengesResponse, stepResultsResponse, profileResponse, trainingLeaderboardResponse, stepLeaderboardResponse] = await Promise.all([
+    const [resultsResponse, challengesResponse, stepResultsResponse, bonusClaimsResponse, profileResponse, trainingLeaderboardResponse, stepLeaderboardResponse] = await Promise.all([
       client
         .from('daily_results')
-        .select('result_date, multiplier, points')
+        .select('result_date, multiplier, points, completed_parts')
         .eq('user_id', session.user.id)
         .gte('result_date', '2026-10-01')
         .lte('result_date', '2026-10-31')
         .order('result_date'),
       client
         .from('daily_challenges')
-        .select('challenge_date, title, description, unit, base_amount')
+        .select('challenge_date, title, description, unit, base_amount, completion_mode, second_description, second_base_amount, second_unit, bonus_description, bonus_points')
         .gte('challenge_date', '2026-10-01')
         .lte('challenge_date', '2026-10-31')
         .order('challenge_date'),
@@ -473,6 +486,12 @@
         .from('step_period_results')
         .select('period_key, avg_steps')
         .eq('user_id', session.user.id),
+      client
+        .from('daily_bonus_claims')
+        .select('challenge_date, points')
+        .eq('user_id', session.user.id)
+        .gte('challenge_date', '2026-10-01')
+        .lte('challenge_date', '2026-10-31'),
       client
         .from('profiles')
         .select('display_name')
@@ -488,6 +507,9 @@
 
     const results = resultsResponse.data || [];
     const challenges = challengesResponse.data || [];
+    if (bonusClaimsResponse.error) throw bonusClaimsResponse.error;
+    const bonusClaims = bonusClaimsResponse.data || [];
+    bonusClaimsByDate = new Map(bonusClaims.map((claim) => [claim.challenge_date, claim]));
     stepResultsUnavailable = Boolean(stepResultsResponse.error);
     if (stepResultsUnavailable) {
       console.warn('Stegresultaten kunde inte läsas; visar övrig historik ändå', stepResultsResponse.error);
@@ -500,12 +522,13 @@
       session.user.id,
       profileResponse.data?.display_name,
     );
-    renderHistory(results, profileResponse.data?.display_name, competitionStatus);
-    renderWeeklyReports(results, challenges, stepResults, today);
+    renderHistory(results, bonusClaims, profileResponse.data?.display_name, competitionStatus);
+    renderWeeklyReports(results, challenges, stepResults, bonusClaims, today);
     finalReportData = window.SoberOctoberHistory.buildFinalReport({
       results,
       challenges,
       stepResults,
+      bonusClaims,
       today,
       competitionStatus,
       trainingLeaderboard: trainingLeaderboardResponse.error ? [] : (trainingLeaderboardResponse.data || []),

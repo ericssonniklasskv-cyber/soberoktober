@@ -51,7 +51,7 @@
       </section>
     </main>
   </div>
-  <dialog class="detail-dialog" id="day-detail" aria-labelledby="detail-title"><div class="detail"><button class="detail-close" id="detail-close" type="button" aria-label="Stäng detaljvyn">×</button><p class="detail-kicker" id="detail-date"></p><h2 id="detail-title"></h2><p class="detail-description" id="detail-description"></p><div class="detail-result"><div><span>Nivå</span><strong id="detail-level"></strong></div><div><span>Poäng</span><strong id="detail-points"></strong></div></div></div></dialog>
+  <dialog class="detail-dialog" id="day-detail" aria-labelledby="detail-title"><div class="detail"><button class="detail-close" id="detail-close" type="button" aria-label="Stäng detaljvyn">×</button><p class="detail-kicker" id="detail-date"></p><h2 id="detail-title"></h2><p class="detail-description" id="detail-description"></p><div class="detail-result"><div><span>Nivå</span><strong id="detail-level"></strong></div><div><span>Poäng</span><strong id="detail-points"></strong></div></div><p class="detail-bonus" id="detail-bonus" hidden></p></div></dialog>
   <dialog class="detail-dialog report-dialog" id="weekly-report-detail" aria-labelledby="weekly-report-detail-title">
     <div class="detail report-detail">
       <div class="report-confetti" id="report-confetti" aria-hidden="true"></div>
@@ -94,6 +94,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.js" defer></script>
   <script src="/elimination.js" defer></script>
   <script src="/stegtavling/steps-logic.js" defer></script>
+  <script src="/min-oktober/challenge-logic.js" defer></script>
   <script src="/min-oktober/history-logic.js" defer></script>
   <script src="/min-oktober/history.js" defer></script>
 </body>

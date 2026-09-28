@@ -1,8 +1,10 @@
 (function attachHistoryLogic(root, factory) {
-  const api = factory();
+  const challengeLogic = root?.SoberOctoberChallengeLogic
+    || (typeof require === 'function' ? require('./challenge-logic.js') : null);
+  const api = factory(challengeLogic);
   if (typeof module === 'object' && module.exports) module.exports = api;
   if (root) root.SoberOctoberHistory = api;
-}(typeof globalThis !== 'undefined' ? globalThis : this, function createHistoryLogic() {
+}(typeof globalThis !== 'undefined' ? globalThis : this, function createHistoryLogic(challengeLogic) {
   const OCTOBER_DATES = Array.from({ length: 31 }, (_, index) => `2026-10-${String(index + 1).padStart(2, '0')}`);
   const OCTOBER_START = OCTOBER_DATES[0];
   const OCTOBER_END = OCTOBER_DATES[OCTOBER_DATES.length - 1];
@@ -19,7 +21,7 @@
     return value.toISOString().slice(0, 10);
   }
 
-  function calculate(results, today, competitionStatus = null) {
+  function calculate(results, today, competitionStatus = null, bonusClaims = []) {
     const octoberResults = results.filter(({ result_date: date }) => date >= OCTOBER_START && date <= OCTOBER_END);
     const resultsByDate = new Map(octoberResults.map((result) => [result.result_date, result]));
     const days = OCTOBER_DATES.map((date) => ({
@@ -73,7 +75,8 @@
     return {
       days,
       resultsByDate,
-      totalPoints: octoberResults.reduce((total, result) => total + Number(result.points || 0), 0),
+      totalPoints: octoberResults.reduce((total, result) => total + Number(result.points || 0), 0)
+        + (challengeLogic?.sumBonusPoints(bonusClaims, OCTOBER_START, OCTOBER_END) || 0),
       completedDays: octoberResults.length,
       currentStreak,
       longestStreak,
@@ -91,7 +94,7 @@
     return closedReportPeriods(today).find((period) => !seen.has(period.key)) || null;
   }
 
-  function buildPeriodReport({ results, challenges, stepResults, periodKey, today, stepsLogic }) {
+  function buildPeriodReport({ results, challenges, stepResults, bonusClaims = [], periodKey, today, stepsLogic }) {
     const period = REPORT_PERIODS.find((candidate) => candidate.key === periodKey);
     if (!period || period.end >= today) return null;
 
@@ -101,7 +104,6 @@
       && result.result_date <= today
     ));
     const challengeByDate = new Map((challenges || []).map((challenge) => [challenge.challenge_date, challenge]));
-    const totalsByUnit = new Map();
     const multiplierCounts = { 1: 0, 2: 0, 3: 0 };
     const completedDates = new Set();
     let trainingPoints = 0;
@@ -113,16 +115,6 @@
       multiplierCounts[multiplier] += 1;
       trainingPoints += Number(result.points) || 0;
 
-      const challenge = challengeByDate.get(result.result_date);
-      const baseAmount = Number(challenge?.base_amount);
-      const rawUnit = typeof challenge?.unit === 'string' && challenge.unit.trim()
-        ? challenge.unit.trim()
-        : (typeof challenge?.title === 'string' ? challenge.title.trim() : '');
-      if (!rawUnit || !Number.isFinite(baseAmount) || baseAmount <= 0) return;
-      const key = rawUnit.toLocaleLowerCase('sv-SE');
-      const current = totalsByUnit.get(key) || { unit: rawUnit, amount: 0 };
-      current.amount += baseAmount * multiplier;
-      totalsByUnit.set(key, current);
     });
 
     let bestStreak = 0;
@@ -143,14 +135,17 @@
       ? stepsLogic.createProjection([stepResult])
       : null;
 
+    const bonusPoints = challengeLogic?.sumBonusPoints(bonusClaims, period.start, period.end) || 0;
     return {
       ...period,
       completedDays: completedDates.size,
       missedDays: Math.max(0, period.days - completedDates.size),
       trainingPoints,
+      bonusPoints,
+      totalPoints: trainingPoints + bonusPoints,
       bestStreak,
       multiplierCounts,
-      exerciseTotals: [...totalsByUnit.values()].sort((a, b) => a.unit.localeCompare(b.unit, 'sv-SE')),
+      exerciseTotals: challengeLogic?.aggregateExerciseTotals(completed, [...challengeByDate.values()]) || [],
       stepAverage: Number.isFinite(stepAverage) ? stepAverage : null,
       stepPoints: stepProjection?.points ?? null,
     };
@@ -189,6 +184,7 @@
     results = [],
     challenges = [],
     stepResults = [],
+    bonusClaims = [],
     today,
     competitionStatus = null,
     trainingLeaderboard = [],
@@ -210,23 +206,11 @@
       && [1, 2, 3].includes(Number(result.multiplier))
     ));
     const completedDates = new Set(monthResults.map((result) => result.result_date));
-    const challengeByDate = new Map(challenges.map((challenge) => [challenge.challenge_date, challenge]));
-    const totalsByUnit = new Map();
     const multiplierCounts = { 1: 0, 2: 0, 3: 0 };
 
     monthResults.forEach((result) => {
       const multiplier = Number(result.multiplier);
       multiplierCounts[multiplier] += 1;
-      const challenge = challengeByDate.get(result.result_date);
-      const baseAmount = Number(challenge?.base_amount);
-      const rawUnit = typeof challenge?.unit === 'string' && challenge.unit.trim()
-        ? challenge.unit.trim()
-        : (typeof challenge?.title === 'string' ? challenge.title.trim() : '');
-      if (!rawUnit || !Number.isFinite(baseAmount) || baseAmount <= 0) return;
-      const key = rawUnit.toLocaleLowerCase('sv-SE');
-      const current = totalsByUnit.get(key) || { unit: rawUnit, amount: 0 };
-      current.amount += baseAmount * multiplier;
-      totalsByUnit.set(key, current);
     });
 
     let longestStreak = 0;
@@ -255,17 +239,22 @@
         && Number(entry.average_steps) === stepProjection.average
       ));
 
+    const totalTrainingPoints = monthResults.reduce((total, result) => total + (Number(result.points) || 0), 0);
+    const bonusPoints = challengeLogic?.sumBonusPoints(bonusClaims, OCTOBER_START, cutoffDate) || 0;
+
     return {
       cutoffDate,
       completedDays: completedDates.size,
       missedDays: Math.max(0, includedDates.length - completedDates.size),
-      totalTrainingPoints: monthResults.reduce((total, result) => total + (Number(result.points) || 0), 0),
+      totalTrainingPoints,
+      bonusPoints,
+      totalPoints: totalTrainingPoints + bonusPoints,
       longestStreak,
       multiplierCounts,
       mostUsedMultiplier: Object.values(multiplierCounts).some((count) => count > 0)
         ? [1, 2, 3].reduce((best, level) => multiplierCounts[level] > multiplierCounts[best] ? level : best, 1)
         : null,
-      exerciseTotals: [...totalsByUnit.values()].sort((a, b) => a.unit.localeCompare(b.unit, 'sv-SE')),
+      exerciseTotals: challengeLogic?.aggregateExerciseTotals(monthResults, challenges) || [],
       competition: {
         status: isEliminated ? 'eliminated' : competitionStatus?.status === 'active' ? 'active' : 'unknown',
         eliminationReason: isEliminated ? competitionStatus.elimination_reason || null : null,

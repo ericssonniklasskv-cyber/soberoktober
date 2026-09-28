@@ -26,6 +26,13 @@
     description: document.querySelector('#challenge-description'),
     amount: document.querySelector('#challenge-amount'),
     unit: document.querySelector('#challenge-unit'),
+    completionMode: document.querySelector('#completion-mode'),
+    secondPartFields: document.querySelector('#second-part-fields'),
+    secondDescription: document.querySelector('#second-description'),
+    secondAmount: document.querySelector('#second-amount'),
+    secondUnit: document.querySelector('#second-unit'),
+    bonusDescription: document.querySelector('#bonus-description'),
+    bonusPoints: document.querySelector('#bonus-points'),
     formStatus: document.querySelector('#form-status'),
     bulkSection: document.querySelector('#bulk-section'),
     bulkRows: document.querySelector('#bulk-rows'),
@@ -169,7 +176,7 @@
 
   function setBusy(busy) {
     ui.form.classList.toggle('busy', busy);
-    ui.form.querySelectorAll('button, input, textarea').forEach((control) => {
+    ui.form.querySelectorAll('button, input, textarea, select').forEach((control) => {
       control.disabled = busy;
     });
   }
@@ -179,6 +186,32 @@
     ui.description.value = '';
     ui.amount.value = '';
     ui.unit.value = '';
+    ui.completionMode.value = 'single';
+    ui.secondDescription.value = '';
+    ui.secondAmount.value = '';
+    ui.secondUnit.value = '';
+    ui.bonusDescription.value = '';
+    ui.bonusPoints.value = '';
+    ui.secondPartFields.hidden = true;
+  }
+
+  function challengeDescription(challenge) {
+    if (!challenge) return 'Ingen beskrivning';
+    const first = String(challenge.description || '').trim()
+      || [challenge.base_amount, challenge.unit].filter(Boolean).join(' ')
+      || 'Del 1';
+    const mode = challenge.completion_mode || 'single';
+    const second = String(challenge.second_description || '').trim()
+      || [challenge.second_base_amount, challenge.second_unit].filter(Boolean).join(' ')
+      || 'Del 2';
+    const primary = mode === 'single' ? first : `${first} ${mode === 'and' ? 'och' : 'eller'} ${second}`;
+    return challenge.bonus_description
+      ? `${primary} · Bonus: ${challenge.bonus_description} (+${challenge.bonus_points || 0} p)`
+      : primary;
+  }
+
+  function updateModeFields() {
+    ui.secondPartFields.hidden = ui.completionMode.value === 'single';
   }
 
   function makeText(className, text) {
@@ -329,12 +362,15 @@
       top.append(makeText('day-status', challenge ? 'Sparat' : 'Saknas'));
       card.append(top);
       card.append(makeText('day-title', challenge?.title || 'Inget pass ännu'));
-      card.append(makeText('day-description', challenge?.description || 'Ingen beskrivning'));
+      card.append(makeText('day-description', challengeDescription(challenge)));
 
       const meta = document.createElement('span');
       meta.className = 'day-meta';
-      meta.append(makeText('', `Grundmängd: ${challenge?.base_amount ?? '—'}`));
-      meta.append(makeText('', `Enhet: ${challenge?.unit || '—'}`));
+      meta.append(makeText('', `Del 1: ${challenge?.base_amount ?? '—'} ${challenge?.unit || ''}`.trim()));
+      if (challenge?.completion_mode && challenge.completion_mode !== 'single') {
+        meta.append(makeText('', `Del 2: ${challenge.second_base_amount ?? '—'} ${challenge.second_unit || ''}`.trim()));
+        meta.append(makeText('', challenge.completion_mode === 'and' ? 'Båda krävs' : 'Valfri del'));
+      }
       card.append(meta);
       card.addEventListener('click', () => selectDate(date, true));
       return card;
@@ -355,8 +391,16 @@
       ui.description.value = challenge.description || '';
       ui.amount.value = challenge.base_amount ?? '';
       ui.unit.value = challenge.unit || '';
+      ui.completionMode.value = challenge.completion_mode || 'single';
+      ui.secondDescription.value = challenge.second_description || '';
+      ui.secondAmount.value = challenge.second_base_amount ?? '';
+      ui.secondUnit.value = challenge.second_unit || '';
+      ui.bonusDescription.value = challenge.bonus_description || '';
+      ui.bonusPoints.value = challenge.bonus_points ?? '';
+      updateModeFields();
       ui.existingStatus.textContent = 'Sparat pass. Ändra fälten och spara för att uppdatera.';
     } else {
+      updateModeFields();
       ui.existingStatus.textContent = 'Den här dagen saknar pass. Fyll i fälten för att skapa ett.';
     }
 
@@ -380,7 +424,7 @@
     ui.days.textContent = 'Laddar oktober…';
     const { data, error } = await client
       .from('daily_challenges')
-      .select('challenge_date, title, description, unit, base_amount')
+      .select('challenge_date, title, description, unit, base_amount, completion_mode, second_description, second_base_amount, second_unit, bonus_description, bonus_points')
       .gte('challenge_date', OCTOBER_START)
       .lte('challenge_date', OCTOBER_END)
       .order('challenge_date');
@@ -453,6 +497,7 @@
     }
     selectDate(ui.date.value);
   });
+  ui.completionMode.addEventListener('change', updateModeFields);
 
   ui.previousDay.addEventListener('click', () => {
     const index = OCTOBER_DATES.indexOf(selectedDate);
@@ -468,14 +513,31 @@
     event.preventDefault();
     const title = ui.title.value.trim();
     const amount = ui.amount.value ? Number(ui.amount.value) : null;
+    const unit = ui.unit.value.trim();
+    const completionMode = ui.completionMode.value;
+    const secondDescription = ui.secondDescription.value.trim();
+    const secondAmount = ui.secondAmount.value ? Number(ui.secondAmount.value) : null;
+    const secondUnit = ui.secondUnit.value.trim();
+    const bonusDescription = ui.bonusDescription.value.trim();
+    const bonusPoints = ui.bonusPoints.value ? Number(ui.bonusPoints.value) : null;
 
     if (!OCTOBER_DATES.includes(ui.date.value)) {
       ui.formStatus.textContent = 'Välj ett datum i oktober 2026.';
       return;
     }
 
-    if (!title || (amount !== null && (!Number.isInteger(amount) || amount < 1))) {
-      ui.formStatus.textContent = 'Kontrollera namn och grundmängd.';
+    const validAmount = (value) => value !== null && Number.isInteger(value) && value >= 1 && value <= 100000;
+    const invalidFirst = amount !== null && !validAmount(amount);
+    const invalidSecond = completionMode !== 'single'
+      && (!validAmount(amount) || !unit || !validAmount(secondAmount) || !secondUnit);
+    const invalidBonus = Boolean(bonusDescription) !== (bonusPoints !== null)
+      || (bonusPoints !== null && (!Number.isInteger(bonusPoints) || bonusPoints < 1 || bonusPoints > 100));
+    if (!title || invalidFirst || invalidSecond || invalidBonus) {
+      ui.formStatus.textContent = invalidBonus
+        ? 'Fyll i både bonusuppgift och ett heltal mellan 1 och 100 bonuspoäng.'
+        : invalidSecond
+          ? 'För pass med två delar krävs grundmängd och enhet för båda delarna.'
+          : 'Kontrollera passnamn och grundmängd.';
       return;
     }
 
@@ -487,10 +549,16 @@
         challenge_date: ui.date.value,
         title,
         description: ui.description.value.trim() || null,
-        unit: ui.unit.value.trim() || null,
+        unit: unit || null,
         base_amount: amount,
+        completion_mode: completionMode,
+        second_description: completionMode === 'single' ? null : (secondDescription || null),
+        second_base_amount: completionMode === 'single' ? null : secondAmount,
+        second_unit: completionMode === 'single' ? null : secondUnit,
+        bonus_description: bonusDescription || null,
+        bonus_points: bonusDescription ? bonusPoints : null,
       }, { onConflict: 'challenge_date' })
-      .select('challenge_date, title, description, unit, base_amount')
+      .select('challenge_date, title, description, unit, base_amount, completion_mode, second_description, second_base_amount, second_unit, bonus_description, bonus_points')
       .single();
     setBusy(false);
 
@@ -571,7 +639,7 @@
           base_amount: draft.base_amount ? Number(draft.base_amount) : null,
           unit: draft.unit || null,
         }, { onConflict: 'challenge_date' })
-        .select('challenge_date, title, description, unit, base_amount')
+        .select('challenge_date, title, description, unit, base_amount, completion_mode, second_description, second_base_amount, second_unit, bonus_description, bonus_points')
         .single();
       if (error) throw error;
       return { date, challenge: data };

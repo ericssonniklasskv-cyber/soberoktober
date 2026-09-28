@@ -42,7 +42,7 @@ test('report multiplies daily amounts, combines matching units, and counts misse
     { unit: 'squats', amount: 90 },
   ]);
   assert.equal(report.stepAverage, 9430);
-  assert.equal(report.stepPoints, 16);
+  assert.equal(report.stepPoints, 15);
 });
 
 test('missing exercises and step reports stay empty instead of becoming zeros', () => {
@@ -59,6 +59,45 @@ test('missing exercises and step reports stay empty instead of becoming zeros', 
   assert.deepEqual(report.exerciseTotals, []);
   assert.equal(report.stepAverage, null);
   assert.equal(report.stepPoints, null);
+});
+
+test('and/or report only counts the parts the user selected, while bonus awards stay separate and join totals', () => {
+  const challenge = {
+    challenge_date: '2026-10-01',
+    title: 'Dagens mix',
+    completion_mode: 'or',
+    description: '15 armhävningar',
+    base_amount: 15,
+    unit: 'armhävningar',
+    second_description: '10 000 steg',
+    second_base_amount: 10000,
+    second_unit: 'steg',
+  };
+  const report = history.buildPeriodReport({
+    periodKey: 'oct_01_07',
+    today: '2026-10-08',
+    results: [
+      { result_date: '2026-10-01', multiplier: 2, points: 1.5, completed_parts: ['first'] },
+      { result_date: '2026-10-02', multiplier: 1, points: 1, completed_parts: ['first', 'second'] },
+    ],
+    challenges: [challenge, { ...challenge, challenge_date: '2026-10-02' }],
+    bonusClaims: [
+      { challenge_date: '2026-10-01', points: 3 },
+      { challenge_date: '2026-10-08', points: 9 },
+    ],
+    stepResults: [],
+    stepsLogic: steps,
+  });
+  assert.equal(report.trainingPoints, 2.5);
+  assert.equal(report.bonusPoints, 3);
+  assert.equal(report.totalPoints, 5.5);
+  assert.deepEqual(report.exerciseTotals, [
+    { unit: 'armhävningar', amount: 45 },
+    { unit: 'steg', amount: 10000 },
+  ]);
+  assert.equal(history.calculate([
+    { result_date: '2026-10-01', multiplier: 2, points: 1.5 },
+  ], '2026-10-02', { status: 'active' }, [{ challenge_date: '2026-10-01', points: 3 }]).totalPoints, 4.5);
 });
 
 test('locked and unknown report periods cannot be calculated early', () => {
@@ -125,7 +164,7 @@ test('final report stays locked while October 31 submissions are incomplete and 
   assert.equal(report.trainingPlacement, 3);
   assert.equal(report.stepAverage, 11000);
   assert.equal(report.stepReportedPeriods, 2);
-  assert.equal(report.stepPoints, 18);
+  assert.equal(report.stepPoints, 20);
   assert.equal(report.stepPlacement, 1);
   assert.equal(report.competition.status, 'active');
 });

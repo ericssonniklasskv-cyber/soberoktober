@@ -35,6 +35,19 @@
                 <div class="field full"><label for="challenge-description">Beskrivning</label><textarea id="challenge-description" name="description" maxlength="240" placeholder="15 squats"></textarea></div>
                 <div class="field"><label for="challenge-amount">Grundmängd</label><input id="challenge-amount" name="base_amount" type="number" min="1" step="1" inputmode="numeric" placeholder="15"></div>
                 <div class="field"><label for="challenge-unit">Enhet</label><input id="challenge-unit" name="unit" type="text" maxlength="32" placeholder="squats"></div>
+                <div class="field full"><label for="completion-mode">Hur fungerar passet?</label><select id="completion-mode" name="completion_mode"><option value="single">En del</option><option value="and">Båda delarna krävs</option><option value="or">Välj en eller båda delarna</option></select></div>
+                <fieldset class="compound-fields full" id="second-part-fields" hidden>
+                  <legend>Del 2</legend>
+                  <div class="field full"><label for="second-description">Beskrivning</label><textarea id="second-description" name="second_description" maxlength="240" placeholder="10 000 steg"></textarea></div>
+                  <div class="field"><label for="second-amount">Grundmängd</label><input id="second-amount" name="second_base_amount" type="number" min="1" max="100000" step="1" inputmode="numeric" placeholder="10000"></div>
+                  <div class="field"><label for="second-unit">Enhet</label><input id="second-unit" name="second_unit" type="text" maxlength="32" placeholder="steg"></div>
+                </fieldset>
+                <fieldset class="bonus-fields full">
+                  <legend>Bonusuppgift (valfritt)</legend>
+                  <div class="field full"><label for="bonus-description">Bonusuppgift</label><textarea id="bonus-description" name="bonus_description" maxlength="240" placeholder="Till exempel: ta en extra promenad"></textarea></div>
+                  <div class="field"><label for="bonus-points">Bonuspoäng</label><input id="bonus-points" name="bonus_points" type="number" min="1" max="100" step="1" inputmode="numeric" placeholder="2"></div>
+                  <p class="field-note">Deltagaren kan registrera bonusen en gång den dagen. Massinmatningen hanterar grundpass; använd den här editorn för del 2 och bonus.</p>
+                </fieldset>
                 <div class="form-actions"><button class="primary" type="submit">Spara passet</button><button class="secondary" id="admin-sign-out" type="button">Logga ut</button><p class="status" id="form-status" role="status"></p></div>
               </form>
             </section>

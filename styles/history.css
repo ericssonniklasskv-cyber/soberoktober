@@ -511,6 +511,15 @@ h1 {
   font-size:1.05rem;
   font-weight:800
 }
+.detail-bonus {
+  margin:12px 0 0;
+  padding:10px 12px;
+  border-radius:12px;
+  color:#8f4b14;
+  background:#fff0dc;
+  font-weight:900
+}
+.detail-bonus[hidden] { display:none }
 .detail-result {
   display:grid;
   grid-template-columns:1fr 1fr;
