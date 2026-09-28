@@ -2021,11 +2021,11 @@ body.entry-active {
   display:flex;
   align-items:center;
   justify-content:center;
-  gap:12px;
-  width:max-content;
+  gap:20px;
+  width:min(100%,460px);
   max-width:100%;
-  margin:0 auto 27px;
-  padding:11px 16px;
+  margin:0 auto 38px;
+  padding:36px 28px;
   color:var(--forest);
   border-color:rgba(23,63,50,.1);
   background:rgba(255,253,248,.84);
@@ -2035,15 +2035,15 @@ body.entry-active {
   display:grid;
   flex:0 0 auto;
   place-items:center;
-  width:42px;
-  height:42px;
-  border-radius:14px;
+  width:72px;
+  height:72px;
+  border-radius:20px;
   color:var(--cream);
   background:var(--forest)
 }
 .launch-countdown-mark svg {
-  width:22px;
-  height:22px
+  width:34px;
+  height:34px
 }
 .launch-countdown-copy {
   min-width:0
@@ -2051,26 +2051,26 @@ body.entry-active {
 .launch-countdown .countdown-kicker {
   margin:0 0 5px;
   color:var(--orange-dark);
-  font-size:.62rem
+  font-size:.8rem
 }
 .launch-countdown .countdown-clock {
   display:flex;
-  gap:9px
+  gap:14px
 }
 .launch-countdown .countdown-unit {
   justify-content:flex-start;
   gap:2px
 }
 .launch-countdown .countdown-unit strong {
-  font-size:1.2rem
+  font-size:1.9rem
 }
 .launch-countdown .countdown-unit small {
   color:var(--muted);
-  font-size:.58rem
+  font-size:.8rem
 }
 .launch-countdown .countdown-caption {
-  margin-top:4px;
-  font-size:.64rem
+  margin-top:9px;
+  font-size:.78rem
 }
 .launch-countdown.is-complete {
   border-color:rgba(242,138,56,.34);
@@ -2095,27 +2095,31 @@ body.entry-active {
     font-size:1.45rem
   }
   .launch-countdown {
-    gap:9px;
-    width:min(100%,370px);
-    margin-bottom:22px;
-    padding:10px 11px;
-    border-radius:17px
+    gap:12px;
+    width:min(100%,420px);
+    margin-bottom:25px;
+    padding:18px 16px;
+    border-radius:20px
   }
   .launch-countdown-mark {
-    width:36px;
-    height:36px;
-    border-radius:12px
+    width:48px;
+    height:48px;
+    border-radius:15px
+  }
+  .launch-countdown-mark svg {
+    width:27px;
+    height:27px
   }
   .launch-countdown .countdown-clock {
     gap:6px
   }
   .launch-countdown .countdown-unit strong {
-    font-size:1.05rem
+    font-size:1.3rem
   }
   .launch-countdown .countdown-unit small {
-    font-size:.55rem
+    font-size:.64rem
   }
   .launch-countdown .countdown-caption {
-    font-size:.59rem
+    font-size:.68rem
   }
 }
