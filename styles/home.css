@@ -1913,3 +1913,208 @@ body.entry-active {
 .history-link[hidden] {
   display:none
 }
+
+
+/* October deadline and start timers */
+.countdown-panel {
+  position:relative;
+  border:1px solid rgba(23,63,50,.12);
+  border-radius:24px;
+  box-shadow:0 18px 46px rgba(23,63,50,.12);
+  font-variant-numeric:tabular-nums
+}
+.entry-countdown {
+  position:absolute;
+  z-index:2;
+  top:50%;
+  left:calc(100% + clamp(28px,4vw,72px));
+  width:clamp(220px,16vw,280px);
+  padding:24px 20px 20px;
+  overflow:hidden;
+  transform:translateY(-50%);
+  color:var(--cream);
+  border-color:rgba(255,255,255,.15);
+  background:linear-gradient(145deg,#173f32,#214f40);
+  text-align:left
+}
+.entry-countdown:after {
+  content:"";
+  position:absolute;
+  top:-44px;
+  right:-48px;
+  width:126px;
+  height:126px;
+  border-radius:50%;
+  background:rgba(242,138,56,.16);
+  pointer-events:none
+}
+.countdown-kicker {
+  margin:0 0 12px;
+  color:var(--orange);
+  font-size:.68rem;
+  font-weight:950;
+  letter-spacing:.12em;
+  line-height:1.35;
+  text-transform:uppercase
+}
+.entry-countdown .countdown-kicker {
+  position:relative;
+  z-index:1;
+  color:#ffd19a
+}
+.countdown-clock {
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  align-items:baseline;
+  gap:4px
+}
+.countdown-unit {
+  display:flex;
+  align-items:baseline;
+  justify-content:center;
+  gap:3px;
+  min-width:0;
+  color:inherit
+}
+.countdown-unit strong {
+  font-size:1.55rem;
+  font-weight:950;
+  letter-spacing:-.055em;
+  line-height:1
+}
+.countdown-unit small {
+  font-size:.62rem;
+  font-weight:850;
+  letter-spacing:.01em
+}
+.entry-countdown .countdown-unit {
+  padding:11px 3px;
+  border-radius:12px;
+  color:#fff8e9;
+  background:rgba(255,255,255,.09)
+}
+.entry-countdown .countdown-unit strong {
+  font-size:1.65rem
+}
+.countdown-caption {
+  margin:12px 0 0;
+  color:var(--muted);
+  font-size:.72rem;
+  font-weight:700;
+  line-height:1.4
+}
+.entry-countdown .countdown-caption {
+  color:rgba(255,248,233,.75)
+}
+.countdown-panel.is-complete .countdown-clock {
+  display:none
+}
+.countdown-panel.is-complete .countdown-caption {
+  margin-top:0;
+  font-weight:850
+}
+.entry-countdown.is-complete {
+  background:linear-gradient(145deg,#ad4d1f,#d96b20)
+}
+.launch-countdown {
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:12px;
+  width:max-content;
+  max-width:100%;
+  margin:0 auto 27px;
+  padding:11px 16px;
+  color:var(--forest);
+  border-color:rgba(23,63,50,.1);
+  background:rgba(255,253,248,.84);
+  text-align:left
+}
+.launch-countdown-mark {
+  display:grid;
+  flex:0 0 auto;
+  place-items:center;
+  width:42px;
+  height:42px;
+  border-radius:14px;
+  color:var(--cream);
+  background:var(--forest)
+}
+.launch-countdown-mark svg {
+  width:22px;
+  height:22px
+}
+.launch-countdown-copy {
+  min-width:0
+}
+.launch-countdown .countdown-kicker {
+  margin:0 0 5px;
+  color:var(--orange-dark);
+  font-size:.62rem
+}
+.launch-countdown .countdown-clock {
+  display:flex;
+  gap:9px
+}
+.launch-countdown .countdown-unit {
+  justify-content:flex-start;
+  gap:2px
+}
+.launch-countdown .countdown-unit strong {
+  font-size:1.2rem
+}
+.launch-countdown .countdown-unit small {
+  color:var(--muted);
+  font-size:.58rem
+}
+.launch-countdown .countdown-caption {
+  margin-top:4px;
+  font-size:.64rem
+}
+.launch-countdown.is-complete {
+  border-color:rgba(242,138,56,.34);
+  background:#fff0dc
+}
+@media (max-width:1320px) {
+  .entry-countdown {
+    position:static;
+    width:min(100%,420px);
+    margin:26px auto 0;
+    transform:none
+  }
+}
+@media (max-width:700px) {
+  .entry-countdown {
+    padding:19px 16px 17px
+  }
+  .entry-countdown .countdown-unit {
+    padding:9px 2px
+  }
+  .entry-countdown .countdown-unit strong {
+    font-size:1.45rem
+  }
+  .launch-countdown {
+    gap:9px;
+    width:min(100%,370px);
+    margin-bottom:22px;
+    padding:10px 11px;
+    border-radius:17px
+  }
+  .launch-countdown-mark {
+    width:36px;
+    height:36px;
+    border-radius:12px
+  }
+  .launch-countdown .countdown-clock {
+    gap:6px
+  }
+  .launch-countdown .countdown-unit strong {
+    font-size:1.05rem
+  }
+  .launch-countdown .countdown-unit small {
+    font-size:.55rem
+  }
+  .launch-countdown .countdown-caption {
+    font-size:.59rem
+  }
+}

@@ -22,6 +22,15 @@
         <button class="entry-button entry-yes" id="entry-yes" type="button" disabled>JA, JAG ÄR MED</button>
         <button class="entry-button entry-no" id="entry-no" type="button" disabled>NEJ</button>
       </div>
+      <aside class="entry-countdown countdown-panel" data-countdown="registration" role="timer" aria-live="off" aria-label="Anmälan stänger vid midnatt 1 oktober 2026">
+        <p class="countdown-kicker" data-countdown-label>Anmälan stänger om</p>
+        <div class="countdown-clock" aria-hidden="true">
+          <span class="countdown-unit"><strong data-countdown-hours>00</strong><small>h</small></span>
+          <span class="countdown-unit"><strong data-countdown-minutes>00</strong><small>min</small></span>
+          <span class="countdown-unit"><strong data-countdown-seconds>00</strong><small>sek</small></span>
+        </div>
+        <p class="countdown-caption" data-countdown-caption>Stänger 1 oktober kl. 00.00</p>
+      </aside>
       <p class="entry-status" id="entry-status" role="status" aria-live="polite"></p>
       <aside class="registered-panel entry-registered" aria-labelledby="entry-registered-title">
         <div class="registered-head"><h2 class="registered-title" id="entry-registered-title">Anmälda</h2><span class="registered-count" data-registered-count>0</span></div>
@@ -74,6 +83,18 @@
     <main>
       <div class="hero-stage">
         <section class="hero" aria-labelledby="page-title">
+          <div class="launch-countdown countdown-panel" data-countdown="launch" role="timer" aria-live="off" aria-label="Oktober startar vid midnatt 1 oktober 2026">
+            <span class="launch-countdown-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8.5" stroke="currentColor" stroke-width="1.8"/><path d="M12 7v5l3.2 2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></span>
+            <div class="launch-countdown-copy">
+              <p class="countdown-kicker" data-countdown-label>Vi drar igång om</p>
+              <div class="countdown-clock" aria-hidden="true">
+                <span class="countdown-unit"><strong data-countdown-hours>00</strong><small>h</small></span>
+                <span class="countdown-unit"><strong data-countdown-minutes>00</strong><small>min</small></span>
+                <span class="countdown-unit"><strong data-countdown-seconds>00</strong><small>sek</small></span>
+              </div>
+              <p class="countdown-caption" data-countdown-caption>Första passet väntar på dig.</p>
+            </div>
+          </div>
           <h1 id="page-title">Sober<br><span>Oktober</span></h1>
           <div class="progress-wrap" aria-label="Oktobers framsteg"><div class="progress-meta"><span id="progress-day">Snart kör vi</span><span id="progress-percent">0%</span></div><div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div></div>
         </section>
@@ -224,6 +245,8 @@
       button?.animate([{transform:'scale(1)'},{transform:'scale(1.05)'},{transform:'scale(1)'}],{duration:280,easing:'ease-out'});
     };
   </script>
+  <script src="/countdown-logic.js" defer></script>
+  <script src="/countdown.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.js" defer></script>
   <script src="/aktivitet/activity-logic.js" defer></script>
   <script src="/aktivitet/activity-shared.js" defer></script>
