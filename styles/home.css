@@ -1076,7 +1076,8 @@ body.entry-active {
   inset:0;
   display:grid;
   place-items:center;
-  overflow:auto;
+  overflow-x:hidden;
+  overflow-y:auto;
   padding:24px;
   color:var(--ink);
   background:radial-gradient(circle at 12% 12%,rgba(242,138,56,.24),transparent 25rem),radial-gradient(circle at 92% 85%,rgba(23,63,50,.13),transparent 26rem),var(--cream)
