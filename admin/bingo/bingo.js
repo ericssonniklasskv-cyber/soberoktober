@@ -90,7 +90,7 @@
       button.dataset.cell = index;
       button.title = task.description;
       button.setAttribute('aria-label', 'Ruta ' + (index + 1) + ': ' + task.description + (completed ? '. Klar. Gör igen för dagsaktivitet utan fler poäng.' : '. Markera som klar för 1 poäng.'));
-      button.append(node('span', (index + 1) + (completed ? ' ✓' : ''), 'cell-number'), node('span', task.label, 'cell-label'), node('span', completed ? 'Klar · gör igen' : '+1 poäng', 'cell-points'));
+      button.append(node('span', (index + 1) + (completed ? ' ✓' : ''), 'cell-number'), node('span', task.description, 'cell-label'), node('span', completed ? 'Klar · gör igen' : '+1 poäng', 'cell-points'));
       return button;
     });
     $('#bingo-board').replaceChildren(...buttons);
