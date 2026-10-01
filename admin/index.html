@@ -66,6 +66,27 @@
             </div>
             <div class="bulk-actions"><button class="primary bulk-save" id="bulk-save" type="button" disabled>Spara alla ändringar</button><p class="status bulk-status" id="bulk-status" role="status"></p></div>
           </section>
+          <section class="participants-section" aria-labelledby="correction-title">
+            <p class="kicker">Rätta en registrering</p><h2 id="correction-title">Deltagarens dagsresultat</h2>
+            <p class="bulk-copy">Lägg till ett missat pass eller rätta nivån för en påbörjad dag i oktober. Poängen räknas automatiskt. Varje rättning sparas med en anledning.</p>
+            <form class="form" id="correction-form">
+              <div class="field"><label for="correction-user">Deltagare</label><select id="correction-user" required><option value="">Välj deltagare</option></select></div>
+              <div class="field"><label for="correction-date">Datum</label><input id="correction-date" type="date" min="2026-10-01" max="2026-10-31" required></div>
+              <div class="full"><button class="secondary" id="correction-load" type="button">Ladda resultat</button></div>
+              <div class="full" id="correction-details" hidden>
+                <p id="correction-challenge"></p><p><strong id="correction-current"></strong></p>
+                <p class="field-note" id="correction-warning"></p><p class="field-note" id="correction-bonus"></p>
+                <div class="field"><label for="correction-level">Rätt nivå</label><select id="correction-level"><option value="1">1× · 1 poäng</option><option value="2">2× · 1,5 poäng</option><option value="3">3× · 2 poäng</option></select></div>
+                <div class="field" id="correction-parts-field" hidden><label for="correction-parts">Genomförd del</label><select id="correction-parts"><option value="first">Del 1</option><option value="second">Del 2</option><option value="first,second">Båda delarna</option></select></div>
+                <div class="field"><label for="correction-reason">Anledning</label><textarea id="correction-reason" minlength="3" maxlength="240" required placeholder="Till exempel: genomfört men glömt att registrera"></textarea></div>
+                <h3>Senaste rättningar för dagen</h3><p class="field-note" id="correction-history-empty">Inga rättningar ännu.</p><ul id="correction-history"></ul>
+              </div>
+              <div class="form-actions"><button class="primary" id="correction-save" type="submit" disabled>Granska och spara rättning</button><p class="status" id="correction-status" role="status" aria-live="polite"></p></div>
+            </form>
+          </section>
+          <dialog class="delete-dialog" id="correction-confirmation" aria-labelledby="correction-confirm-title">
+            <div class="delete-content"><h2 id="correction-confirm-title">Spara rättningen?</h2><p id="correction-confirm-copy"></p><p class="field-note">Tävlingsstatusen ändras inte. Rättningen påverkar deltagarens träningspoäng och rapporter.</p><div class="dialog-actions"><button class="secondary" id="correction-cancel" type="button">Avbryt</button><button class="primary" id="correction-confirm" type="button">Spara rättning</button></div></div>
+          </dialog>
           <section class="participants-section" aria-labelledby="participants-title">
             <div class="participants-head"><div><p class="kicker">Tävlingsstatus</p><h2 id="participants-title">Deltagare</h2></div><button class="day-nav" id="refresh-participants" type="button">Uppdatera lista</button></div>
             <ul class="participants-list" id="participants-list" aria-live="polite"><li>Laddar deltagare…</li></ul>
@@ -83,6 +104,7 @@
   </div>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.js" defer></script>
   <script src="/elimination.js" defer></script>
+  <script src="/admin/corrections.js" defer></script>
   <script src="/admin/admin.js" defer></script>
 </body>
 </html>

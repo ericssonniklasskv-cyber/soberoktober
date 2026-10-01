@@ -1,0 +1,1 @@
+create policy daily_result_corrections_no_direct_access on private.daily_result_corrections for all to authenticated using (false) with check (false);

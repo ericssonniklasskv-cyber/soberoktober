@@ -92,6 +92,7 @@
   }
 
   function renderParticipants(rows) {
+    window.SoberOctoberAdminCorrections?.mount(client, rows);
     ui.participants.replaceChildren();
     if (!rows.length) {
       const empty = document.createElement('li');
@@ -453,6 +454,7 @@
     ui.loginStatus.textContent = '';
 
     if (!session) {
+      window.SoberOctoberAdminCorrections?.reset();
       showState(ui.signedOut);
       return;
     }
@@ -464,6 +466,7 @@
       .single();
 
     if (error || !profile?.is_admin) {
+      window.SoberOctoberAdminCorrections?.reset();
       showState(ui.denied);
       return;
     }
