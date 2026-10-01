@@ -1,0 +1,28 @@
+begin;
+do $setup$ begin perform set_config('request.jwt.claim.sub',(select id::text from public.profiles where is_admin is true limit 1),true); end $setup$;
+set local role authenticated;
+do $qa$ declare v jsonb; i integer; begin
+ v:=public.admin_bingo_test('reset');
+ for i in 0..24 loop v:=public.admin_bingo_test('complete',jsonb_build_object('cell',i)); end loop;
+ if v->'score'->>'total_points'<>'45' then raise exception 'Full board'; end if;
+ v:=public.admin_bingo_test('uncomplete','{"cell":0}');
+ if v->'score'->>'total_points'<>'32' or v->'score'->>'line_points'<>'8' then raise exception 'Undo bonus'; end if;
+ v:=public.admin_bingo_test('complete','{"cell":0}');
+ if v->'score'->>'total_points'<>'45' then raise exception 'Recheck'; end if;
+ v:=public.admin_bingo_test('set_date','{"date":"2026-10-06"}');
+ v:=public.admin_bingo_test('complete','{"cell":0}');
+ if jsonb_array_length(v->'activity_dates')<>1 then raise exception 'Repeat added day'; end if;
+ for i in 0..24 loop v:=public.admin_bingo_test('uncomplete',jsonb_build_object('cell',i)); end loop;
+ if v->'score'->>'total_points'<>'0' or jsonb_array_length(v->'activity_dates')<>0 then raise exception 'Empty board activity'; end if;
+ v:=public.admin_bingo_test('complete','{"cell":0}');
+ v:=public.admin_bingo_test('complete','{"cell":1}');
+ v:=public.admin_bingo_test('uncomplete','{"cell":0}');
+ if jsonb_array_length(v->'activity_dates')<>1 then raise exception 'Other square day removed'; end if;
+ begin perform public.admin_bingo_test('uncomplete','{"cell":25}'); raise exception 'Invalid cell'; exception when invalid_parameter_value then null; end;
+end $qa$;
+reset role;
+do $setup$ begin perform set_config('request.jwt.claim.sub',(select id::text from public.profiles where is_admin is false limit 1),true); end $setup$;
+set local role authenticated;
+do $qa$ begin begin perform public.admin_bingo_test('uncomplete','{"cell":0}');raise exception 'Regular user';exception when insufficient_privilege then null;end; end $qa$;
+rollback;
+select 'PASS: undo/recheck, bonuses, activity dates, invalid cells and admin access; rolled back' as result;

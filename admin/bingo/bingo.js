@@ -29,7 +29,7 @@
         fieldset.disabled = Object.keys(state.completed_cells).length > 0;
       });
       $('.bingo-board').querySelectorAll('button').forEach(button => {
-        button.disabled = Boolean(state.elimination_date) || state.simulated_date > '2026-10-11';
+        button.disabled = !Object.hasOwn(state.completed_cells, button.dataset.cell) && (Boolean(state.elimination_date) || state.simulated_date > '2026-10-11');
       });
       $('#test-alcohol').disabled = Boolean(state.elimination_date);
     }
@@ -89,8 +89,8 @@
       button.type = 'button';
       button.dataset.cell = index;
       button.title = task.description;
-      button.setAttribute('aria-label', 'Ruta ' + (index + 1) + ': ' + task.description + (completed ? '. Klar. Gör igen för dagsaktivitet utan fler poäng.' : '. Markera som klar för 1 poäng.'));
-      button.append(node('span', (index + 1) + (completed ? ' ✓' : ''), 'cell-number'), node('span', task.description, 'cell-label'), node('span', completed ? 'Klar · gör igen' : '+1 poäng', 'cell-points'));
+      button.setAttribute('aria-label', 'Ruta ' + (index + 1) + ': ' + task.description + (completed ? '. Klar. Klicka för att avmarkera.' : '. Markera som klar för 1 poäng.'));
+      button.append(node('span', (index + 1) + (completed ? ' ✓' : ''), 'cell-number'), node('span', task.description, 'cell-label'), node('span', completed ? 'Klar · avmarkera' : '+1 poäng', 'cell-points'));
       return button;
     });
     $('#bingo-board').replaceChildren(...buttons);
@@ -142,6 +142,7 @@
           : state.new_activity ? 'Dagens aktivitet är registrerad. Rutan gav inga nya poäng.'
           : 'Rutan och dagens aktivitet är redan registrerade. Inga nya poäng.';
       }
+      if (action === 'uncomplete') message = 'Rutan är avmarkerad. Testpoäng, radbonus och aktivitetsdagar har räknats om.';
       if (action === 'set_date') message = 'Testdatum: ' + dateText(state.simulated_date) + '.';
       if (action === 'reset') { message = 'Testet är nollställt. Dina uppgifter finns kvar.'; renderEditor(true); }
       if (action === 'save_board') { message = 'Testbrickan är sparad.'; $('#editor-status').textContent = message; }
@@ -174,7 +175,7 @@
   }
   $('#bingo-board').addEventListener('click', event => {
     const cell = event.target.closest('button[data-cell]');
-    if (cell) void runAction('complete', { cell: Number(cell.dataset.cell) });
+    if (cell) void runAction(Object.hasOwn(state.completed_cells, cell.dataset.cell) ? 'uncomplete' : 'complete', { cell: Number(cell.dataset.cell) });
   });
   $('#date-form').addEventListener('submit', event => {
     event.preventDefault();

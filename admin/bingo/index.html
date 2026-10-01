@@ -33,7 +33,7 @@
         <p id="competition-state" class="competition-state" role="status"></p>
         <section class="board-section" aria-labelledby="board-title">
           <div class="board-heading"><div><p class="kicker">5–11 oktober 2026</p><h2 id="board-title">Din bingobricka</h2></div><span class="progress-count" id="board-progress">0 av 25 klara</span></div>
-          <p class="help">Klicka när du har klarat uppgiften: +1 poäng. En klar ruta kan göras igen för dagens aktivitet, utan extra poäng. Hela uppgifterna finns i listan under brickan.</p>
+          <p class="help">Klicka när du har klarat uppgiften: +1 poäng. Klicka igen för att avmarkera om det blev fel. Poäng och radbonus räknas om automatiskt.</p>
           <p class="board-scroll-hint">Svep åt sidan för att se hela 5×5-brickan.</p>
           <div class="bingo-board" id="bingo-board" aria-label="Bingobricka med 25 aktiviteter"></div>
           <p class="line-status" id="line-status">0 vågräta · 0 lodräta rader klara</p>
@@ -46,7 +46,7 @@
           <div class="report-stats"><div><strong id="report-days">0 / 7</strong><span>Aktiva dagar</span></div><div><strong id="report-missed">0</strong><span>Missade heldagar</span></div><div><strong id="report-streak">0</strong><span>Längsta streak</span></div></div>
           <div class="activity-days" id="activity-days" aria-label="Dagsaktivitet under bingoveckan"></div>
           <p id="report-status"></p><ul class="exercise-totals" id="exercise-totals"></ul>
-          <p class="help">Mängderna summeras från unika avklarade rutor. Upprepningar räknas som dagsaktivitet, utan nya rutpoäng eller ny träningsmängd i detta utkast.</p>
+          <p class="help">Mängder och aktivitetsdagar räknas från rutorna som är markerade. Avmarkerar du en ruta tas den också bort från rapportutkastet.</p>
         </section>
         <details class="board-editor panel"><summary>Redigera testbrickan</summary><p class="help">Ändra kortnamn, uppgift och mängd för rapporten. När testet har påbörjats måste det nollställas först. Uppgifterna behålls vid nollställning.</p><form id="board-form"><div id="board-fields" class="board-fields"></div><button class="primary" type="submit" id="save-board">Spara testbrickan</button><p id="editor-status" class="status" role="status"></p></form></details>
       </div>

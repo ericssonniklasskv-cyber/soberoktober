@@ -30,7 +30,9 @@ begin
   if v->'score'->>'total_points' <> '45' or v->'score'->>'line_points' <> '10' or v->'score'->>'full_board_points' <> '10' then raise exception 'Full board not 45'; end if;
   v:=public.admin_bingo_test('set_date','{"date":"2026-10-06"}');
   v:=public.admin_bingo_test('complete','{"cell":0}');
-  if v->'score'->>'total_points' <> '45' or v->>'new_activity' <> 'true' or jsonb_array_length(v->'activity_dates')<>2 then raise exception 'Repeat activity failed'; end if;
+  if v->'score'->>'total_points' <> '45' or v->>'new_activity' <> 'true' or jsonb_array_length(v->'activity_dates')<>1 then raise exception 'Repeated cell added an activity day'; end if;
+  v:=public.admin_bingo_test('uncomplete','{"cell":0}');
+  v:=public.admin_bingo_test('complete','{"cell":0}');
   v:=public.admin_bingo_test('set_date','{"date":"2026-10-08"}');
   if v->>'elimination_date' is not null then raise exception 'One missed day eliminated participant'; end if;
   v:=public.admin_bingo_test('set_date','{"date":"2026-10-09"}');
