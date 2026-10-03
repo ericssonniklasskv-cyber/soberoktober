@@ -63,10 +63,11 @@
     const score = state.score;
     $('#total-points').textContent = score.total_points;
     $('#cell-points').textContent = score.cell_points + ' / 25';
+    $('#day-bonus-points').textContent = score.day_bonus_points + ' / 7';
     $('#line-points').textContent = score.line_points + ' / 10';
     $('#full-points').textContent = score.full_board_points + ' / 10';
     $('#board-progress').textContent = score.cell_points + ' av 25 klara';
-    $('#score-caption').textContent = score.cell_points === 25 ? 'Full bricka. Full pott!' : score.cell_points ? 'Varje ruta tar dig närmare bingo.' : 'Din första ruta väntar.';
+    $('#score-caption').textContent = score.cell_points === 25 ? 'Alla 25 rutor klara!' : score.cell_points ? 'Varje ruta tar dig närmare bingo.' : 'Din första ruta väntar.';
     $('#test-date').value = state.simulated_date;
     $('#test-date').min = state.simulated_date;
     $('#restore-test').hidden = !state.elimination_date;
@@ -82,6 +83,7 @@
       : warning ? 'Du missade igår – en aktivitet idag håller dig kvar i testet.'
       : activeToday ? 'Dagens aktivitet är registrerad. Du är fortfarande med i testet.'
       : 'Du är fortfarande med i testet. Gör en aktivitet idag!';
+    const nextCellPoints = activeToday ? 1 : 2;
     const buttons = state.board.map((task, index) => {
       const completed = Object.hasOwn(state.completed_cells, String(index));
       const inLine = score.rows.includes(Math.floor(index / 5)) || score.columns.includes(index % 5);
@@ -89,8 +91,8 @@
       button.type = 'button';
       button.dataset.cell = index;
       button.title = task.description;
-      button.setAttribute('aria-label', 'Ruta ' + (index + 1) + ': ' + task.description + (completed ? '. Klar. Klicka för att avmarkera.' : '. Markera som klar för 1 poäng.'));
-      button.append(node('span', (index + 1) + (completed ? ' ✓' : ''), 'cell-number'), node('span', task.description, 'cell-label'), node('span', completed ? 'Klar · avmarkera' : '+1 poäng', 'cell-points'));
+      button.setAttribute('aria-label', 'Ruta ' + (index + 1) + ': ' + task.description + (completed ? '. Klar. Klicka för att avmarkera.' : '. Markera som klar för ' + nextCellPoints + ' poäng.'));
+      button.append(node('span', (index + 1) + (completed ? ' ✓' : ''), 'cell-number'), node('span', task.description, 'cell-label'), node('span', completed ? 'Klar · avmarkera' : '+' + nextCellPoints + ' poäng', 'cell-points'));
       return button;
     });
     $('#bingo-board').replaceChildren(...buttons);
@@ -106,7 +108,7 @@
     $('#report-days').textContent = report.completedDays + ' / 7';
     $('#report-missed').textContent = report.missedDays;
     $('#report-streak').textContent = report.longestStreak;
-    $('#report-status').textContent = score.total_points + ' bingopoäng · ' + score.cell_points + ' avklarade rutor · ' + score.line_points + ' rader' + (state.elimination_date ? ' · Utslagen: ' + state.elimination_reason : ' · Aktiv');
+    $('#report-status').textContent = score.total_points + ' bingopoäng · ' + score.cell_points + ' avklarade rutor · ' + score.day_bonus_points + ' dagliga extrapoäng · ' + score.line_points + ' rader' + (state.elimination_date ? ' · Utslagen: ' + state.elimination_reason : ' · Aktiv');
     $('#activity-days').replaceChildren(...report.days.map(day => {
       const label = day.state === 'completed' ? '✓ Klar' : day.state === 'missed' ? 'Missad' : 'Kommande';
       const item = node('div', undefined, 'activity-day ' + day.state);
@@ -138,7 +140,7 @@
       let message = 'Testet är sparat.';
       if (action === 'complete') {
         const gained = state.score.total_points - beforePoints;
-        message = state.new_completion ? 'Snyggt! +' + gained + ' testpoäng' + (gained > 1 ? ' – bingo-bonus inkluderad!' : '.')
+        message = state.new_completion ? 'Snyggt! +' + gained + ' testpoäng' + '.'
           : state.new_activity ? 'Dagens aktivitet är registrerad. Rutan gav inga nya poäng.'
           : 'Rutan och dagens aktivitet är redan registrerade. Inga nya poäng.';
       }
