@@ -963,6 +963,7 @@
         },
       );
 
+      window.SoberOctoberTomorrow?.init(client, stockholmDate);
       await Promise.all([loadTodayChallenge(), loadRegistered()]);
       const { data, error } = await client.auth.getSession();
       if (error) throw error;

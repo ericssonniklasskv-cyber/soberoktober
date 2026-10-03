@@ -12,6 +12,7 @@
   <link rel="stylesheet" href="/styles/design-system.css">
   <link rel="stylesheet" href="/styles/activity.css">
   <link rel="stylesheet" href="/styles/elimination.css">
+  <link rel="stylesheet" href="/styles/tomorrow.css">
 </head>
 <body class="page-home entry-active">
   <section class="entry-gate" id="entry-gate" aria-labelledby="entry-title">
@@ -98,10 +99,11 @@
           <h1 id="page-title">Sober<br><span>Oktober</span></h1>
           <div class="progress-wrap" aria-label="Oktobers framsteg"><div class="progress-meta"><span id="progress-day">Snart kör vi</span><span id="progress-percent">0%</span></div><div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div></div>
         </section>
-        <aside class="registered-panel hero-registered" aria-labelledby="hero-registered-title">
-          <div class="registered-head"><h2 class="registered-title" id="hero-registered-title">Anmälda</h2><span class="registered-count" data-registered-count>0</span></div>
-          <ul class="registered-list" data-registered-list aria-live="polite"><li class="registered-empty">Laddar deltagare…</li></ul>
-          <p class="registered-status" data-registered-status role="status"></p>
+        <aside class="tomorrow-preview hero-registered" id="tomorrow-preview" aria-label="Morgondagens pass">
+          <details id="tomorrow-details">
+            <summary><span class="tomorrow-kicker">Ett steg före</span><span class="tomorrow-invitation">Klicka här för en sneak peek på morgondagens pass</span><span class="tomorrow-toggle" aria-hidden="true">Visa morgondagen <b>↗</b></span></summary>
+            <div class="tomorrow-content" id="tomorrow-content" aria-live="polite"></div>
+          </details>
         </aside>
       <aside class="leaderboard-preview hero-leaderboard-preview" aria-label="Topplista, topp 5">
         <div class="leaderboard-preview-head"><span class="leaderboard-preview-icon" aria-hidden="true">♛</span><h2 class="leaderboard-preview-title">Topplista</h2></div>
@@ -254,6 +256,7 @@
   <script src="/elimination.js" defer></script>
   <script src="/min-oktober/challenge-logic.js" defer></script>
   <script src="/min-oktober/history-logic.js" defer></script>
+  <script src="/tomorrow-preview.js" defer></script>
   <script src="/auth.js" defer></script>
   <script src="/mohv-egg.js" defer></script>
   <script src="/trump-quote.js" defer></script>
