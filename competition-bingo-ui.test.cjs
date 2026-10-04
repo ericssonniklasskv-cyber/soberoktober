@@ -65,6 +65,7 @@ const score=(cells)=>{const keys=Object.keys(cells).map(Number);const rows=[0,1,
  await page.waitForFunction(()=>!document.querySelector('#activity-preview-list').textContent.includes('Testaren klarade en bingoruta: 30 minuter löpning'));
  await page.goto('http://127.0.0.1:'+server.address().port+'/aktivitet/');await page.locator('#activity-list .activity-item').first().waitFor();
  assert.equal(await page.locator('#activity-list .activity-item').count(),5);
+ assert.equal(await page.locator('#activity-list .activity-empty').count(),0,'Loading placeholder removed when activities arrive');
  assert.match(await page.locator('#activity-list').innerText(),/Testaren klarade en bingoruta: 30 minuter racketsport/);
  assert.match(await page.locator('#activity-list').innerText(),/En annan fick en hel bingorad!/);
  assert.match(await page.locator('#activity-list').innerText(),/Förra passet klarade dagens pass ×2/);

@@ -25,7 +25,10 @@
         empty.className = 'activity-empty';
         empty.textContent = 'Inga aktiviteter än. Klara pass och bingorutor syns här.';
         list.replaceChildren(empty);
-      } else if (page.length) list.append(...page);
+      } else if (page.length) {
+        if (offset === 0) list.replaceChildren(...page);
+        else list.append(...page);
+      }
       offset += Math.min(records.length, pageSize);
       more.hidden = records.length <= pageSize;
       status.textContent = records.length > pageSize ? '' : (offset ? 'Du är ikapp med allt.' : '');
