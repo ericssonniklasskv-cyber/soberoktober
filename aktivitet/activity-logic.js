@@ -23,6 +23,12 @@
 
   function sentence(item) {
     const name = String(item.display_name || 'Deltagare').trim() || 'Deltagare';
+    if (item.activity_type === 'bingo_cell') {
+      const label = String(item.activity_label || '').trim();
+      return label ? `${name} klarade en bingoruta: ${label}` : '';
+    }
+    if (item.activity_type === 'bingo_row') return `${name} fick en hel bingorad!`;
+    if (item.activity_type === 'bingo_full') return `${name} klarade hela bingobrickan!`;
     const level = Number(item.multiplier);
     if (![1, 2, 3].includes(level)) return '';
     return item.activity_type === 'upgraded'

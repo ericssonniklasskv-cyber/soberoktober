@@ -23,10 +23,10 @@
       if (!page.length && offset === 0) {
         const empty = document.createElement('li');
         empty.className = 'activity-empty';
-        empty.textContent = 'Inga aktiviteter än. När någon klarar dagens pass syns det här.';
+        empty.textContent = 'Inga aktiviteter än. Klara pass och bingorutor syns här.';
         list.replaceChildren(empty);
       } else if (page.length) list.append(...page);
-      offset += page.length;
+      offset += Math.min(records.length, pageSize);
       more.hidden = records.length <= pageSize;
       status.textContent = records.length > pageSize ? '' : (offset ? 'Du är ikapp med allt.' : '');
     } catch (_) {

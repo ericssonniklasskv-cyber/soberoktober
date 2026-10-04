@@ -21,7 +21,7 @@
       const { data, error } = await client.rpc('get_activity_feed', { p_limit: 4, p_offset: 0 });
       if (error) throw error;
       const items = (data || []).slice(0, 4).map(item => window.SoberActivity.createFeedItem(item, true)).filter(Boolean);
-      if (!items.length) showMessage('Inga aktiviteter än. Bli först med dagens pass!');
+      if (!items.length) showMessage('Inga aktiviteter än. Nästa lilla seger syns här!');
       else list.replaceChildren(...items);
       status.textContent = '';
     } catch (_) {
@@ -42,5 +42,6 @@
     if (document.hidden) clearInterval(timer);
     else startPolling();
   });
+  document.addEventListener('soberoktober:bingo-saved', refresh);
   startPolling();
 })();

@@ -22,6 +22,10 @@ const score=(cells)=>{const keys=Object.keys(cells).map(Number);const rows=[0,1,
   return {data,error:null};
  });
  await page.exposeFunction('fixtureRPC',(name,args={})=>{
+  if(name==='get_activity_feed'){
+   const events=[...Object.keys(cells).reverse().map(index=>({display_name:'Testaren',activity_type:'bingo_cell',activity_label:board[Number(index)].description,multiplier:null,event_at:'2026-10-05T10:00:00Z'})),{display_name:'En annan',activity_type:'bingo_full',multiplier:null,event_at:'2026-10-05T09:59:00Z'},{display_name:'En annan',activity_type:'bingo_row',multiplier:null,event_at:'2026-10-05T09:58:00Z'},{display_name:'Förra passet',activity_type:'completed',multiplier:2,event_at:'2026-10-04T12:00:00Z'},{display_name:'Lång aktivitet',activity_type:'bingo_cell',activity_label:board[23].description,multiplier:null,event_at:'2026-10-05T09:57:00Z'}];
+   return{data:events.slice(args.p_offset||0,(args.p_offset||0)+(args.p_limit||4)),error:null};
+  }
   if(name==='my_competition_bingo'){
    if(args.p_action==='complete')cells[String(args.p_cell)]||=args.p_date;
    if(args.p_action==='uncomplete')delete cells[String(args.p_cell)];
@@ -45,6 +49,8 @@ const score=(cells)=>{const keys=Object.keys(cells).map(Number);const rows=[0,1,
   await page.evaluate(()=>{const close=document.querySelector('#trump-quote-close');if(close)close.click();document.querySelector('#trump-quote-overlay')?.setAttribute('hidden','');});
   assert.equal(await page.locator('#dagens-pass').isVisible(),false);
   assert.equal(await page.locator('#competition-bingo .bingo-cell').count(),25);
+  await page.waitForFunction(()=>document.querySelectorAll('#activity-preview-list .activity-item').length===4);
+  assert.match(await page.locator('#activity-preview-list').innerText(),/hela bingobrickan/);
   assert.deepEqual(await page.locator('#competition-bingo .bingo-cell-copy').allTextContents(),board.map(t=>t.description));
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true,'Overflow '+width);
   assert.equal(await page.locator('#competition-bingo .bingo-cell').evaluateAll(els=>els.every(e=>e.getBoundingClientRect().width>=44&&e.getBoundingClientRect().height>=44)),true);
@@ -53,8 +59,15 @@ const score=(cells)=>{const keys=Object.keys(cells).map(Number);const rows=[0,1,
   await page.screenshot({path:path.join(root,'qa','bingo-main-'+width+'.png'),fullPage:true,animations:'disabled'});
  }
  await page.locator('#competition-bingo .bingo-cell').nth(0).click();await page.waitForFunction(()=>document.querySelector('#competition-bingo .bingo-stats').textContent.includes('2 poäng'));
+ await page.waitForFunction(()=>document.querySelector('#activity-preview-list').textContent.includes('Testaren klarade en bingoruta: 30 minuter racketsport'));
  await page.locator('#competition-bingo .bingo-cell').nth(1).click();await page.waitForFunction(()=>document.querySelector('#competition-bingo .bingo-stats').textContent.includes('3 poäng'));
  await page.locator('#competition-bingo .bingo-cell').nth(1).click();await page.waitForFunction(()=>document.querySelector('#competition-bingo .bingo-stats').textContent.includes('2 poäng'));
+ await page.waitForFunction(()=>!document.querySelector('#activity-preview-list').textContent.includes('Testaren klarade en bingoruta: 30 minuter löpning'));
+ await page.goto('http://127.0.0.1:'+server.address().port+'/aktivitet/');await page.locator('#activity-list .activity-item').first().waitFor();
+ assert.equal(await page.locator('#activity-list .activity-item').count(),5);
+ assert.match(await page.locator('#activity-list').innerText(),/Testaren klarade en bingoruta: 30 minuter racketsport/);
+ assert.match(await page.locator('#activity-list').innerText(),/En annan fick en hel bingorad!/);
+ assert.match(await page.locator('#activity-list').innerText(),/Förra passet klarade dagens pass ×2/);
  for(const width of [320,390,768,1440]){
   await page.setViewportSize({width,height:950});await page.goto('http://127.0.0.1:'+server.address().port+'/bingobingo/');await page.locator('.bingo-person').first().waitFor();
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);

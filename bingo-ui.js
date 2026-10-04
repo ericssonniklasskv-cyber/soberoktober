@@ -49,6 +49,7 @@
       const response = await client.rpc('my_competition_bingo', { p_action: action, p_date: date, p_cell: cell });
       if (response.error) throw response.error;
       data = response.data;
+      document.dispatchEvent(new Event('soberoktober:bingo-saved'));
       const restored = Boolean(response.data.restored);
       let refreshFailed = false;
       try { await onChange(); } catch (_) { refreshFailed = true; }

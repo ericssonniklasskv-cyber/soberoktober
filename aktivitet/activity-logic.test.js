@@ -18,3 +18,10 @@ test('formats relative and absolute times', () => {
   assert.match(ActivityLogic.fullTimestamp('2026-10-12T11:58:00Z'), /2026/);
   assert.equal(ActivityLogic.relativeTime('not a date', now), '');
 });
+
+test('bingo cells use their activity text and milestones never invent multipliers', () => {
+  assert.equal(ActivityLogic.sentence({ display_name: 'Niklas', activity_type: 'bingo_cell', activity_label: ' Cykla till jobbet ' }), 'Niklas klarade en bingoruta: Cykla till jobbet');
+  assert.equal(ActivityLogic.sentence({ display_name: 'Emma', activity_type: 'bingo_row', multiplier: null }), 'Emma fick en hel bingorad!');
+  assert.equal(ActivityLogic.sentence({ display_name: 'Jacob', activity_type: 'bingo_full', multiplier: null }), 'Jacob klarade hela bingobrickan!');
+  assert.equal(ActivityLogic.sentence({ activity_type: 'bingo_cell', activity_label: ' ' }), '');
+});
