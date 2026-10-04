@@ -64,8 +64,8 @@
     $('#total-points').textContent = score.total_points;
     $('#cell-points').textContent = score.cell_points + ' / 25';
     $('#day-bonus-points').textContent = score.day_bonus_points + ' / 7';
-    $('#line-points').textContent = score.line_points + ' / 10';
-    $('#full-points').textContent = score.full_board_points + ' / 10';
+    $('#line-points').textContent = score.line_points + ' / 30';
+    $('#full-points').textContent = score.full_board_points + ' / 20';
     $('#board-progress').textContent = score.cell_points + ' av 25 klara';
     $('#score-caption').textContent = score.cell_points === 25 ? 'Alla 25 rutor klara!' : score.cell_points ? 'Varje ruta tar dig närmare bingo.' : 'Din första ruta väntar.';
     $('#test-date').value = state.simulated_date;
@@ -108,7 +108,7 @@
     $('#report-days').textContent = report.completedDays + ' / 7';
     $('#report-missed').textContent = report.missedDays;
     $('#report-streak').textContent = report.longestStreak;
-    $('#report-status').textContent = score.total_points + ' bingopoäng · ' + score.cell_points + ' avklarade rutor · ' + score.day_bonus_points + ' dagliga extrapoäng · ' + score.line_points + ' rader' + (state.elimination_date ? ' · Utslagen: ' + state.elimination_reason : ' · Aktiv');
+    $('#report-status').textContent = score.total_points + ' bingopoäng · ' + score.cell_points + ' avklarade rutor · ' + score.day_bonus_points + ' dagliga extrapoäng · ' + score.line_points + ' radbonuspoäng' + (state.elimination_date ? ' · Utslagen: ' + state.elimination_reason : ' · Aktiv');
     $('#activity-days').replaceChildren(...report.days.map(day => {
       const label = day.state === 'completed' ? '✓ Klar' : day.state === 'missed' ? 'Missad' : 'Kommande';
       const item = node('div', undefined, 'activity-day ' + day.state);

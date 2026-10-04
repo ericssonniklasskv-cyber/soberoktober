@@ -2,7 +2,16 @@ const {chromium}=require('playwright');
 const fs=require('node:fs/promises'),path=require('node:path'),http=require('node:http'),assert=require('node:assert/strict');
 const root=__dirname;
 const board=require('./qa/bingo-board.json');
-const score=(cells)=>{const keys=Object.keys(cells).map(Number);const rows=[0,1,2,3,4].filter(r=>[0,1,2,3,4].every(c=>keys.includes(r*5+c)));const columns=[0,1,2,3,4].filter(c=>[0,1,2,3,4].every(r=>keys.includes(r*5+c)));const dates=[...new Set(Object.values(cells))];return {cell_points:keys.length,day_bonus_points:dates.length,line_points:rows.length+columns.length,full_board_points:keys.length===25?10:0,total_points:keys.length+dates.length+rows.length+columns.length+(keys.length===25?10:0),rows,columns};};
+const score=(cells)=>{const keys=Object.keys(cells).map(Number);const rows=[0,1,2,3,4].filter(r=>[0,1,2,3,4].every(c=>keys.includes(r*5+c)));const columns=[0,1,2,3,4].filter(c=>[0,1,2,3,4].every(r=>keys.includes(r*5+c)));const dates=[...new Set(Object.values(cells))];return {cell_points:keys.length,day_bonus_points:dates.length,line_points:3*(rows.length+columns.length),full_board_points:keys.length===25?20:0,total_points:keys.length+dates.length+3*(rows.length+columns.length)+(keys.length===25?20:0),rows,columns};};
+const dailyScores=(cells)=>{
+ const points=new Map();
+ for(const date of Object.values(cells))points.set(date,(points.get(date)||1)+1);
+ const awards=score(cells),dateFor=(indexes)=>indexes.map(i=>cells[i]).sort().at(-1);
+ for(const row of awards.rows){const date=dateFor([0,1,2,3,4].map(c=>row*5+c));points.set(date,points.get(date)+3);}
+ for(const column of awards.columns){const date=dateFor([0,1,2,3,4].map(r=>r*5+column));points.set(date,points.get(date)+3);}
+ if(awards.full_board_points){const date=Object.values(cells).sort().at(-1);points.set(date,points.get(date)+20);}
+ return [...points].map(([result_date,points])=>({result_date,points}));
+};
 (async()=>{
  const server=http.createServer(async(req,res)=>{try{let file=decodeURIComponent(new URL(req.url,'http://localhost').pathname);if(file.endsWith('/'))file+='index.html';const target=path.resolve(root,'.'+file);if(!target.startsWith(root+path.sep))throw Error();const bytes=await fs.readFile(target);res.setHeader('Content-Type',file.endsWith('.html')?'text/html; charset=utf-8':file.endsWith('.css')?'text/css; charset=utf-8':file.endsWith('.svg')?'image/svg+xml':'application/javascript; charset=utf-8');res.end(bytes);}catch{res.writeHead(404);res.end();}});
  await new Promise(r=>server.listen(0,'127.0.0.1',r));
@@ -11,7 +20,7 @@ const score=(cells)=>{const keys=Object.keys(cells).map(Number);const rows=[0,1,
  browser=await chromium.launch({headless:true,executablePath:process.env.BINGO_BROWSER_PATH||'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'});
  const context=await browser.newContext({reducedMotion:'reduce'});
  const page=await context.newPage();let today='2026-10-05',enabled=true,signedIn=true,profileName='Testaren',cells={},repeat=[],queries=[];
- const state=()=>({enabled,board,completed_cells:cells,repeat_dates:repeat,activity_dates:[...new Set([...Object.values(cells),...repeat])].sort(),daily_scores:[...new Set(Object.values(cells))].map(result_date=>({result_date,points:Object.values(cells).filter(d=>d===result_date).length+1})),score:score(cells),today});
+ const state=()=>({enabled,board,completed_cells:cells,repeat_dates:repeat,activity_dates:[...new Set([...Object.values(cells),...repeat])].sort(),daily_scores:dailyScores(cells),score:score(cells),today});
  const challenge={title:'Squats',description:'15 squats',base_amount:15,unit:'squats',completion_mode:'single',bonus_description:'Promenera',bonus_points:1};
  const errors=[];page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()==='error')errors.push(m.text());});
  await page.exposeFunction('fixtureSession',()=>({data:{session:signedIn?{user:{id:'own-fixture',email:'own@example.invalid'}}:null},error:null}));
@@ -49,6 +58,7 @@ const score=(cells)=>{const keys=Object.keys(cells).map(Number);const rows=[0,1,
   await page.evaluate(()=>{const close=document.querySelector('#trump-quote-close');if(close)close.click();document.querySelector('#trump-quote-overlay')?.setAttribute('hidden','');});
   assert.equal(await page.locator('#dagens-pass').isVisible(),false);
   assert.equal(await page.locator('#competition-bingo .bingo-cell').count(),25);
+  assert.match(await page.locator('#competition-bingo .bingo-rules').innerText(),/rad ger 3 extra.*ytterligare 20.*Max 82/);
   await page.waitForFunction(()=>document.querySelectorAll('#activity-preview-list .activity-item').length===4);
   assert.match(await page.locator('#activity-preview-list').innerText(),/hela bingobrickan/);
   assert.deepEqual(await page.locator('#competition-bingo .bingo-cell-copy').allTextContents(),board.map(t=>t.description));
@@ -63,6 +73,17 @@ const score=(cells)=>{const keys=Object.keys(cells).map(Number);const rows=[0,1,
  await page.locator('#competition-bingo .bingo-cell').nth(1).click();await page.waitForFunction(()=>document.querySelector('#competition-bingo .bingo-stats').textContent.includes('3 poäng'));
  await page.locator('#competition-bingo .bingo-cell').nth(1).click();await page.waitForFunction(()=>document.querySelector('#competition-bingo .bingo-stats').textContent.includes('2 poäng'));
  await page.waitForFunction(()=>!document.querySelector('#activity-preview-list').textContent.includes('Testaren klarade en bingoruta: 30 minuter löpning'));
+ for(const cell of [1,2,3,4]){
+  await page.locator('#competition-bingo .bingo-cell').nth(cell).click();
+  await page.waitForFunction(()=>document.querySelector('#competition-bingo').getAttribute('aria-busy')!=='true' && !document.querySelector('#competition-bingo .bingo-cell').disabled);
+ }
+ await page.waitForFunction(()=>document.querySelector('#competition-bingo .bingo-stats').textContent.includes('9 poäng'));
+ assert.match(await page.locator('#competition-bingo .bingo-stats').innerText(),/1\/10 rader/);
+ for(const cell of [4,3,2,1]){
+  await page.locator('#competition-bingo .bingo-cell').nth(cell).click();
+  await page.waitForFunction(()=>!document.querySelector('#competition-bingo .bingo-cell').disabled);
+ }
+ await page.waitForFunction(()=>document.querySelector('#competition-bingo .bingo-stats').textContent.includes('2 poäng'));
  await page.goto('http://127.0.0.1:'+server.address().port+'/aktivitet/');await page.locator('#activity-list .activity-item').first().waitFor();
  assert.equal(await page.locator('#activity-list .activity-item').count(),5);
  assert.equal(await page.locator('#activity-list .activity-empty').count(),0,'Loading placeholder removed when activities arrive');

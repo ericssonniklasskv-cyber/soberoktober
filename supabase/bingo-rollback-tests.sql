@@ -1,7 +1,8 @@
--- Execute after the preparation DDL, inside BEGIN ... ROLLBACK only.
+-- Execute inside BEGIN ... ROLLBACK only; the live activation switch is restored by rollback.
 create temporary table bingo_qa_results(test text);
 create function pg_temp.check_bingo(ok boolean,label text) returns void language plpgsql as $$ begin if ok is distinct from true then raise exception 'FAILED: %',label; end if; insert into bingo_qa_results values(label); end; $$;
-select pg_temp.check_bingo(not private.bingo_enabled(),'Preparation remains disabled');
+create or replace function private.bingo_enabled() returns boolean language sql immutable set search_path='' as $$select false;$$;
+select pg_temp.check_bingo(not private.bingo_enabled(),'Disabled switch blocks competition');
 create temporary table baseline_sandbox as select md5(coalesce(jsonb_agg(to_jsonb(s) order by to_jsonb(s)::text)::text,'')) checksum from public.bingo_test_sessions s;
 insert into auth.users(id) values('11111111-2222-4333-8444-555555555555'),('11111111-2222-4333-8444-555555555556');
 insert into public.profiles(id,email,display_name,auto_elimination_recheck_after) values('11111111-2222-4333-8444-555555555555','bingo-fixture-one@example.invalid','Bingo fixture one','2026-10-04'),('11111111-2222-4333-8444-555555555556','bingo-fixture-two@example.invalid','Bingo fixture two','2026-10-04');
@@ -26,11 +27,11 @@ select pg_temp.check_bingo((select competition_status='active' from public.profi
 select private.apply_elimination('11111111-2222-4333-8444-555555555555','Alkohol');
 select private.bingo_mutation('complete','2026-10-08',3,'2026-10-09T12:00:00+02');
 select pg_temp.check_bingo((select competition_status='eliminated' and elimination_reason='Alkohol' from public.profiles where id='11111111-2222-4333-8444-555555555555'),'Alcohol status survives historical correction');
-select pg_temp.check_bingo((private.bingo_score((select jsonb_object_agg(i::text,'2026-10-05') from generate_series(0,24)i))->>'total_points')::integer=46,'Full board one day scores 46');
-select pg_temp.check_bingo((private.bingo_score((select jsonb_object_agg(i::text,('2026-10-05'::date+i%7)::text) from generate_series(0,24)i))->>'total_points')::integer=52,'Full board seven days maximum 52');
-select pg_temp.check_bingo((select sum(points)=52 from private.bingo_daily_scores((select jsonb_object_agg(i::text,('2026-10-05'::date+i%7)::text) from generate_series(0,24)i))),'Daily report allocations equal exact full board score');
-select pg_temp.check_bingo((private.bingo_score('{"0":"2026-10-05","1":"2026-10-05","2":"2026-10-05","3":"2026-10-05","4":"2026-10-05"}')->>'line_points')::integer=1,'Completed horizontal row earns one');
-select pg_temp.check_bingo((private.bingo_score('{"0":"2026-10-05","5":"2026-10-05","10":"2026-10-05","15":"2026-10-05","20":"2026-10-05"}')->>'line_points')::integer=1,'Completed vertical column earns one');
+select pg_temp.check_bingo((private.bingo_score((select jsonb_object_agg(i::text,'2026-10-05') from generate_series(0,24)i))->>'total_points')::integer=76,'Full board one day scores 76');
+select pg_temp.check_bingo((private.bingo_score((select jsonb_object_agg(i::text,('2026-10-05'::date+i%7)::text) from generate_series(0,24)i))->>'total_points')::integer=82,'Full board seven days maximum 82');
+select pg_temp.check_bingo((select sum(points)=82 from private.bingo_daily_scores((select jsonb_object_agg(i::text,('2026-10-05'::date+i%7)::text) from generate_series(0,24)i))),'Daily report allocations equal exact full board score');
+select pg_temp.check_bingo((private.bingo_score('{"0":"2026-10-05","1":"2026-10-05","2":"2026-10-05","3":"2026-10-05","4":"2026-10-05"}')->>'line_points')::integer=3,'Completed horizontal row earns three');
+select pg_temp.check_bingo((private.bingo_score('{"0":"2026-10-05","5":"2026-10-05","10":"2026-10-05","15":"2026-10-05","20":"2026-10-05"}')->>'line_points')::integer=3,'Completed vertical column earns three');
 select pg_temp.check_bingo((select total_points=(private.bingo_score((select completed_cells from public.bingo_results where user_id='11111111-2222-4333-8444-555555555555'))->>'total_points')::numeric and completed_days=4 from public.get_leaderboard() where display_name='Bingo fixture one'),'Leaderboard adds bingo score and attendance');
 select pg_temp.check_bingo(not has_function_privilege('authenticated','private.bingo_mutation(text,date,integer,timestamptz)','execute'),'Simulated clock helper is not client executable');
 select pg_temp.check_bingo(not has_table_privilege('anon','public.bingo_results','select') and not has_table_privilege('authenticated','public.bingo_results','insert') and not has_table_privilege('authenticated','public.bingo_results','update'),'Anonymous raw data and direct writes denied');

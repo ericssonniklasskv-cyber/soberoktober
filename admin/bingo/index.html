@@ -27,13 +27,13 @@
           <div class="test-actions"><button class="secondary" id="test-alcohol" type="button">Simulera alkohol</button><button class="secondary" id="restore-test" type="button" hidden>Återställ till aktiv</button><button class="secondary" id="reset-test" type="button">Nollställ testet</button></div>
         </section>
         <section class="bingo-summary" aria-label="Dina testpoäng">
-          <div class="main-score"><p class="kicker">Bingopoäng · test</p><strong><span id="total-points">0</span><small> / 52</small></strong><p id="score-caption">Din första ruta väntar.</p></div>
-          <div class="score-breakdown"><div><strong id="cell-points">0 / 25</strong><span>Rutpoäng</span></div><div><strong id="day-bonus-points">0 / 7</strong><span>Första rutan per dag</span></div><div><strong id="line-points">0 / 10</strong><span>Radbonus</span></div><div><strong id="full-points">0 / 10</strong><span>Full bricka</span></div></div>
+          <div class="main-score"><p class="kicker">Bingopoäng · test</p><strong><span id="total-points">0</span><small> / 82</small></strong><p id="score-caption">Din första ruta väntar.</p></div>
+          <div class="score-breakdown"><div><strong id="cell-points">0 / 25</strong><span>Rutpoäng</span></div><div><strong id="day-bonus-points">0 / 7</strong><span>Första rutan per dag</span></div><div><strong id="line-points">0 / 30</strong><span>Radbonus</span></div><div><strong id="full-points">0 / 20</strong><span>Full bricka</span></div></div>
         </section>
         <p id="competition-state" class="competition-state" role="status"></p>
         <section class="board-section" aria-labelledby="board-title">
           <div class="board-heading"><div><p class="kicker">5–11 oktober 2026</p><h2 id="board-title">Din bingobricka</h2></div><span class="progress-count" id="board-progress">0 av 25 klara</span></div>
-          <p class="help">Första avklarade rutan varje dag ger 2 poäng. Fler rutor samma dag ger 1 poäng per ruta. Klicka igen för att avmarkera om det blev fel. Poäng och bonusar räknas om automatiskt. Radbonus: +1 per hel vågrät/lodrät rad. Full bricka: +10. Max 52 poäng med aktivitet alla sju dagar.</p>
+          <p class="help">Första avklarade rutan varje dag ger 2 poäng. Fler rutor samma dag ger 1 poäng per ruta. Klicka igen för att avmarkera om det blev fel. Poäng och bonusar räknas om automatiskt. Radbonus: +3 per hel vågrät/lodrät rad. Full bricka: +20. Max 82 poäng med aktivitet alla sju dagar.</p>
           <p class="board-scroll-hint">Svep åt sidan för att se hela 5×5-brickan.</p>
           <div class="bingo-board" id="bingo-board" aria-label="Bingobricka med 25 aktiviteter"></div>
           <p class="line-status" id="line-status">0 vågräta · 0 lodräta rader klara</p>
@@ -54,6 +54,7 @@
   </div>
   <dialog class="delete-dialog" id="confirm-dialog" aria-labelledby="confirm-title"><div class="delete-content"><h2 id="confirm-title"></h2><p id="confirm-copy"></p><div class="dialog-actions"><button class="secondary" id="cancel-confirm" type="button">Avbryt</button><button class="primary" id="accept-confirm" type="button">Bekräfta</button></div></div></dialog>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.js" defer></script>
-  <script src="/admin/bingo/bingo-logic.js" defer></script><script src="/admin/bingo/bingo.js" defer></script>
+  <script src="/admin/bingo/bingo-logic.js" defer></script><script src="/admin/bingo/bingo.js?v=bonus-3-20" defer></script>
 </body>
 </html>
+

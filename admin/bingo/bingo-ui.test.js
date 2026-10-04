@@ -64,6 +64,9 @@ const root = path.resolve(__dirname, '../..');
    await page.goto(origin+'/admin/bingo/');
    await page.locator('#sandbox').waitFor({state:'visible'});
    assert.equal(await page.locator('.bingo-cell').count(),25);
+   assert.match(await page.locator('.main-score small').innerText(),/82/);
+   assert.equal(await page.locator('#line-points').innerText(),'0 / 30');
+   assert.equal(await page.locator('#full-points').innerText(),'0 / 20');
    assert.equal(await page.locator('#task-list li').count(),25);
    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth),true,'Overflow at '+width);
    assert.equal(await page.locator('.bingo-cell').evaluateAll(nodes=>nodes.every(n=>n.getBoundingClientRect().width>=44&&n.getBoundingClientRect().height>=44)),true,'Touch targets at '+width);
@@ -111,3 +114,4 @@ const root = path.resolve(__dirname, '../..');
   await new Promise(resolve=>server.close(resolve));
  }
 })().catch(error=>{console.error(error);process.exitCode=1;});
+

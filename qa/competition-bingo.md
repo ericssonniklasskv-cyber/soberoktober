@@ -1,6 +1,6 @@
 # Competition bingo / BingoBingo
 
-Prepared from production main `0bc7976`. Preview only; production frontend is unchanged.
+Originally prepared from production main `0bc7976`; the competition frontend and timed activation have since been released.
 
 ## Release switch
 
@@ -13,7 +13,7 @@ Do not disable the switch after participants start without reviewing the impact 
 ## Rules and privacy
 
 - Each new square: 1 point, plus 1 extra for the first new square on each Swedish date. A repeat only records attendance.
-- Five horizontal and five vertical lines: 1 extra each. Full board: 10 extra. Maximum 52 over seven days (46 if all squares are completed on one day).
+- Five horizontal and five vertical lines: 3 extra each. Full board: 20 extra. Maximum 82 over seven days (76 if all squares are completed on one day).
 - Daily allocations date each line/full-board award to the last required square, so weekly totals add up to the monthly total. Units aggregate from the frozen board, separately from ordinary training volume.
 - Elimination uses the same database attendance helper across normal/bingo days. Historical corrections may restore missed-day elimination, never alcohol elimination. Historical elimination events remain acknowledged rather than replaying.
 - Own writes only through a scoped authenticated RPC, with profile/board row locks. No caller-supplied user identifier, timestamp or points. The simulated-clock helper cannot be executed by anon/authenticated.
@@ -21,7 +21,7 @@ Do not disable the switch after participants start without reviewing the impact 
 
 ## Verification
 
-32 rollback SQL assertions passed, including RLS, public data shape, exact start, future dates, daily bonus, 46/52 maximum, undo, repeat, status restoration and Oct4/5 plus Oct11/12 boundaries. No real participants were mutated by tests; fake users were rolled back. A same-transaction before/after comparison confirmed disabled preparation preserves the live leaderboard exactly.
+32 rollback SQL assertions passed, including RLS, public data shape, exact start, future dates, daily bonus, 76/82 maximum, undo, repeat, status restoration and Oct4/5 plus Oct11/12 boundaries. No real participants were mutated by tests; fake users were rolled back. A same-transaction before/after comparison confirmed disabled preparation preserves the live leaderboard exactly.
 
 31 unit tests passed across bingo, challenge/history reports, existing sandbox and step logic. Isolated Playwright fixtures passed at 320/390/768/1440 px: no page overflow, readable full task text, touch targets, centered hero, mobile order, read-only other boards, own complete/uncheck, Min oktober correction, weekly bingo section, return to ordinary pass and disabled flag. No console/page errors. These are controlled tests, not claims of real participant writes on preview.
 
@@ -29,6 +29,14 @@ Run unit tests: `node --test bingo-logic.test.js min-oktober/history-logic.test.
 
 Run browser fixtures: `node competition-bingo-ui.test.cjs` with Playwright available and Chrome path configured via `BINGO_BROWSER_PATH` if needed. This script uses a local server and mocked Supabase; it never writes participant data.
 
-For database verification, execute `supabase/bingo-rollback-tests.sql` inside BEGIN/ROLLBACK on a prepared database while disabled. It temporarily enables the switch only in the rolled-back transaction. Do not execute it outside a rollback transaction. To test migration parity, first capture `before_bingo_qa` in the same transaction before applying preparation DDL, then compare leaderboard JSON immediately after preparation.
+For database verification, execute `supabase/bingo-rollback-tests.sql` inside BEGIN/ROLLBACK on the current database. It temporarily disables and enables the switch only in the rolled-back transaction. Do not execute it outside a rollback transaction. To test migration parity, first capture `before_bingo_qa` in the same transaction before applying preparation DDL, then compare leaderboard JSON immediately after preparation.
 
 Supabase security/performance advisors after preparation: no new findings; existing intentional public-function/password/unused-index findings remain unchanged.
+
+## Bonus update (4 October 2026)
+
+Rows and columns now award 3 points each; a full board awards 20. Existing squares and daily attendance are untouched. Both the live board and admin sandbox use the same private SQL scorer. Daily allocations award bonuses on the final required square's date, so leaderboard/history/report totals remain consistent.
+
+Validation: 35 unit tests; 32 competition, 23 activity and 13 dedicated bonus SQL checks in isolated rollback transactions. Dedicated checks cover row undo, full-board undo (82 to 55), seven-day maximum 82, same-day maximum 76, sandbox parity, last-day bonus allocation, private function grants and total parity across 27 partial/full boards. Browser fixtures cover rules, row bonus and undo, 320/390/768/1440 layouts, public boards, Min oktober and the activity feed. No real participant results are modified by tests.
+
+Applied migration `20261004191404_update_bingo_row_and_full_board_bonus`. Security/performance advisors introduce no new findings (baseline: one intentional RLS info, existing public-function/password warnings and five unused-index infos). Rollback fixture users were confirmed absent after testing.

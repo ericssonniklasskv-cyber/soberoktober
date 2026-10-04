@@ -24,7 +24,7 @@ select pg_temp.check_feed((select count(*)=10 from private.bingo_activity_events
 select pg_temp.check_feed((select count(*)=1 from private.bingo_activity_events where user_id='22222222-3333-4444-8555-666666666661' and activity_type='bingo_full' and is_active),'Full board celebrated once');
 select pg_temp.check_feed((select activity_type='bingo_full' from public.get_activity_feed(1,0)),'Milestone comes first when timestamps tie');
 select pg_temp.check_feed((select count(*)=4 from public.get_activity_feed(4,0)),'Main feed limit is four');
-select pg_temp.check_feed((select (private.bingo_score(completed_cells)->>'total_points')::integer=46 from public.bingo_results where user_id='22222222-3333-4444-8555-666666666661'),'Existing scoring unchanged');
+select pg_temp.check_feed((select (private.bingo_score(completed_cells)->>'total_points')::integer=76 from public.bingo_results where user_id='22222222-3333-4444-8555-666666666661'),'Activity tracking preserves the new bonus scoring');
 select private.bingo_mutation('uncomplete','2026-10-05',0,'2026-10-06T13:01:00+02');
 select pg_temp.check_feed((select count(*)=8 from private.bingo_activity_events where user_id='22222222-3333-4444-8555-666666666661' and activity_type='bingo_row' and is_active),'Undo withdraws only invalidated row and column');
 select pg_temp.check_feed((select count(*)=0 from private.bingo_activity_events where user_id='22222222-3333-4444-8555-666666666661' and activity_type='bingo_full' and is_active),'Undo withdraws full board celebration');
