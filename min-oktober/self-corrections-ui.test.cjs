@@ -9,7 +9,7 @@ const client={auth:{getSession:async()=>({data:{session}}),onAuthStateChange:()=
 from(table){const q={select(){return q},eq(){return q},gte(){return q},lte(){return q},order(){return q},maybeSingle:async()=>({data:{display_name:'Testare'}}),then(resolve,reject){const f=window.fixture;return Promise.resolve({data:table==='daily_results'?f.results:table==='daily_bonus_claims'?f.bonus:table==='daily_challenges'?Array.from({length:4},(_,i)=>({...challenge,challenge_date:'2026-10-0'+(i+1)})):[],error:null}).then(resolve,reject)}};return q},
 async rpc(name,args){const f=window.fixture;f.calls.push({name,args});if(name!=='self_daily_result')return {data:[],error:null};if(f.error)return {data:null,error:{message:f.error}};
 let result=f.results.find(x=>x.result_date===args.p_date);let bonus=f.bonus.find(x=>x.challenge_date===args.p_date);
-if(args.p_action==='save'){const p=args.p_payload;if(p.multiplier){result={result_date:args.p_date,multiplier:p.multiplier,points:[0,1,1.5,2][p.multiplier],completed_parts:p.completed_parts,updated_at:'fixture-time'};f.results=f.results.filter(x=>x.result_date!==args.p_date).concat(result)}if(p.claim_bonus&&!bonus){bonus={challenge_date:args.p_date,points:2};f.bonus.push(bonus)}}
+if(args.p_action==='save'){const p=args.p_payload;if(p.multiplier){result={result_date:args.p_date,multiplier:p.multiplier,points:[0,1,1.5,2][p.multiplier],completed_parts:p.completed_parts,updated_at:'fixture-time'};f.results=f.results.filter(x=>x.result_date!==args.p_date).concat(result)}if(p.unclaim_bonus){f.bonus=f.bonus.filter(x=>x.challenge_date!==args.p_date);bonus=null}if(p.claim_bonus&&!bonus){bonus={challenge_date:args.p_date,points:2};f.bonus.push(bonus)}}
 return {data:{result:result?{multiplier:result.multiplier,points:result.points,completed_parts:result.completed_parts,updated_at:result.updated_at}:null,bonus_points:bonus?.points??null,challenge:{...challenge,completion_mode:f.mode},restored:f.restored},error:null}}
 };window.supabase={createClient:()=>client};`;
 (async()=>{
@@ -39,6 +39,10 @@ assert(await page.locator('#day-detail').evaluate(e=>e.scrollWidth<=e.clientWidt
 if(process.env.SOBER_SCREENSHOT_DIR) await page.screenshot({path:path.join(process.env.SOBER_SCREENSHOT_DIR,'correction-'+width+'.png'),fullPage:true});
 await page.locator('#detail-close').click();await page.locator('#history-calendar button').first().click();await page.waitForFunction(()=>!document.querySelector('#day-edit-fields').disabled);
 assert.equal(await page.locator('#day-edit-level').inputValue(),'3');
+await page.locator('#day-edit-bonus').uncheck();await page.locator('#day-edit-save').click();await page.waitForFunction(()=>document.querySelector('#total-points').textContent==='2');
+assert.equal(await page.locator('#detail-level').textContent(),'3×');assert.equal(await page.locator('#detail-bonus').isVisible(),false);
+await page.locator('#day-edit-bonus').check();await page.locator('#day-edit-save').click();await page.waitForFunction(()=>document.querySelector('#total-points').textContent==='4');
+assert.equal(await page.evaluate(()=>fixture.bonus.length),1);
 await page.evaluate(()=>fixture.error='Resultatet har ändrats. Öppna dagen igen innan du sparar.');await page.locator('#day-edit-save').click();await page.waitForFunction(()=>document.querySelector('#day-edit-status').textContent.includes('Resultatet har ändrats'));
 assert.equal(await page.locator('#day-edit-save').isDisabled(),false);
 console.log('PASS '+width+'px: bonus before result, missing day, upgrade, total refresh, reopen, conflict, overflow');

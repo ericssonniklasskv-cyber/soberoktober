@@ -198,8 +198,8 @@
       }
       edit.bonusWrap.hidden = !challenge.bonus_description || !challenge.bonus_points;
       edit.bonus.checked = data.bonus_points !== null;
-      edit.bonus.disabled = data.bonus_points !== null;
-      edit.bonusLabel.textContent = `${challenge.bonus_description || ''} · ${pointsFormatter.format(Number(challenge.bonus_points || 0))} bonuspoäng${data.bonus_points !== null ? ' (redan sparat)' : ''}`;
+      edit.bonus.disabled = false;
+      edit.bonusLabel.textContent = `${challenge.bonus_description || ''} · ${pointsFormatter.format(Number(challenge.bonus_points || 0))} bonuspoäng`;
       edit.status.textContent = '';
       edit.fields.disabled = false;
     } catch (error) {
@@ -212,7 +212,8 @@
     if (savingDay || !editData || !currentSession) return;
     const multiplier = edit.level.value ? Number(edit.level.value) : null;
     const claimBonus = edit.bonus.checked && editData.bonus_points === null;
-    if (!multiplier && !claimBonus) {
+    const unclaimBonus = !edit.bonus.checked && editData.bonus_points !== null;
+    if (!multiplier && !claimBonus && !unclaimBonus) {
       edit.status.textContent = 'Välj en nivå eller markera bonusuppgiften.';
       return;
     }
@@ -231,13 +232,13 @@
     try {
       const { data, error } = await client.rpc('self_daily_result', {
         p_date: editDate, p_action: 'save',
-        p_payload: { expected: editData.result, multiplier, completed_parts: parts, claim_bonus: claimBonus },
+        p_payload: { expected: editData.result, multiplier, completed_parts: parts, claim_bonus: claimBonus, unclaim_bonus: unclaimBonus, expected_bonus_points: editData.bonus_points },
       });
       if (error) throw error;
       editData = data;
       showSavedDay(data);
       edit.bonus.checked = data.bonus_points !== null;
-      edit.bonus.disabled = data.bonus_points !== null;
+      edit.bonus.disabled = false;
       edit.status.textContent = data.restored ? 'Sparat! Du är aktiv i tävlingen igen.' : 'Sparat! Din oktober är uppdaterad.';
       try { await loadHistory(currentSession); }
       catch (_error) { edit.status.textContent += ' Historiken kunde inte uppdateras just nu. Ladda om sidan.'; }

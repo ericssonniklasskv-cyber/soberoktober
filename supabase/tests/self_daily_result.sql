@@ -25,8 +25,19 @@ begin
  d:=public.self_daily_result('2026-10-01');
  saved:=public.self_daily_result('2026-10-01','save',jsonb_build_object('expected',d->'result','multiplier',null,'claim_bonus',true));
  if saved->>'bonus_points'<>'2' or saved->'result'<>'null'::jsonb or saved->>'restored'<>'false' then raise exception 'Bonus-only mismatch'; end if;
+ saved:=public.self_daily_result('2026-10-01','save',jsonb_build_object('expected',null,'unclaim_bonus',true,'expected_bonus_points',2));
+ if saved->'bonus_points'<>'null'::jsonb or saved->'result'<>'null'::jsonb then raise exception 'Bonus-only removal mismatch'; end if;
+ saved:=public.self_daily_result('2026-10-01','save',jsonb_build_object('expected',null,'claim_bonus',true));
+ begin
+   perform public.self_daily_result('2026-10-01','save',jsonb_build_object('expected',null,'unclaim_bonus',true,'expected_bonus_points',99));
+   raise exception 'Stale bonus removal accepted';
+ exception when serialization_failure then null; end;
  saved:=public.self_daily_result('2026-10-01','save',jsonb_build_object('expected',null,'multiplier',1,'completed_parts',jsonb_build_array('first'),'claim_bonus',true));
  if saved->'result'->>'points'<>'1.0' or saved->>'restored'<>'false' then raise exception 'First result mismatch'; end if;
+ d:=saved;
+ saved:=public.self_daily_result('2026-10-01','save',jsonb_build_object('expected',d->'result','unclaim_bonus',true,'expected_bonus_points',2));
+ if saved->'result' is distinct from d->'result' or saved->'bonus_points'<>'null'::jsonb then raise exception 'Removing bonus changed workout'; end if;
+ saved:=public.self_daily_result('2026-10-01','save',jsonb_build_object('expected',saved->'result','claim_bonus',true));
  -- A stale form cannot overwrite a newer result.
  begin
    perform public.self_daily_result('2026-10-01','save',jsonb_build_object('expected',null,'multiplier',3,'completed_parts',jsonb_build_array('first')));
