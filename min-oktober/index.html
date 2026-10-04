@@ -51,7 +51,19 @@
       </section>
     </main>
   </div>
-  <dialog class="detail-dialog" id="day-detail" aria-labelledby="detail-title"><div class="detail"><button class="detail-close" id="detail-close" type="button" aria-label="Stäng detaljvyn">×</button><p class="detail-kicker" id="detail-date"></p><h2 id="detail-title"></h2><p class="detail-description" id="detail-description"></p><div class="detail-result"><div><span>Nivå</span><strong id="detail-level"></strong></div><div><span>Poäng</span><strong id="detail-points"></strong></div></div><p class="detail-bonus" id="detail-bonus" hidden></p></div></dialog>
+  <dialog class="detail-dialog" id="day-detail" aria-labelledby="detail-title"><div class="detail"><button class="detail-close" id="detail-close" type="button" aria-label="Stäng detaljvyn">×</button><p class="detail-kicker" id="detail-date"></p><h2 id="detail-title"></h2><p class="detail-description" id="detail-description"></p><div class="detail-result"><div><span>Nivå</span><strong id="detail-level"></strong></div><div><span>Poäng</span><strong id="detail-points"></strong></div></div><p class="detail-bonus" id="detail-bonus" hidden></p>
+<form id="day-edit-form" class="day-edit-form">
+  <p class="day-edit-intro">Glömt att registrera eller valt fel nivå? Rätta ditt eget resultat här.</p>
+  <fieldset id="day-edit-fields" disabled>
+    <legend>Det du gjorde</legend>
+    <label for="day-edit-level">Nivå</label>
+    <select id="day-edit-level"><option value="">Välj nivå</option><option value="1">1× · 1 poäng</option><option value="2">2× · 1,5 poäng</option><option value="3">3× · 2 poäng</option></select>
+    <div id="day-edit-parts" class="day-edit-parts"></div>
+    <label class="day-edit-bonus" id="day-edit-bonus-wrap" hidden><input type="checkbox" id="day-edit-bonus"><span id="day-edit-bonus-label"></span></label>
+    <button class="google" id="day-edit-save" type="submit">Spara resultat</button>
+  </fieldset>
+  <p class="status" id="day-edit-status" role="status" aria-live="polite"></p>
+</form></div></dialog>
   <dialog class="detail-dialog report-dialog" id="weekly-report-detail" aria-labelledby="weekly-report-detail-title">
     <div class="detail report-detail">
       <div class="report-confetti" id="report-confetti" aria-hidden="true"></div>

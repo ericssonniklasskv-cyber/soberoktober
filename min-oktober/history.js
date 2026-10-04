@@ -52,6 +52,22 @@
     finalReportConfetti: document.querySelector('#final-report-confetti'),
   };
 
+  let currentSession = null;
+  let editDate = null;
+  let editData = null;
+  let savingDay = false;
+  let editRequest = 0;
+  const edit = {
+    form: document.querySelector('#day-edit-form'),
+    fields: document.querySelector('#day-edit-fields'),
+    level: document.querySelector('#day-edit-level'),
+    parts: document.querySelector('#day-edit-parts'),
+    bonus: document.querySelector('#day-edit-bonus'),
+    bonusWrap: document.querySelector('#day-edit-bonus-wrap'),
+    bonusLabel: document.querySelector('#day-edit-bonus-label'),
+    save: document.querySelector('#day-edit-save'),
+    status: document.querySelector('#day-edit-status'),
+  };
   let client;
   let sessionWork = Promise.resolve();
   let challengesByDate = new Map();
@@ -128,18 +144,114 @@
     return descriptions.join(challenge.completion_mode === 'and' ? ' och ' : ' eller ') || challenge.title;
   }
 
-  function openDetail(day) {
-    const challenge = challengesByDate.get(day.date);
-    ui.detailDate.textContent = formatDate(day.date);
-    ui.detailTitle.textContent = challenge?.title || 'Dagens pass';
-    ui.detailDescription.textContent = completedChallengeDescription(challenge, day.result);
-    ui.detailLevel.textContent = `${day.result.multiplier}×`;
-    ui.detailPoints.textContent = `${pointsFormatter.format(Number(day.result.points))} poäng`;
-    const bonus = bonusClaimsByDate.get(day.date);
-    ui.detailBonus.hidden = !bonus;
-    ui.detailBonus.textContent = bonus ? `Bonuspoäng: ${pointsFormatter.format(Number(bonus.points))}` : '';
-    ui.detail.showModal();
+  function showSavedDay(data) {
+    const result = data.result;
+    ui.detailLevel.textContent = result ? `${result.multiplier}×` : 'Inte registrerat';
+    ui.detailPoints.textContent = result ? `${pointsFormatter.format(Number(result.points))} poäng` : '–';
+    ui.detailBonus.hidden = data.bonus_points === null;
+    ui.detailBonus.textContent = data.bonus_points === null ? '' : `Bonuspoäng: ${pointsFormatter.format(Number(data.bonus_points))}`;
   }
+
+  async function openDetail(day) {
+    if (savingDay) return;
+    const request = ++editRequest;
+    editDate = day.date;
+    editData = null;
+    edit.fields.disabled = true;
+    edit.status.textContent = 'Hämtar passet…';
+    edit.parts.replaceChildren();
+    edit.bonusWrap.hidden = true;
+    ui.detailDate.textContent = formatDate(day.date);
+    ui.detailTitle.textContent = challengesByDate.get(day.date)?.title || 'Dagens pass';
+    ui.detailDescription.textContent = '';
+    ui.detailLevel.textContent = day.result ? `${day.result.multiplier}×` : 'Inte registrerat';
+    ui.detailPoints.textContent = day.result ? `${pointsFormatter.format(Number(day.result.points))} poäng` : '–';
+    ui.detailBonus.hidden = true;
+    ui.detail.showModal();
+    try {
+      const { data, error } = await client.rpc('self_daily_result', { p_date: day.date });
+      if (request !== editRequest || !ui.detail.open) return;
+      if (error) throw error;
+      editData = data;
+      const challenge = data.challenge;
+      const logic = window.SoberOctoberChallengeLogic;
+      const mode = challenge.completion_mode || 'single';
+      ui.detailTitle.textContent = challenge.title;
+      ui.detailDescription.textContent = [logic.describePart(challenge, 'first'), mode !== 'single' ? logic.describePart(challenge, 'second') : ''].filter(Boolean).join(mode === 'and' ? ' och ' : ' eller ');
+      showSavedDay(data);
+      edit.level.value = data.result ? String(data.result.multiplier) : '';
+      if (mode === 'or') {
+        const note = document.createElement('p');
+        note.textContent = 'Vilken del gjorde du? Markera en eller båda.';
+        edit.parts.append(note);
+        ['first', 'second'].forEach((part) => {
+          const label = document.createElement('label');
+          const input = document.createElement('input');
+          input.type = 'checkbox';
+          input.value = part;
+          input.checked = (data.result?.completed_parts || ['first']).includes(part);
+          const text = document.createElement('span');
+          text.textContent = logic.describePart(challenge, part);
+          label.append(input, text);
+          edit.parts.append(label);
+        });
+      }
+      edit.bonusWrap.hidden = !challenge.bonus_description || !challenge.bonus_points;
+      edit.bonus.checked = data.bonus_points !== null;
+      edit.bonus.disabled = data.bonus_points !== null;
+      edit.bonusLabel.textContent = `${challenge.bonus_description || ''} · ${pointsFormatter.format(Number(challenge.bonus_points || 0))} bonuspoäng${data.bonus_points !== null ? ' (redan sparat)' : ''}`;
+      edit.status.textContent = '';
+      edit.fields.disabled = false;
+    } catch (error) {
+      if (request === editRequest) edit.status.textContent = error.message || 'Passet kunde inte hämtas. Försök igen.';
+    }
+  }
+
+  edit.form.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    if (savingDay || !editData || !currentSession) return;
+    const multiplier = edit.level.value ? Number(edit.level.value) : null;
+    const claimBonus = edit.bonus.checked && editData.bonus_points === null;
+    if (!multiplier && !claimBonus) {
+      edit.status.textContent = 'Välj en nivå eller markera bonusuppgiften.';
+      return;
+    }
+    const mode = editData.challenge.completion_mode || 'single';
+    const parts = mode === 'and' ? ['first', 'second'] : mode === 'or'
+      ? [...edit.parts.querySelectorAll('input:checked')].map((input) => input.value) : ['first'];
+    if (multiplier && !parts.length) {
+      edit.status.textContent = 'Markera vilken del du gjorde.';
+      return;
+    }
+    savingDay = true;
+    ui.detailClose.disabled = true;
+    edit.fields.disabled = true;
+    edit.save.textContent = 'Sparar…';
+    edit.status.textContent = '';
+    try {
+      const { data, error } = await client.rpc('self_daily_result', {
+        p_date: editDate, p_action: 'save',
+        p_payload: { expected: editData.result, multiplier, completed_parts: parts, claim_bonus: claimBonus },
+      });
+      if (error) throw error;
+      editData = data;
+      showSavedDay(data);
+      edit.bonus.checked = data.bonus_points !== null;
+      edit.bonus.disabled = data.bonus_points !== null;
+      edit.status.textContent = data.restored ? 'Sparat! Du är aktiv i tävlingen igen.' : 'Sparat! Din oktober är uppdaterad.';
+      try { await loadHistory(currentSession); }
+      catch (_error) { edit.status.textContent += ' Historiken kunde inte uppdateras just nu. Ladda om sidan.'; }
+    } catch (error) {
+      edit.status.textContent = error.message || 'Kunde inte spara. Försök igen.';
+    } finally {
+      savingDay = false;
+      ui.detailClose.disabled = false;
+      edit.fields.disabled = false;
+      edit.save.textContent = 'Spara resultat';
+    }
+  });
+  ui.detail.addEventListener('close', () => { editRequest += 1; });
+  ui.detail.addEventListener('cancel', (event) => { if (savingDay) event.preventDefault(); });
 
   function renderCalendar(history, today) {
     const firstWeekday = new Date('2026-10-01T12:00:00').getDay();
@@ -152,7 +264,7 @@
     });
 
     history.days.forEach((day, index) => {
-      const cell = document.createElement(day.state === 'completed' ? 'button' : 'div');
+      const cell = document.createElement(day.date <= today ? 'button' : 'div');
       cell.className = `calendar-day ${day.state}${day.date === today ? ' today' : ''}`;
       if (cell.tagName === 'BUTTON') {
         cell.type = 'button';
@@ -551,6 +663,7 @@
   }
 
   async function handleSession(session) {
+    currentSession = session;
     ui.loginStatus.textContent = '';
     if (!session) {
       showState(ui.signedOut);
@@ -582,7 +695,7 @@
 
   ui.detailClose.addEventListener('click', () => ui.detail.close());
   ui.detail.addEventListener('click', (event) => {
-    if (event.target === ui.detail) ui.detail.close();
+    if (event.target === ui.detail && !savingDay) ui.detail.close();
   });
   ui.reportDetailClose.addEventListener('click', () => ui.reportDetail.close());
   ui.reportDetail.addEventListener('click', (event) => {
