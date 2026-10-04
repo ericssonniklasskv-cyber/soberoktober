@@ -40,3 +40,7 @@ Rows and columns now award 3 points each; a full board awards 20. Existing squar
 Validation: 35 unit tests; 32 competition, 23 activity and 13 dedicated bonus SQL checks in isolated rollback transactions. Dedicated checks cover row undo, full-board undo (82 to 55), seven-day maximum 82, same-day maximum 76, sandbox parity, last-day bonus allocation, private function grants and total parity across 27 partial/full boards. Browser fixtures cover rules, row bonus and undo, 320/390/768/1440 layouts, public boards, Min oktober and the activity feed. No real participant results are modified by tests.
 
 Applied migration `20261004191404_update_bingo_row_and_full_board_bonus`. Security/performance advisors introduce no new findings (baseline: one intentional RLS info, existing public-function/password warnings and five unused-index infos). Rollback fixture users were confirmed absent after testing.
+
+## Square 13: golf (4 October 2026)
+
+Migration `20261004192301_change_bingo_square13_to_golf` changes square 13 to “spela en runda golf eller slå på rangen”, with report amount 1 and unit `golfaktivitet`. The public board, sandbox default and existing uncustomized sandbox entries all match. Rollback checks confirm the other 24 squares and all participant/sandbox progress remain unchanged. Existing responsive browser checks passed at 320/390/768/1440 px with full task texts. Security/performance advisors remain at the previous baseline.
