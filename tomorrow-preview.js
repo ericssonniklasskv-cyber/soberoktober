@@ -35,6 +35,12 @@
       content.replaceChildren(text('p', 'Inget nytt oktoberpass imorgon. Tack för den här månaden!', 'tomorrow-note'));
       return;
     }
+    if (window.SoberOctoberBingo?.state()?.enabled && window.SoberOctoberCompetition.isBingoDate(date)) {
+      const link = text('a', 'Kika på bingoaktiviteterna →', 'bingo-directory-link');
+      link.href = '/bingobingo/';
+      content.replaceChildren(text('h2', 'Träningsbingo · 5–11 oktober'), text('p', 'Imorgon fortsätter vi med bingobrickan. Första nya rutan ger 2 poäng, fler nya rutor ger 1 var. Hela rader och hela brickan ger bonus.', 'tomorrow-task'), link);
+      return;
+    }
     try {
       const { data, error } = await client.from('daily_challenges')
         .select('title, description, base_amount, unit, completion_mode, second_description, second_base_amount, second_unit, bonus_description, bonus_points')

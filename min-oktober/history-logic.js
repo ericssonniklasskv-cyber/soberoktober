@@ -1,10 +1,11 @@
 (function attachHistoryLogic(root, factory) {
   const challengeLogic = root?.SoberOctoberChallengeLogic
     || (typeof require === 'function' ? require('./challenge-logic.js') : null);
-  const api = factory(challengeLogic);
+  const bingoLogic = root?.SoberOctoberCompetition || (typeof require === 'function' ? require('../bingo-logic.js') : null);
+  const api = factory(challengeLogic, bingoLogic);
   if (typeof module === 'object' && module.exports) module.exports = api;
   if (root) root.SoberOctoberHistory = api;
-}(typeof globalThis !== 'undefined' ? globalThis : this, function createHistoryLogic(challengeLogic) {
+}(typeof globalThis !== 'undefined' ? globalThis : this, function createHistoryLogic(challengeLogic, bingoLogic) {
   const OCTOBER_DATES = Array.from({ length: 31 }, (_, index) => `2026-10-${String(index + 1).padStart(2, '0')}`);
   const OCTOBER_START = OCTOBER_DATES[0];
   const OCTOBER_END = OCTOBER_DATES[OCTOBER_DATES.length - 1];
@@ -94,7 +95,7 @@
     return closedReportPeriods(today).find((period) => !seen.has(period.key)) || null;
   }
 
-  function buildPeriodReport({ results, challenges, stepResults, bonusClaims = [], periodKey, today, stepsLogic }) {
+  function buildPeriodReport({ results, challenges, stepResults, bonusClaims = [], bingo = null, periodKey, today, stepsLogic }) {
     const period = REPORT_PERIODS.find((candidate) => candidate.key === periodKey);
     if (!period || period.end >= today) return null;
 
@@ -110,6 +111,7 @@
 
     completed.forEach((result) => {
       const multiplier = Number(result.multiplier);
+      if (result.kind === 'bingo') { completedDates.add(result.result_date); return; }
       if (![1, 2, 3].includes(multiplier)) return;
       completedDates.add(result.result_date);
       multiplierCounts[multiplier] += 1;
@@ -136,13 +138,15 @@
       : null;
 
     const bonusPoints = challengeLogic?.sumBonusPoints(bonusClaims, period.start, period.end) || 0;
+    const bingoReport = bingoLogic?.report(bingo, period.start, period.end);
     return {
       ...period,
+      bingo: bingoReport,
       completedDays: completedDates.size,
       missedDays: Math.max(0, period.days - completedDates.size),
       trainingPoints,
       bonusPoints,
-      totalPoints: trainingPoints + bonusPoints,
+      totalPoints: trainingPoints + bonusPoints + (bingoReport?.points || 0),
       bestStreak,
       multiplierCounts,
       exerciseTotals: challengeLogic?.aggregateExerciseTotals(completed, [...challengeByDate.values()]) || [],
@@ -185,6 +189,7 @@
     challenges = [],
     stepResults = [],
     bonusClaims = [],
+    bingo = null,
     today,
     competitionStatus = null,
     trainingLeaderboard = [],
@@ -203,14 +208,14 @@
     const monthResults = results.filter((result) => (
       result.result_date >= OCTOBER_START
       && result.result_date <= cutoffDate
-      && [1, 2, 3].includes(Number(result.multiplier))
+      && (result.kind === 'bingo' || [1, 2, 3].includes(Number(result.multiplier)))
     ));
     const completedDates = new Set(monthResults.map((result) => result.result_date));
     const multiplierCounts = { 1: 0, 2: 0, 3: 0 };
 
     monthResults.forEach((result) => {
       const multiplier = Number(result.multiplier);
-      multiplierCounts[multiplier] += 1;
+      if ([1, 2, 3].includes(multiplier)) multiplierCounts[multiplier] += 1;
     });
 
     let longestStreak = 0;
@@ -239,16 +244,18 @@
         && Number(entry.average_steps) === stepProjection.average
       ));
 
-    const totalTrainingPoints = monthResults.reduce((total, result) => total + (Number(result.points) || 0), 0);
+    const totalTrainingPoints = monthResults.filter(r => r.kind !== 'bingo').reduce((total, result) => total + (Number(result.points) || 0), 0);
     const bonusPoints = challengeLogic?.sumBonusPoints(bonusClaims, OCTOBER_START, cutoffDate) || 0;
 
+    const bingoReport = bingoLogic?.report(bingo, OCTOBER_START, cutoffDate);
     return {
+      bingo: bingoReport,
       cutoffDate,
       completedDays: completedDates.size,
       missedDays: Math.max(0, includedDates.length - completedDates.size),
       totalTrainingPoints,
       bonusPoints,
-      totalPoints: totalTrainingPoints + bonusPoints,
+      totalPoints: totalTrainingPoints + bonusPoints + (bingoReport?.points || 0),
       longestStreak,
       multiplierCounts,
       mostUsedMultiplier: Object.values(multiplierCounts).some((count) => count > 0)

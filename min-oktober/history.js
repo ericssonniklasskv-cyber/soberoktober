@@ -137,6 +137,7 @@
   }
 
   function completedChallengeDescription(challenge, result) {
+    if (result?.kind === 'bingo') return 'Träningsbingo';
     if (!challenge) return 'Passinformationen saknas';
     const logic = window.SoberOctoberChallengeLogic;
     const parts = logic?.completedParts(result, challenge) || ['first'];
@@ -152,7 +153,17 @@
     ui.detailBonus.textContent = data.bonus_points === null ? '' : `Bonuspoäng: ${pointsFormatter.format(Number(data.bonus_points))}`;
   }
 
+  let bingoState = null;
+  const bingoDialog = document.querySelector('#bingo-day-detail');
+  bingoDialog.querySelector('button').addEventListener('click', () => bingoDialog.close());
+  bingoDialog.addEventListener('click', event => { if (event.target === bingoDialog) bingoDialog.close(); });
   async function openDetail(day) {
+    if (bingoState?.enabled && window.SoberOctoberCompetition.isBingoDate(day.date)) {
+      document.querySelector('#bingo-day-title').textContent = formatDate(day.date);
+      window.SoberOctoberBingo.mount(bingoDialog.querySelector('.bingo-editor'), day.date);
+      bingoDialog.showModal();
+      return;
+    }
     if (savingDay) return;
     const request = ++editRequest;
     editDate = day.date;
@@ -164,7 +175,7 @@
     ui.detailDate.textContent = formatDate(day.date);
     ui.detailTitle.textContent = challengesByDate.get(day.date)?.title || 'Dagens pass';
     ui.detailDescription.textContent = '';
-    ui.detailLevel.textContent = day.result ? `${day.result.multiplier}×` : 'Inte registrerat';
+    ui.detailLevel.textContent = day.result ? (day.result.kind === 'bingo' ? 'Bingo' : `${day.result.multiplier}×`) : 'Inte registrerat';
     ui.detailPoints.textContent = day.result ? `${pointsFormatter.format(Number(day.result.points))} poäng` : '–';
     ui.detailBonus.hidden = true;
     ui.detail.showModal();
@@ -280,7 +291,7 @@
       const result = document.createElement('span');
       result.className = 'day-result';
       result.textContent = day.state === 'completed'
-        ? `${day.result.multiplier}×`
+        ? (day.result.kind === 'bingo' ? 'Bingo' : `${day.result.multiplier}×`)
         : (day.state === 'missed' ? 'Missad' : (day.date === today ? 'Idag' : 'Senare'));
       cell.append(result);
 
@@ -291,7 +302,7 @@
         cell.append(points);
         const challenge = challengesByDate.get(day.date);
         const bonus = bonusClaimsByDate.get(day.date);
-        cell.setAttribute('aria-label', `${formatDate(day.date)}, genomförd ${day.result.multiplier} gånger, ${pointsFormatter.format(Number(day.result.points))} poäng${bonus ? `, ${pointsFormatter.format(Number(bonus.points))} bonuspoäng` : ''}, ${completedChallengeDescription(challenge, day.result)}`);
+        cell.setAttribute('aria-label', `${formatDate(day.date)}, genomförd ${day.result.kind === 'bingo' ? 'bingo' : `${day.result.multiplier} gånger`}, ${pointsFormatter.format(Number(day.result.points))} poäng${bonus ? `, ${pointsFormatter.format(Number(bonus.points))} bonuspoäng` : ''}, ${completedChallengeDescription(challenge, day.result)}`);
       } else {
         cell.setAttribute('aria-label', `${formatDate(day.date)}, ${day.state === 'missed' ? 'missad' : 'framtida'}`);
       }
@@ -355,6 +366,7 @@
         challenges,
         stepResults,
         bonusClaims,
+        bingo: bingoState,
         periodKey: period.key,
         today,
         stepsLogic: window.SoberOctoberSteps,
@@ -466,6 +478,7 @@
       ui.reportSteps.classList.remove('is-unreported');
     }
 
+    renderBingoReport(document.querySelector('#weekly-bingo-report'), report.bingo);
     ui.reportDetail.showModal();
     if (wasNew) addReportConfetti();
     renderWeeklyReportsFromCache();
@@ -513,6 +526,7 @@
         ? 'AKTIV · Du höll dig kvar i tävlingen hela oktober'
         : 'Tävlingsstatusen kunde inte hämtas just nu.';
 
+    renderBingoReport(document.querySelector('#final-bingo-report'), report.bingo);
     const trainingPlace = report.trainingPlacement === null ? 'Ej tillgänglig' : `${report.trainingPlacement}:e plats`;
     ui.finalReportStats.replaceChildren(...createReportStats([
       ['Total träningspoäng', `${formatNumber(report.totalTrainingPoints)} p`],
@@ -577,11 +591,22 @@
     renderCalendar(history, today);
   }
 
+  function renderBingoReport(section, report) {
+    section.hidden = !report || report.completedDays === 0;
+    section.replaceChildren();
+    if (section.hidden) return;
+    const title = document.createElement('h3'); title.textContent = 'Träningsbingo';
+    const summary = document.createElement('p'); summary.textContent = `${report.completedCells} rutor · ${report.completedDays} aktiva dagar · ${formatNumber(report.points)} bingopoäng`;
+    const list = document.createElement('ul');
+    list.replaceChildren(...report.exerciseTotals.map(total => { const row = document.createElement('li'); row.textContent = `${formatNumber(total.amount)} ${total.unit}`; return row; }));
+    section.append(title, summary, list);
+  }
+
   async function loadHistory(session) {
     ui.historyStatus.textContent = '';
     const today = stockholmDate();
     const reportUnlocked = today >= '2026-11-01';
-    const [resultsResponse, challengesResponse, stepResultsResponse, bonusClaimsResponse, profileResponse, trainingLeaderboardResponse, stepLeaderboardResponse] = await Promise.all([
+    const [resultsResponse, challengesResponse, stepResultsResponse, bonusClaimsResponse, profileResponse, trainingLeaderboardResponse, stepLeaderboardResponse, bingoResponse] = await Promise.all([
       client
         .from('daily_results')
         .select('result_date, multiplier, points, completed_parts')
@@ -612,16 +637,20 @@
         .maybeSingle(),
       reportUnlocked ? client.rpc('get_leaderboard') : Promise.resolve({ data: [], error: null }),
       reportUnlocked ? client.rpc('get_step_leaderboard') : Promise.resolve({ data: [], error: null }),
+      client.rpc('my_competition_bingo'),
     ]);
 
     if (resultsResponse.error) throw resultsResponse.error;
     if (challengesResponse.error) throw challengesResponse.error;
     if (profileResponse.error) throw profileResponse.error;
 
-    const results = resultsResponse.data || [];
+    if (bingoResponse.error) throw bingoResponse.error;
+    bingoState = bingoResponse.data;
+    window.SoberOctoberBingo.setState(bingoState);
+    const results = window.SoberOctoberCompetition.mergeResults(resultsResponse.data || [], bingoState);
     const challenges = challengesResponse.data || [];
     if (bonusClaimsResponse.error) throw bonusClaimsResponse.error;
-    const bonusClaims = bonusClaimsResponse.data || [];
+    const bonusClaims = window.SoberOctoberCompetition.normalBonus(bonusClaimsResponse.data || [], bingoState);
     bonusClaimsByDate = new Map(bonusClaims.map((claim) => [claim.challenge_date, claim]));
     stepResultsUnavailable = Boolean(stepResultsResponse.error);
     if (stepResultsUnavailable) {
@@ -642,6 +671,7 @@
       challenges,
       stepResults,
       bonusClaims,
+      bingo: bingoState,
       today,
       competitionStatus,
       trainingLeaderboard: trainingLeaderboardResponse.error ? [] : (trainingLeaderboardResponse.data || []),
@@ -664,9 +694,12 @@
   }
 
   async function handleSession(session) {
+    window.SoberOctoberBingo.init(client, async () => { if (currentSession) await loadHistory(currentSession); });
     currentSession = session;
     ui.loginStatus.textContent = '';
     if (!session) {
+      bingoDialog.close();
+      window.SoberOctoberBingo.reset();
       showState(ui.signedOut);
       return;
     }

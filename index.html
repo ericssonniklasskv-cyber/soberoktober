@@ -13,6 +13,7 @@
   <link rel="stylesheet" href="/styles/activity.css">
   <link rel="stylesheet" href="/styles/elimination.css">
   <link rel="stylesheet" href="/styles/tomorrow.css">
+  <link rel="stylesheet" href="/styles/bingo.css">
 </head>
 <body class="page-home entry-active">
   <section class="entry-gate" id="entry-gate" aria-labelledby="entry-title">
@@ -77,6 +78,7 @@
     </header>
     <nav class="main-nav" aria-label="Huvudnavigation">
       <a href="#dagens-pass">Dagens pass</a>
+      <a href="/bingobingo/">BingoBingo</a>
       <a class="history-nav" href="/min-oktober/">Min oktober</a>
       <a href="#topplista">Topplista</a>
       <a href="/stegtavling/">Stegtävling</a>
@@ -144,6 +146,11 @@
         </div>
         <p class="save-status" id="save-status" role="status" aria-live="polite"></p>
         <p class="motivation"><b>●</b> Små segrar räknas också. Särskilt idag.</p>
+      </section>
+      <section class="challenge-card bingo-feature" id="competition-bingo" aria-labelledby="competition-bingo-title" hidden>
+        <p class="bingo-kicker">5–11 oktober · en vecka, en bricka</p><h2 id="competition-bingo-title">Dagens bingo</h2>
+        <p class="bingo-rules">Första nya rutan varje dag ger 2 poäng. Fler nya rutor samma dag ger 1 poäng var. En hel vågrät eller lodrät rad ger 1 extra, och hela brickan ger ytterligare 10. Max 52 poäng under veckan. Gör något varje dag – två missade heldagar i rad slår ut dig.</p>
+        <div class="bingo-editor"></div><a class="bingo-directory-link" href="/bingobingo/">BingoBingo · Se gruppens brickor →</a>
       </section>
       <aside class="activity-preview" aria-labelledby="activity-preview-title">
         <div class="activity-preview-head"><span class="activity-preview-icon" aria-hidden="true">↗</span><div><h2 id="activity-preview-title">Senaste aktivitet</h2><p>Små segrar sprider sig.</p></div></div>
@@ -255,6 +262,8 @@
   <script src="/aktivitet/activity-preview.js" defer></script>
   <script src="/elimination.js" defer></script>
   <script src="/min-oktober/challenge-logic.js" defer></script>
+  <script src="/bingo-logic.js" defer></script>
+  <script src="/bingo-ui.js" defer></script>
   <script src="/min-oktober/history-logic.js" defer></script>
   <script src="/tomorrow-preview.js" defer></script>
   <script src="/auth.js" defer></script>
