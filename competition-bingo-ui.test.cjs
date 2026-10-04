@@ -10,14 +10,15 @@ const score=(cells)=>{const keys=Object.keys(cells).map(Number);const rows=[0,1,
  try{
  browser=await chromium.launch({headless:true,executablePath:process.env.BINGO_BROWSER_PATH||'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'});
  const context=await browser.newContext({reducedMotion:'reduce'});
- const page=await context.newPage();let today='2026-10-05',enabled=true,signedIn=true,cells={},repeat=[],queries=[];
+ const page=await context.newPage();let today='2026-10-05',enabled=true,signedIn=true,profileName='Testaren',cells={},repeat=[],queries=[];
  const state=()=>({enabled,board,completed_cells:cells,repeat_dates:repeat,activity_dates:[...new Set([...Object.values(cells),...repeat])].sort(),daily_scores:[...new Set(Object.values(cells))].map(result_date=>({result_date,points:Object.values(cells).filter(d=>d===result_date).length+1})),score:score(cells),today});
  const challenge={title:'Squats',description:'15 squats',base_amount:15,unit:'squats',completion_mode:'single',bonus_description:'Promenera',bonus_points:1};
  const errors=[];page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()==='error')errors.push(m.text());});
  await page.exposeFunction('fixtureSession',()=>({data:{session:signedIn?{user:{id:'own-fixture',email:'own@example.invalid'}}:null},error:null}));
  await page.exposeFunction('fixtureQuery',(table,args,single)=>{
   queries.push(table);
-  let data=table==='profiles'?{id:'own-fixture',display_name:'Testaren',is_admin:false,email:'own@example.invalid'}:table==='daily_challenges'?(single?challenge:['2026-10-01','2026-10-04','2026-10-05','2026-10-31'].map(challenge_date=>({...challenge,challenge_date}))):table==='daily_results'?[{result_date:'2026-10-04',multiplier:2,points:1.5}]:[];
+  if(table==='profiles'&&args.some(a=>a[0]==='update'))profileName=args.find(a=>a[0]==='update')[1].display_name;
+  let data=table==='profiles'?{id:'own-fixture',display_name:profileName,is_admin:false,email:'own@example.invalid'}:table==='daily_challenges'?(single?challenge:['2026-10-01','2026-10-04','2026-10-05','2026-10-31'].map(challenge_date=>({...challenge,challenge_date}))):table==='daily_results'?[{result_date:'2026-10-04',multiplier:2,points:1.5}]:[];
   return {data,error:null};
  });
  await page.exposeFunction('fixtureRPC',(name,args={})=>{
@@ -71,6 +72,7 @@ const score=(cells)=>{const keys=Object.keys(cells).map(Number);const rows=[0,1,
  await page.locator('.weekly-report-action').first().click();await page.locator('#weekly-bingo-report').waitFor({state:'visible'});assert.match(await page.locator('#weekly-bingo-report').innerText(),/2 rutor.*3 bingopoäng/s);await page.locator('#report-detail-close').click();
  today='2026-10-12';await page.clock.setFixedTime(new Date('2026-10-12T00:00:00+02:00'));await page.goto('http://127.0.0.1:'+server.address().port+'/');await page.locator('#score-summary').waitFor({state:'visible'});assert.equal(await page.locator('#dagens-pass').isVisible(),true);assert.equal(await page.locator('#competition-bingo').isVisible(),false);
  today='2026-10-05';enabled=false;await page.clock.setFixedTime(new Date('2026-10-05T12:00:00+02:00'));await page.reload();await page.locator('#score-summary').waitFor({state:'visible'});assert.equal(await page.locator('#competition-bingo').isVisible(),false);
+ enabled=true;profileName=null;await page.reload();await page.locator('#auth-onboarding').waitFor({state:'visible'});await page.locator('#display-name').fill('Ny deltagare');await page.locator('#name-form button[type=submit]').click();await page.locator('#competition-bingo').waitFor({state:'visible'});await page.locator('#auth-onboarding').waitFor({state:'hidden'});assert.equal(await page.locator('#dagens-pass').isVisible(),false,'Onboarding immediately activates own bingo');
  assert.deepEqual(errors,[],'Console/page errors');console.log('PASS: 320/390/768/1440 layouts, centered home, full task texts, own writes/uncheck, public read-only boards, history backfill/report, automatic return and disabled preparation.');
  } finally{if(browser)await browser.close();await new Promise(r=>server.close(r));}
 })().catch(e=>{console.error(e);process.exitCode=1});

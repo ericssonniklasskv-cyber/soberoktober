@@ -916,6 +916,10 @@
     ui.adminLink.hidden = !profile.is_admin;
     ui.accountName.textContent = `Hej, ${profile.display_name}!`;
     ui.accountEmail.textContent = session.user.email || '';
+    try { await loadResults(); } catch (loadError) {
+      console.error('Kunde inte läsa poängen', loadError);
+      ui.saveStatus.textContent = 'Poängen kunde inte laddas. Ladda om sidan för att försöka igen.';
+    }
     await Promise.all([refreshLeaderboard(), loadRegistered()]);
     closeModal();
   });
