@@ -66,12 +66,7 @@
         tone: 'eliminated',
         text: `Du är utslagen ur tävlingen${competitionStatus.elimination_reason ? ` · ${competitionStatus.elimination_reason}` : ''}`,
       };
-    } else if (bingoLogic.isBingoDate(today)) {
-      competition = {
-        tone: 'active',
-        text: 'Tvådagarsregeln är pausad 5–11 oktober. Alkoholregeln gäller som vanligt.',
-      };
-    } else if (today >= OCTOBER_START && today <= OCTOBER_END && !bingoLogic.isBingoDate(yesterday) && yesterdayMissed && !todayCompleted) {
+    } else if (today >= OCTOBER_START && today <= OCTOBER_END && yesterdayMissed && !todayCompleted) {
       competition = {
         tone: 'warning',
         text: 'Du missade igår – dagens pass håller dig kvar',
