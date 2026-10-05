@@ -73,6 +73,17 @@ const dailyScores=(cells)=>{
   await page.evaluate(()=>{const close=document.querySelector('#trump-quote-close');if(close)close.click();document.querySelector('#trump-quote-overlay')?.setAttribute('hidden','');});
   assert.equal(await page.locator('#dagens-pass').isVisible(),false);
   assert.equal(await page.locator('#competition-bingo .bingo-cell').count(),25);
+  const titleBox=await page.locator('#competition-bingo-title').boundingBox();
+  const linkBox=await page.locator('#competition-bingo .bingo-directory-link').boundingBox();
+  const rulesBox=await page.locator('#competition-bingo > .bingo-rules').boundingBox();
+  assert.equal(await page.locator('#competition-bingo .bingo-directory-link').count(),1,'Single directory link');
+  assert.equal(await page.locator('#competition-bingo .bingo-directory-link').getAttribute('href'),'/bingobingo/');
+  assert(linkBox.y+linkBox.height<=rulesBox.y,'Directory link precedes rules');
+  assert(linkBox.height>=44,'Directory link has touch target');
+  if(width===1440)assert(linkBox.x>=titleBox.x+titleBox.width,'Desktop directory link beside title');
+  if(width<=390)assert(linkBox.y>=titleBox.y+titleBox.height,'Mobile directory link below title');
+  await page.locator('#competition-bingo .bingo-heading').screenshot({path:path.join(root,'qa','bingo-heading-'+width+'.png')});
+
   await page.locator('#bonus-button:not([disabled])').waitFor();
   assert.equal(await page.locator('#bonus-challenge').isVisible(),true);
   assert.equal(await page.locator('#bonus-description').innerText(),'Promenera');

@@ -17,6 +17,13 @@ button.bingo-cell:hover:not(:disabled){border-color:#b44d19}
 .bingo-cell:disabled{cursor:default;opacity:1}
 .bingo-repeat,.bingo-directory-link{display:inline-block;margin-top:18px;padding:12px 16px;border:1px solid #b7c2a7;border-radius:12px;background:transparent;color:#173f32;font:inherit;font-size:.82rem;font-weight:850;text-decoration:none;cursor:pointer}
 .bingo-repeat:disabled{opacity:.5}
+.bingo-heading{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:16px;margin:12px 0 22px}
+.bingo-feature .bingo-heading h2{margin:0}
+.bingo-heading .bingo-directory-link{display:flex;flex-direction:column;gap:3px;flex:none;max-width:100%;margin:0;min-height:48px;text-align:center;line-height:1.4}
+.bingo-heading .bingo-directory-link strong{font-size:.95rem}
+.bingo-heading .bingo-directory-link:hover{background:#fffaf0;border-color:#204d3b}
+.bingo-heading .bingo-directory-link:focus-visible{outline:3px solid #af491a;outline-offset:3px}
+@media(max-width:600px){.bingo-heading{align-items:flex-start;gap:14px;margin-bottom:20px}.bingo-heading .bingo-directory-link{width:100%;flex-direction:row;flex-wrap:wrap;justify-content:center;align-items:center;gap:4px 10px}}
 .bingo-status{min-height:1.5em;color:#a2461a;font-size:.85rem;font-weight:700;line-height:1.5}
 .bingo-dialog{width:min(950px,calc(100vw - 24px));max-height:90dvh;padding:24px;border:1px solid #ced3bf;border-radius:24px;background:#e3e9da;--muted:#586558;color:#173f32;overflow:auto}
 .bingo-dialog::backdrop{background:rgba(13,35,27,.7)}
