@@ -235,9 +235,16 @@
   }
 
   function refreshBonusButton() {
+    const today = stockholmDate();
     const configured = Boolean(currentChallenge?.bonus_description && Number(currentChallenge?.bonus_points) > 0);
-    ui.bonusChallenge.hidden = !configured;
-    ui.bonusButton.disabled = bonusBusy || levelBusy || availableChallengeDate !== stockholmDate() || Boolean(currentTodayBonus);
+    const claimed = currentTodayBonus?.challenge_date === today;
+    ui.bonusChallenge.hidden = !isCompetitionDay(today);
+    ui.bonusDescription.textContent = configured ? currentChallenge.bonus_description : 'Dagens bonus kommer snart.';
+    ui.bonusValue.textContent = configured ? `+${pointsFormatter.format(Number(currentChallenge.bonus_points))} poäng` : '';
+    ui.bonusButton.hidden = !configured;
+    ui.bonusButton.disabled = bonusBusy || levelBusy || availableChallengeDate !== today;
+    ui.bonusButton.setAttribute('aria-pressed', String(claimed));
+    ui.bonusButton.textContent = bonusBusy ? 'Sparar…' : claimed ? '✓ Bonus klar · klicka ur' : 'Bonuspoäng';
   }
 
   function renderResults(results, bonusClaims) {
@@ -292,11 +299,11 @@
   }
 
   async function loadTodayChallenge() {
-    if (window.SoberOctoberBingo?.active()) return;
     const today = stockholmDate();
     loadedChallengeDate = today;
     availableChallengeDate = null;
     currentChallenge = null;
+    ui.bonusStatus.textContent = '';
     refreshLevelButtons();
     refreshBonusButton();
 
@@ -304,7 +311,7 @@
       ui.challengeTitle.textContent = 'Dagens pass kommer snart';
       ui.challengeDescription.hidden = true;
       ui.challengeParts.hidden = true;
-      ui.bonusChallenge.hidden = true;
+      refreshBonusButton();
       return;
     }
 
@@ -323,7 +330,7 @@
       ui.challengeTitle.textContent = 'Dagens pass kommer snart';
       ui.challengeDescription.hidden = true;
       ui.challengeParts.hidden = true;
-      ui.bonusChallenge.hidden = true;
+      refreshBonusButton();
       return;
     }
 
@@ -669,59 +676,40 @@
   }
 
   async function saveBonusClaim() {
-    if (window.SoberOctoberBingo?.active()) { ui.bonusStatus.textContent = 'Den här veckan samlar du bonus genom bingot.'; return; }
-    if (bonusBusy || !currentChallenge?.bonus_description || !Number(currentChallenge.bonus_points)) return;
-    if (!authReady) {
-      ui.bonusStatus.textContent = 'Inloggningen laddas. Försök igen om en sekund.';
-      return;
-    }
+    if (bonusBusy) return;
+    if (!authReady) { ui.bonusStatus.textContent = 'Inloggningen laddas. Försök igen om en sekund.'; return; }
     if (!session) {
       ui.loginStatus.textContent = 'Logga in först för att spara bonuspoäng.';
-      openModal(ui.loginView);
-      return;
+      openModal(ui.loginView); return;
     }
     if (!profile?.display_name) {
       ui.nameStatus.textContent = 'Välj ditt namn innan du sparar bonuspoäng.';
       ui.email.textContent = session.user.email || '';
-      openModal(ui.onboardingView);
-      return;
+      openModal(ui.onboardingView); return;
     }
-    if (competitionStatus?.status === 'eliminated') {
-      ui.bonusStatus.textContent = 'Du är utslagen ur tävlingen.';
-      return;
+    const today = stockholmDate();
+    if (loadedChallengeDate !== today) await loadTodayChallenge();
+    if (availableChallengeDate !== today || !currentChallenge?.bonus_description || !Number(currentChallenge.bonus_points)) {
+      ui.bonusStatus.textContent = 'Dagens bonus är inte publicerad ännu.'; return;
     }
-    if (loadedChallengeDate !== stockholmDate()) await loadTodayChallenge();
-    if (availableChallengeDate !== stockholmDate()) {
-      ui.bonusStatus.textContent = 'Dagens pass är inte publicerat ännu.';
-      return;
+    const claimed = currentTodayBonus?.challenge_date === today;
+    if (!claimed && competitionStatus?.status === 'eliminated') {
+      ui.bonusStatus.textContent = 'Du är utslagen ur tävlingen.'; return;
     }
-
+    if (claimed && !window.confirm('Avmarkera dagens bonuspoäng?')) return;
     bonusBusy = true;
     refreshBonusButton();
-    ui.bonusStatus.textContent = 'Sparar bonuspoängen…';
-    const { data: awardedPoints, error } = await client.rpc('claim_daily_bonus');
-
-    if (error) {
-      console.error('Bonuspoängen kunde inte sparas', error);
-      ui.bonusStatus.textContent = error.code === '23505'
-        ? 'Dagens bonuspoäng är redan sparade.'
-        : error.code === '42501' && /utslagen/i.test(error.message || '')
-          ? 'Du är utslagen ur tävlingen.'
-          : 'Bonuspoängen kunde inte sparas. Kontrollera att bonusuppgiften är klar och försök igen.';
-      if (error.code === '23505') await loadResults().catch((loadError) => console.error('Poängen kunde inte uppdateras', loadError));
-      bonusBusy = false;
-      refreshBonusButton();
-      return;
-    }
-
+    ui.bonusStatus.textContent = claimed ? 'Tar bort bonuspoängen…' : 'Sparar bonuspoängen…';
+    let saved = false;
     try {
+      const data = await window.SoberOctoberBonus.setClaim(client, today, !claimed, claimed ? Number(currentTodayBonus.points) : null);
+      saved = true;
       await loadResults();
       await refreshLeaderboard();
-      ui.bonusStatus.textContent = `Snyggt! ${pointsFormatter.format(Number(awardedPoints || currentTodayBonus?.points || currentChallenge.bonus_points))} bonuspoäng tillagda.`;
-      window.celebrateLevel?.(1);
+      ui.bonusStatus.textContent = claimed ? 'Bonuspoängen är avmarkerade.' : `Snyggt! +${pointsFormatter.format(Number(data.bonus_points))} bonuspoäng sparade.`;
     } catch (error) {
-      console.error('Bonuspoängen sparades men summeringen kunde inte uppdateras', error);
-      ui.bonusStatus.textContent = 'Bonuspoängen sparades, men summeringen kunde inte uppdateras.';
+      ui.bonusStatus.textContent = saved ? 'Sparat, men summeringen kunde inte uppdateras. Ladda om sidan.' : error.message || 'Bonuspoängen kunde inte sparas. Försök igen.';
+      if (error.code === '40001') await loadResults().catch(() => {});
     } finally {
       bonusBusy = false;
       refreshBonusButton();
@@ -978,7 +966,7 @@
       window.SoberOctoberBingo.init(client, async () => {
         if (!session?.user?.id || !profile?.display_name) return;
         await loadResults();
-        if (!window.SoberOctoberBingo.active() && loadedChallengeDate !== stockholmDate()) await loadTodayChallenge();
+        if (loadedChallengeDate !== stockholmDate()) await loadTodayChallenge();
         competitionStatus = await window.SoberOctoberEliminations?.refresh(client, session.user.id, profile.display_name) || null;
         await refreshLeaderboard();
       });

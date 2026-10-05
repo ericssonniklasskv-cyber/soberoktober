@@ -14,6 +14,7 @@
   <link rel="stylesheet" href="/styles/elimination.css">
   <link rel="stylesheet" href="/styles/tomorrow.css">
   <link rel="stylesheet" href="/styles/bingo.css?v=sage-board-1">
+  <link rel="stylesheet" href="/styles/daily-bonus.css?v=1">
 </head>
 <body class="page-home entry-active">
   <section class="entry-gate" id="entry-gate" aria-labelledby="entry-title">
@@ -86,18 +87,11 @@
     <main>
       <div class="hero-stage">
         <section class="hero" aria-labelledby="page-title">
-          <div class="launch-countdown countdown-panel" data-countdown="launch" role="timer" aria-live="off" aria-label="Oktober startar vid midnatt 1 oktober 2026">
-            <span class="launch-countdown-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8.5" stroke="currentColor" stroke-width="1.8"/><path d="M12 7v5l3.2 2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></span>
-            <div class="launch-countdown-copy">
-              <p class="countdown-kicker" data-countdown-label>Vi drar igång om</p>
-              <div class="countdown-clock" aria-hidden="true">
-                <span class="countdown-unit"><strong data-countdown-hours>00</strong><small>h</small></span>
-                <span class="countdown-unit"><strong data-countdown-minutes>00</strong><small>min</small></span>
-                <span class="countdown-unit"><strong data-countdown-seconds>00</strong><small>sek</small></span>
-              </div>
-              <p class="countdown-caption" data-countdown-caption>Första passet väntar på dig.</p>
-            </div>
-          </div>
+          <section class="bonus-challenge hero-bonus" id="bonus-challenge" aria-labelledby="bonus-heading" hidden>
+            <span class="hero-bonus-mark" aria-hidden="true">✦</span>
+            <div class="bonus-challenge-copy"><h2 class="bonus-kicker" id="bonus-heading">Dagens bonus</h2><p id="bonus-description">Dagens bonus kommer snart.</p><span class="bonus-value" id="bonus-value"></span></div>
+            <div class="bonus-challenge-action"><button class="bonus-button" id="bonus-button" type="button" aria-pressed="false" disabled>Bonuspoäng</button><p class="bonus-status" id="bonus-status" role="status" aria-live="polite"></p></div>
+          </section>
           <h1 id="page-title">Sober<br><span>Oktober</span></h1>
           <div class="progress-wrap" aria-label="Oktobers framsteg"><div class="progress-meta"><span id="progress-day">Snart kör vi</span><span id="progress-percent">0%</span></div><div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div></div>
         </section>
@@ -134,10 +128,6 @@
           <button class="level" type="button" data-level="1" disabled><strong>1×</strong><span>1 poäng</span></button>
           <button class="level" type="button" data-level="2" disabled><strong>2×</strong><span>1,5 poäng</span></button>
           <button class="level" type="button" data-level="3" disabled><strong>3×</strong><span>2 poäng</span></button>
-        </div>
-        <div class="bonus-challenge" id="bonus-challenge" hidden>
-          <div class="bonus-challenge-copy"><span class="bonus-kicker">Extra utmaning</span><p id="bonus-description"></p><span class="bonus-value" id="bonus-value"></span></div>
-          <div class="bonus-challenge-action"><button class="bonus-button" id="bonus-button" type="button" disabled>Bonuspoäng</button><p class="bonus-status" id="bonus-status" role="status" aria-live="polite"></p></div>
         </div>
         <div class="score-summary" id="score-summary" hidden>
           <div class="score-item"><span class="score-label">Dagens resultat</span><strong class="score-value" id="daily-result">Inte registrerat</strong><span class="score-points" id="daily-points">0 poäng</span><span class="score-bonus" id="daily-bonus" hidden></span></div>
@@ -262,11 +252,12 @@
   <script src="/aktivitet/activity-preview.js?v=bingo-feed-1" defer></script>
   <script src="/elimination.js" defer></script>
   <script src="/min-oktober/challenge-logic.js" defer></script>
-  <script src="/bingo-logic.js" defer></script>
+  <script src="/bingo-logic.js?v=daily-bonus-1" defer></script>
   <script src="/bingo-ui.js" defer></script>
   <script src="/min-oktober/history-logic.js" defer></script>
   <script src="/tomorrow-preview.js" defer></script>
-  <script src="/auth.js" defer></script>
+  <script src="/bonus-client.js?v=1" defer></script>
+  <script src="/auth.js?v=daily-bonus-1" defer></script>
   <script src="/mohv-egg.js" defer></script>
   <script src="/trump-quote.js" defer></script>
 </body>

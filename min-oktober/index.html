@@ -10,6 +10,7 @@
   <link rel="stylesheet" href="/styles/design-system.css">
   <link rel="stylesheet" href="/styles/elimination.css">
   <link rel="stylesheet" href="/styles/bingo.css?v=sage-board-1">
+  <link rel="stylesheet" href="/styles/daily-bonus.css?v=1">
 </head>
 <body class="page-history">
   <div class="shell">
@@ -52,7 +53,7 @@
       </section>
     </main>
   </div>
-  <dialog class="bingo-dialog" id="bingo-day-detail" aria-labelledby="bingo-day-title"><button class="bingo-dialog-close" type="button" aria-label="Stäng bingodagen">×</button><p class="bingo-kicker">Din bingo · rätta tidigare dagar</p><h2 id="bingo-day-title"></h2><p class="bingo-rules">Markera det du gjorde den här dagen. Rutor som registrerades en annan dag ändras från den dagen. Poäng och tävlingsstatus räknas om när du sparar.</p><div class="bingo-editor"></div></dialog>
+  <dialog class="bingo-dialog" id="bingo-day-detail" aria-labelledby="bingo-day-title"><button class="bingo-dialog-close" type="button" aria-label="Stäng bingodagen">×</button><p class="bingo-kicker">Din bingo · rätta tidigare dagar</p><h2 id="bingo-day-title"></h2><p class="bingo-rules">Markera det du gjorde den här dagen. Rutor som registrerades en annan dag ändras från den dagen. Poäng och tävlingsstatus räknas om när du sparar.</p><div class="bingo-editor"></div><section class="bingo-day-bonus" id="bingo-day-bonus" hidden><h3>Dagens bonus</h3><p id="bingo-day-bonus-description"></p><button type="button" id="bingo-day-bonus-button" aria-pressed="false" disabled>Bonuspoäng</button><p id="bingo-day-bonus-status" role="status" aria-live="polite"></p></section></dialog>
   <dialog class="detail-dialog" id="day-detail" aria-labelledby="detail-title"><div class="detail"><button class="detail-close" id="detail-close" type="button" aria-label="Stäng detaljvyn">×</button><p class="detail-kicker" id="detail-date"></p><h2 id="detail-title"></h2><p class="detail-description" id="detail-description"></p><div class="detail-result"><div><span>Nivå</span><strong id="detail-level"></strong></div><div><span>Poäng</span><strong id="detail-points"></strong></div></div><p class="detail-bonus" id="detail-bonus" hidden></p>
 <form id="day-edit-form" class="day-edit-form">
   <p class="day-edit-intro">Glömt att registrera eller valt fel nivå? Rätta ditt eget resultat här.</p>
@@ -111,9 +112,10 @@
   <script src="/elimination.js" defer></script>
   <script src="/stegtavling/steps-logic.js" defer></script>
   <script src="/min-oktober/challenge-logic.js" defer></script>
-  <script src="/bingo-logic.js" defer></script>
+  <script src="/bingo-logic.js?v=daily-bonus-1" defer></script>
   <script src="/bingo-ui.js" defer></script>
   <script src="/min-oktober/history-logic.js" defer></script>
-  <script src="/min-oktober/history.js" defer></script>
+  <script src="/bonus-client.js?v=1" defer></script>
+  <script src="/min-oktober/history.js?v=daily-bonus-1" defer></script>
 </body>
 </html>

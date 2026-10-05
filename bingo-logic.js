@@ -8,7 +8,8 @@
     const points=new Map((bingo.daily_scores||[]).map(r=>[r.result_date,Number(r.points)||0]));
     return results.filter(r=>!isBingoDate(r.result_date)).concat((bingo.activity_dates||[]).map(date=>({result_date:date,points:points.get(date)||0,kind:'bingo',multiplier:null})));
   }
-  const normalBonus=(claims=[],bingo)=>bingo?.enabled?claims.filter(c=>!isBingoDate(c.challenge_date)):claims;
+  // Bonus claims add points independently; they never create a completed day.
+  const normalBonus=(claims=[])=>claims;
   function report(bingo,start=START,end=END){
     if(!bingo?.enabled)return null;
     const cells=Object.entries(bingo.completed_cells||{}).filter(([,date])=>date>=start&&date<=end);

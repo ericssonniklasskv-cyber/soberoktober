@@ -157,11 +157,71 @@
   const bingoDialog = document.querySelector('#bingo-day-detail');
   bingoDialog.querySelector('button').addEventListener('click', () => bingoDialog.close());
   bingoDialog.addEventListener('click', event => { if (event.target === bingoDialog) bingoDialog.close(); });
+  const bingoBonus = {
+    section: document.querySelector('#bingo-day-bonus'),
+    description: document.querySelector('#bingo-day-bonus-description'),
+    button: document.querySelector('#bingo-day-bonus-button'),
+    status: document.querySelector('#bingo-day-bonus-status'),
+  };
+  let bingoBonusDate = null, bingoBonusData = null, bingoBonusBusy = false, bingoBonusRequest = 0;
+  function renderBingoBonus(data) {
+    const configured = Boolean(data?.challenge?.bonus_description && Number(data.challenge.bonus_points) > 0);
+    const claimed = data?.bonus_points !== null;
+    bingoBonus.section.hidden = !configured;
+    if (!configured) return;
+    bingoBonus.description.textContent = `${data.challenge.bonus_description} · +${pointsFormatter.format(Number(data.challenge.bonus_points))} poäng`;
+    bingoBonus.button.textContent = bingoBonusBusy ? 'Sparar…' : claimed ? '✓ Bonus klar · klicka ur' : 'Bonuspoäng';
+    bingoBonus.button.setAttribute('aria-pressed', String(claimed));
+    bingoBonus.button.disabled = bingoBonusBusy;
+  }
+  async function loadBingoBonus(date) {
+    const request = ++bingoBonusRequest;
+    bingoBonusDate = date;
+    bingoBonusData = null;
+    bingoBonus.section.hidden = true;
+    bingoBonus.status.textContent = '';
+    try {
+      const {data, error} = await client.rpc('self_daily_result', {p_date: date});
+      if (request !== bingoBonusRequest || !bingoDialog.open) return;
+      if (error) throw error;
+      bingoBonusData = data;
+      renderBingoBonus(data);
+    } catch (error) {
+      // Bingo remains editable when no daily_challenges row/bonus exists.
+      if (request === bingoBonusRequest && !(error.code === '22023' && /saknar ett publicerat pass/.test(error.message || ''))) {
+        bingoBonus.section.hidden = false;
+        bingoBonus.description.textContent = 'Bonusuppgiften kunde inte laddas.';
+        bingoBonus.button.disabled = true;
+        bingoBonus.status.textContent = error.message || 'Försök öppna dagen igen.';
+      }
+    }
+  }
+  bingoBonus.button.addEventListener('click', async () => {
+    if (bingoBonusBusy || !bingoBonusData || !currentSession) return;
+    const claimed = bingoBonusData.bonus_points !== null;
+    if (claimed && !window.confirm('Avmarkera bonuspoängen för den här dagen?')) return;
+    bingoBonusBusy = true;
+    renderBingoBonus(bingoBonusData);
+    try {
+      bingoBonusData = await window.SoberOctoberBonus.setClaim(client, bingoBonusDate, !claimed, bingoBonusData.bonus_points);
+      bingoBonus.status.textContent = claimed ? 'Bonuspoängen är avmarkerade.' : 'Bonuspoängen är sparade.';
+      await loadHistory(currentSession);
+    } catch (error) {
+      bingoBonus.status.textContent = error.message || 'Bonusen kunde inte sparas.';
+    } finally {
+      bingoBonusBusy = false;
+      renderBingoBonus(bingoBonusData);
+    }
+  });
+  bingoDialog.addEventListener('cancel', event => { if (bingoBonusBusy) event.preventDefault(); });
+  bingoDialog.addEventListener('close', () => { bingoBonusRequest += 1; });
   async function openDetail(day) {
+    if (bingoBonusBusy) return;
     if (bingoState?.enabled && window.SoberOctoberCompetition.isBingoDate(day.date)) {
       document.querySelector('#bingo-day-title').textContent = formatDate(day.date);
       window.SoberOctoberBingo.mount(bingoDialog.querySelector('.bingo-editor'), day.date);
       bingoDialog.showModal();
+      await loadBingoBonus(day.date);
       return;
     }
     if (savingDay) return;

@@ -19,18 +19,33 @@ const dailyScores=(cells)=>{
  try{
  browser=await chromium.launch({headless:true,executablePath:process.env.BINGO_BROWSER_PATH||'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'});
  const context=await browser.newContext({reducedMotion:'reduce'});
- const page=await context.newPage();let today='2026-10-05',enabled=true,signedIn=true,profileName='Testaren',cells={},repeat=[],queries=[];
+ const page=await context.newPage();let today='2026-10-05',enabled=true,signedIn=true,profileName='Testaren',cells={},repeat=[],queries=[],bonusClaims={},isAdmin=false;
  const state=()=>({enabled,board,completed_cells:cells,repeat_dates:repeat,activity_dates:[...new Set([...Object.values(cells),...repeat])].sort(),daily_scores:dailyScores(cells),score:score(cells),today});
  const challenge={title:'Squats',description:'15 squats',base_amount:15,unit:'squats',completion_mode:'single',bonus_description:'Promenera',bonus_points:1};
+ const challenges=new Map(['2026-10-01','2026-10-04','2026-10-05','2026-10-31'].map(date=>[date,{...challenge,challenge_date:date}]));
  const errors=[];page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()==='error')errors.push(m.text());});
  await page.exposeFunction('fixtureSession',()=>({data:{session:signedIn?{user:{id:'own-fixture',email:'own@example.invalid'}}:null},error:null}));
  await page.exposeFunction('fixtureQuery',(table,args,single)=>{
   queries.push(table);
   if(table==='profiles'&&args.some(a=>a[0]==='update'))profileName=args.find(a=>a[0]==='update')[1].display_name;
-  let data=table==='profiles'?{id:'own-fixture',display_name:profileName,is_admin:false,email:'own@example.invalid'}:table==='daily_challenges'?(single?challenge:['2026-10-01','2026-10-04','2026-10-05','2026-10-31'].map(challenge_date=>({...challenge,challenge_date}))):table==='daily_results'?[{result_date:'2026-10-04',multiplier:2,points:1.5}]:[];
+  if(table==='daily_challenges'&&args.some(a=>a[0]==='upsert')){
+   const row=args.find(a=>a[0]==='upsert')[1];challenges.set(row.challenge_date,row);return {data:row,error:null};
+  }
+  const date=args.find(a=>a[0]==='eq'&&a[1]==='challenge_date')?.[2];
+  let data=table==='profiles'?{id:'own-fixture',display_name:profileName,is_admin:isAdmin,email:'own@example.invalid'}:table==='daily_challenges'?(single?(challenges.get(date)||{...challenge,challenge_date:date}):[...challenges.values()]):table==='daily_results'?[{result_date:'2026-10-04',multiplier:2,points:1.5}]:table==='daily_bonus_claims'?Object.entries(bonusClaims).map(([challenge_date,points])=>({challenge_date,points})):[];
   return {data,error:null};
  });
  await page.exposeFunction('fixtureRPC',(name,args={})=>{
+  if(name==='self_daily_result'){
+   const before=bonusClaims[args.p_date]??null;
+   if(args.p_action==='save'){
+    assert.equal(args.p_payload.multiplier,null,'Bonus never registers a workout');
+    assert.equal(args.p_payload.expected_bonus_points,before,'Optimistic bonus check');
+    if(args.p_payload.claim_bonus)bonusClaims[args.p_date]=1;
+    if(args.p_payload.unclaim_bonus)delete bonusClaims[args.p_date];
+   }
+   return {data:{result:null,bonus_points:bonusClaims[args.p_date]??null,challenge:challenges.get(args.p_date)||challenge},error:null};
+  }
   if(name==='get_activity_feed'){
    const events=[...Object.keys(cells).reverse().map(index=>({display_name:'Testaren',activity_type:'bingo_cell',activity_label:board[Number(index)].description,multiplier:null,event_at:'2026-10-05T10:00:00Z'})),{display_name:'En annan',activity_type:'bingo_full',multiplier:null,event_at:'2026-10-05T09:59:00Z'},{display_name:'En annan',activity_type:'bingo_row',multiplier:null,event_at:'2026-10-05T09:58:00Z'},{display_name:'Förra passet',activity_type:'completed',multiplier:2,event_at:'2026-10-04T12:00:00Z'},{display_name:'Lång aktivitet',activity_type:'bingo_cell',activity_label:board[23].description,multiplier:null,event_at:'2026-10-05T09:57:00Z'}];
    return{data:events.slice(args.p_offset||0,(args.p_offset||0)+(args.p_limit||4)),error:null};
@@ -44,7 +59,7 @@ const dailyScores=(cells)=>{
   if(name==='get_bingo_directory')return{data:{enabled,board,participants:[{board_key:1,display_name:'Testaren',completed_cells:Object.keys(cells).map(Number),score:score(cells),is_current_user:signedIn,is_eliminated:false},{board_key:2,display_name:'En annan',completed_cells:[3,8],score:{total_points:3},is_current_user:false,is_eliminated:false}]},error:null};
   if(name==='sync_competition_status')return {data:{status:'active'},error:null};
   if(name==='get_registered_participants')return {data:[{display_name:'Testaren',is_eliminated:false}],error:null};
-  if(name==='get_leaderboard')return {data:[{display_name:'Testaren',rank_position:1,total_points:1.5+score(cells).total_points,completed_days:1+Object.keys(cells).length,is_current_user:true,is_eliminated:false}],error:null};
+  if(name==='get_leaderboard')return {data:[{display_name:'Testaren',rank_position:1,total_points:1.5+score(cells).total_points+Object.values(bonusClaims).reduce((a,b)=>a+b,0),completed_days:1+Object.keys(cells).length,is_current_user:true,is_eliminated:false}],error:null};
   return {data:[],error:null};
  });
  await page.route('**/api/config',r=>r.fulfill({json:{supabaseUrl:'https://fixture.invalid',supabasePublishableKey:'fixture-only'}}));
@@ -58,16 +73,29 @@ const dailyScores=(cells)=>{
   await page.evaluate(()=>{const close=document.querySelector('#trump-quote-close');if(close)close.click();document.querySelector('#trump-quote-overlay')?.setAttribute('hidden','');});
   assert.equal(await page.locator('#dagens-pass').isVisible(),false);
   assert.equal(await page.locator('#competition-bingo .bingo-cell').count(),25);
+  await page.locator('#bonus-button:not([disabled])').waitFor();
+  assert.equal(await page.locator('#bonus-challenge').isVisible(),true);
+  assert.equal(await page.locator('#bonus-description').innerText(),'Promenera');
+  assert.equal(await page.locator('#bonus-value').innerText(),'+1 poäng');
   assert.match(await page.locator('#competition-bingo .bingo-rules').innerText(),/rad ger 3 extra.*ytterligare 20.*Max 82/);
   await page.waitForFunction(()=>document.querySelectorAll('#activity-preview-list .activity-item').length===4);
   assert.match(await page.locator('#activity-preview-list').innerText(),/hela bingobrickan/);
   assert.deepEqual(await page.locator('#competition-bingo .bingo-cell-copy').allTextContents(),board.map(t=>t.description));
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true,'Overflow '+width);
   assert.equal(await page.locator('#competition-bingo .bingo-cell').evaluateAll(els=>els.every(e=>e.getBoundingClientRect().width>=44&&e.getBoundingClientRect().height>=44)),true);
-  if(width===1440){const hero=await page.locator('.hero').boundingBox();assert(Math.abs(hero.x+hero.width/2-width/2)<3,'Hero centered');}
+  if(width===1440){const hero=await page.locator('.hero').boundingBox();assert(Math.abs(hero.x+hero.width/2-width/2)<3,'Hero centered');const hideEgg=await page.addStyleTag({content:'#mohv-egg { visibility:hidden !important }'});await page.locator('#bonus-challenge').screenshot({path:path.join(root,'qa','daily-bonus-preview.png')});await hideEgg.evaluate(el=>el.remove());}
   if(width===390){const b=await page.locator('#competition-bingo').boundingBox(),a=await page.locator('.activity-preview').boundingBox();assert(a.y>=b.y+b.height,'Activity follows bingo');}
   await page.screenshot({path:path.join(root,'qa','bingo-main-'+width+'.png'),fullPage:true,animations:'disabled'});
  }
+ const configuredBonus=challenges.get('2026-10-05');challenges.set('2026-10-05',{...configuredBonus,bonus_description:null,bonus_points:null});await page.reload();await page.locator('#competition-bingo').waitFor({state:'visible'});assert.equal(await page.locator('#bonus-description').innerText(),'Dagens bonus kommer snart.');assert.equal(await page.locator('#bonus-button').isVisible(),false,'No button before publication');
+ challenges.set('2026-10-05',configuredBonus);await page.reload();await page.locator('#bonus-button:not([disabled])').waitFor();
+ await page.locator('#bonus-button').click();
+ await page.waitForFunction(()=>document.querySelector('#bonus-button').getAttribute('aria-pressed')==='true');
+ assert.equal(await page.locator('#total-points').innerText(),'2,5');
+ assert.equal(await page.locator('#completed-days').innerText(),'1','Bonus adds no completed day');
+ await page.reload();await page.waitForFunction(()=>document.querySelector('#bonus-button').getAttribute('aria-pressed')==='true');
+ await page.locator('#bonus-button').click();await page.waitForFunction(()=>document.querySelector('#bonus-button').getAttribute('aria-pressed')==='false');
+ assert.equal(await page.locator('#total-points').innerText(),'1,5');
  await page.locator('#competition-bingo .bingo-cell').nth(0).click();await page.waitForFunction(()=>document.querySelector('#competition-bingo .bingo-stats').textContent.includes('2 poäng'));
  await page.waitForFunction(()=>document.querySelector('#activity-preview-list').textContent.includes('Testaren klarade en bingoruta: 30 minuter racketsport'));
  await page.locator('#competition-bingo .bingo-cell').nth(1).click();await page.waitForFunction(()=>document.querySelector('#competition-bingo .bingo-stats').textContent.includes('3 poäng'));
@@ -102,12 +130,27 @@ const dailyScores=(cells)=>{
  }
  signedIn=false;await page.goto('http://127.0.0.1:'+server.address().port+'/bingobingo/');await page.locator('.bingo-person').first().waitFor();assert.equal(await page.locator('.bingo-person').count(),2);
  signedIn=true;today='2026-10-08';await page.clock.setFixedTime(new Date('2026-10-08T12:00:00+02:00'));await page.goto('http://127.0.0.1:'+server.address().port+'/min-oktober/');await page.locator('#history-state').waitFor({state:'visible'});
- await page.locator('#history-calendar .calendar-day').nth(4).click();await page.locator('#bingo-day-detail').waitFor({state:'visible'});assert.equal(await page.locator('#bingo-day-detail .bingo-cell').count(),25);await page.locator('#bingo-day-detail .bingo-cell').nth(2).click();await page.waitForFunction(()=>document.querySelector('#bingo-day-detail .bingo-stats').textContent.includes('3 poäng'));await page.locator('#bingo-day-detail .bingo-dialog-close').click();
+ await page.locator('#history-calendar .calendar-day').nth(4).click();await page.locator('#bingo-day-detail').waitFor({state:'visible'});assert.equal(await page.locator('#bingo-day-detail .bingo-cell').count(),25);await page.locator('#bingo-day-detail .bingo-cell').nth(2).click();await page.waitForFunction(()=>document.querySelector('#bingo-day-detail .bingo-stats').textContent.includes('3 poäng'));await page.locator('#bingo-day-bonus-button:not([disabled])').waitFor();await page.locator('#bingo-day-bonus-button').click();await page.waitForFunction(()=>document.querySelector('#bingo-day-bonus-button').getAttribute('aria-pressed')==='true');assert.equal(bonusClaims['2026-10-05'],1);await page.locator('#bingo-day-bonus-button').click();await page.waitForFunction(()=>document.querySelector('#bingo-day-bonus-button').getAttribute('aria-pressed')==='false');await page.locator('#bingo-day-detail .bingo-dialog-close').click();
  assert.equal(await page.locator('#history-calendar .day-result').nth(4).textContent(),'Bingo');
  await page.locator('.weekly-report-action').first().click();await page.locator('#weekly-bingo-report').waitFor({state:'visible'});assert.match(await page.locator('#weekly-bingo-report').innerText(),/2 rutor.*3 bingopoäng/s);await page.locator('#report-detail-close').click();
  today='2026-10-12';await page.clock.setFixedTime(new Date('2026-10-12T00:00:00+02:00'));await page.goto('http://127.0.0.1:'+server.address().port+'/');await page.locator('#score-summary').waitFor({state:'visible'});assert.equal(await page.locator('#dagens-pass').isVisible(),true);assert.equal(await page.locator('#competition-bingo').isVisible(),false);
  today='2026-10-05';enabled=false;await page.clock.setFixedTime(new Date('2026-10-05T12:00:00+02:00'));await page.reload();await page.locator('#score-summary').waitFor({state:'visible'});assert.equal(await page.locator('#competition-bingo').isVisible(),false);
  enabled=true;profileName=null;await page.reload();await page.locator('#auth-onboarding').waitFor({state:'visible'});await page.locator('#display-name').fill('Ny deltagare');await page.locator('#name-form button[type=submit]').click();await page.locator('#competition-bingo').waitFor({state:'visible'});await page.locator('#auth-onboarding').waitFor({state:'hidden'});assert.equal(await page.locator('#dagens-pass').isVisible(),false,'Onboarding immediately activates own bingo');
- assert.deepEqual(errors,[],'Console/page errors');console.log('PASS: 320/390/768/1440 layouts, centered home, full task texts, own writes/uncheck, public read-only boards, history backfill/report, automatic return and disabled preparation.');
+ isAdmin=true;profileName='Admin';today='2026-10-05';await page.clock.setFixedTime(new Date('2026-10-05T12:00:00+02:00'));
+ for(const width of [320,390,768,1440]){
+  await page.setViewportSize({width,height:950});await page.goto('http://127.0.0.1:'+server.address().port+'/admin/');await page.locator('#admin-state').waitFor({state:'visible'});
+  assert.equal(await page.locator('#bulk-section').count(),0,'Mass input removed');
+  assert.equal(await page.locator('#challenge-days button').count(),31);
+  assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true,'Admin overflow '+width);
+ }
+ await page.locator('#challenge-date').fill('2026-10-06');await page.locator('#challenge-date').dispatchEvent('change');
+ assert.equal(await page.locator('#challenge-title').inputValue(),'Dagens bingo');assert.equal(await page.locator('#bonus-points').inputValue(),'1');
+ await page.locator('#bonus-description').fill('  Gå en extra promenad  ');await page.locator('#challenge-form button[type=submit]').click();await page.waitForFunction(()=>document.querySelector('#form-status').textContent==='Passet är sparat.');
+ assert.equal(challenges.get('2026-10-06').bonus_description,'Gå en extra promenad');assert.equal(challenges.get('2026-10-06').bonus_points,1);
+ await page.reload();await page.locator('#admin-state').waitFor({state:'visible'});await page.locator('#challenge-date').fill('2026-10-06');await page.locator('#challenge-date').dispatchEvent('change');assert.equal(await page.locator('#bonus-description').inputValue(),'Gå en extra promenad');
+ await page.locator('#bonus-description').fill('Drick ett glas vatten');await page.locator('#challenge-form button[type=submit]').click();await page.waitForFunction(()=>document.querySelector('#form-status').textContent==='Passet är sparat.');assert.equal(challenges.get('2026-10-06').bonus_description,'Drick ett glas vatten');
+ await page.screenshot({path:path.join(root,'qa','daily-bonus-admin.png'),fullPage:true,animations:'disabled'});
+ isAdmin=false;await page.reload();await page.locator('#denied-state').waitFor({state:'visible'});assert.equal(await page.locator('#admin-state').isVisible(),false);
+ assert.deepEqual(errors,[],'Console/page errors');console.log('PASS: 320/390/768/1440 home/admin layouts; independent bonus claim before bingo, reload/undo, empty bonus state, history bonus backfill/undo; admin default one point, create/update and denied non-admin; bingo/feed/report regression; no page or console errors.');
  } finally{if(browser)await browser.close();await new Promise(r=>server.close(r));}
 })().catch(e=>{console.error(e);process.exitCode=1});

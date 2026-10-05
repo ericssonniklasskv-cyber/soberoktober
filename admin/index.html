@@ -46,26 +46,13 @@
                 <fieldset class="bonus-fields full">
                   <legend>Bonusuppgift (valfritt)</legend>
                   <div class="field full"><label for="bonus-description">Bonusuppgift</label><textarea id="bonus-description" name="bonus_description" maxlength="240" placeholder="Till exempel: ta en extra promenad"></textarea></div>
-                  <div class="field"><label for="bonus-points">Bonuspoäng</label><input id="bonus-points" name="bonus_points" type="number" min="1" max="100" step="1" inputmode="numeric" placeholder="2"></div>
-                  <p class="field-note">Deltagaren kan registrera bonusen en gång den dagen. Massinmatningen hanterar grundpass; använd den här editorn för del 2 och bonus.</p>
+                  <div class="field"><label for="bonus-points">Bonuspoäng</label><input id="bonus-points" name="bonus_points" type="number" min="1" max="100" step="1" inputmode="numeric" value="1" placeholder="1"></div>
+                  <p class="field-note">Välj dag och skriv bonusuppgiften. Förvalt värde är 1 poäng. Bonusen räknas separat och ersätter inte dagens bingoaktivitet.</p>
                 </fieldset>
-                <div class="form-actions"><button class="primary" type="submit">Spara passet</button><button class="secondary" id="admin-sign-out" type="button">Logga ut</button><p class="status" id="form-status" role="status"></p></div>
+                <div class="form-actions"><button class="primary" type="submit">Spara dagen</button><button class="secondary" id="admin-sign-out" type="button">Logga ut</button><p class="status" id="form-status" role="status"></p></div>
               </form>
             </section>
           </div>
-          <section class="bulk-section" id="bulk-section" aria-labelledby="bulk-title">
-            <div class="bulk-head">
-              <div><h2 id="bulk-title">Massinmatning</h2><p class="bulk-copy">Fyll i flera dagar i lugn och ro. Endast de dagar du ändrar sparas.</p></div>
-              <span class="dirty-count" id="bulk-dirty-count">Inga osparade ändringar</span>
-            </div>
-            <div class="bulk-table-wrap">
-              <table class="bulk-table">
-                <thead><tr><th>Datum</th><th>Passnamn</th><th>Beskrivning</th><th>Grundmängd</th><th>Enhet</th></tr></thead>
-                <tbody id="bulk-rows"></tbody>
-              </table>
-            </div>
-            <div class="bulk-actions"><button class="primary bulk-save" id="bulk-save" type="button" disabled>Spara alla ändringar</button><p class="status bulk-status" id="bulk-status" role="status"></p></div>
-          </section>
           <section class="participants-section" aria-labelledby="correction-title">
             <p class="kicker">Rätta en registrering</p><h2 id="correction-title">Deltagarens dagsresultat</h2>
             <p class="bulk-copy">Lägg till ett missat pass eller rätta nivån för en påbörjad dag i oktober. Poängen räknas automatiskt. Varje rättning sparas med en anledning.</p>
@@ -92,9 +79,6 @@
             <ul class="participants-list" id="participants-list" aria-live="polite"><li>Laddar deltagare…</li></ul>
             <p class="status participants-status" id="participants-status" role="status" aria-live="polite"></p>
           </section>
-          <dialog class="delete-dialog" id="delete-confirmation" aria-labelledby="delete-title">
-            <div class="delete-content"><h2 id="delete-title">Ta bort sparade pass?</h2><p>Du har tömt alla fält för tidigare sparade dagar. Vill du ta bort passen?</p><ul class="delete-list" id="delete-list"></ul><div class="dialog-actions"><button class="secondary" id="cancel-delete" type="button">Avbryt</button><button class="primary danger" id="confirm-delete" type="button">Ta bort och spara</button></div></div>
-          </dialog>
           <dialog class="delete-dialog participant-dialog" id="participant-confirmation" aria-labelledby="participant-confirm-title">
             <div class="delete-content"><h2 id="participant-confirm-title">Bekräfta ändring</h2><p id="participant-confirm-copy"></p><div class="dialog-actions"><button class="secondary" id="cancel-participant-action" type="button">Avbryt</button><button class="primary danger" id="confirm-participant-action" type="button">Bekräfta</button></div></div>
           </dialog>
@@ -105,6 +89,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.js" defer></script>
   <script src="/elimination.js" defer></script>
   <script src="/admin/corrections.js" defer></script>
-  <script src="/admin/admin.js" defer></script>
+  <script src="/admin/admin.js?v=daily-bonus-1" defer></script>
 </body>
 </html>
+

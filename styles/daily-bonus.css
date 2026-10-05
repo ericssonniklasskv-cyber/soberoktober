@@ -1,0 +1,68 @@
+.hero .hero-bonus {
+  display:grid;
+  grid-template-columns:auto minmax(0,1fr);
+  gap:18px 24px;
+  width:min(100%,700px);
+  margin:0 auto 32px;
+  padding:28px 32px;
+  background:#fff1de;
+  border:1px solid #edcaa6;
+  border-radius:28px;
+  text-align:left;
+  box-shadow:0 12px 30px rgba(45,54,32,.06);
+}
+.hero-bonus[hidden],.hero-bonus button[hidden] { display:none }
+.hero-bonus-mark {
+  display:grid;
+  place-items:center;
+  width:66px;
+  height:66px;
+  border-radius:23px;
+  background:#204d3b;
+  color:#fff1de;
+  font-size:2.5rem;
+}
+.hero-bonus .bonus-kicker {
+  margin:0 0 8px;
+  color:#ae4617;
+  font-size:.85rem;
+  font-weight:950;
+  letter-spacing:.1em;
+}
+.hero-bonus .bonus-challenge-copy p {
+  margin:0 0 8px;
+  color:#173f32;
+  font-size:clamp(1rem,1.6vw,1.35rem);
+  font-weight:800;
+  line-height:1.4;
+  overflow-wrap:anywhere;
+}
+.hero-bonus .bonus-value { color:#ae4617; font-size:.9rem }
+.hero-bonus .bonus-challenge-action { grid-column:2; text-align:left }
+.hero-bonus .bonus-button,.bingo-day-bonus button {
+  min-height:48px;
+  padding:12px 20px;
+  border:1px solid #173f32;
+  border-radius:14px;
+  color:#fffaf0;
+  background:#204d3b;
+  font:inherit;
+  font-weight:850;
+  cursor:pointer;
+}
+.hero-bonus .bonus-button:hover,.bingo-day-bonus button:hover { background:#173f32 }
+.hero-bonus .bonus-button:focus-visible,.bingo-day-bonus button:focus-visible { outline:3px solid #ae4617; outline-offset:4px }
+.hero-bonus .bonus-button[aria-pressed="true"],.bingo-day-bonus button[aria-pressed="true"] { color:#173f32; background:#e3e9da }
+.hero-bonus .bonus-status { color:#596353; font-size:.85rem; line-height:1.45; margin-top:10px }
+.bingo-day-bonus { margin-top:24px; padding:20px; border:1px solid #edcaa6; border-radius:20px; background:#fff1de; color:#173f32 }
+.bingo-day-bonus[hidden] { display:none }
+.bingo-day-bonus h3 { margin:0 0 8px }
+.bingo-day-bonus p { overflow-wrap:anywhere }
+.bingo-day-bonus button:disabled { cursor:default; opacity:.6 }
+@media (max-width:600px) {
+  .hero .hero-bonus { gap:12px; padding:20px 18px; margin-bottom:28px; border-radius:22px }
+  .hero-bonus-mark { width:48px; height:48px; border-radius:17px; font-size:1.8rem }
+  .hero-bonus .bonus-kicker { font-size:.75rem; letter-spacing:.08em }
+  .hero-bonus .bonus-challenge-action { grid-column:1 / -1 }
+  .hero-bonus .bonus-button { width:100% }
+}
