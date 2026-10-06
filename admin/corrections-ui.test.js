@@ -24,7 +24,7 @@ try{
  });
  await page.route('https://cdn.jsdelivr.net/**',route=>route.fulfill({body:''}));
  await page.route('**/elimination.js',route=>route.fulfill({body:''}));
- await page.route('**/admin/admin.js',route=>route.fulfill({body:
+ await page.route('**/admin/admin.js*',route=>route.fulfill({body:
   "document.getElementById('loading-state').hidden=true;document.getElementById('admin-state').hidden=false;window.SoberOctoberAdminCorrections.mount({rpc:window.correctionFixtureRPC},[{participant_id:'qa-user',display_name:'QA deltagare'}]);"
  }));
  for(const width of [320,390,768,1440]){
@@ -32,7 +32,7 @@ try{
   await page.locator('#correction-user').selectOption('qa-user');
   await page.locator('#correction-details').waitFor({state:'visible'});
   assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'overflow '+width);
-  await page.locator('#correction-form').screenshot({path:path.join(root,'correction-'+width+'.png')});
+  await page.locator('#correction-form').screenshot({path:path.join(require('node:os').tmpdir(),'sober-correction-'+width+'.png')});
  }
  await page.locator('#correction-level').selectOption('2');
  await page.locator('#correction-parts').selectOption('second');

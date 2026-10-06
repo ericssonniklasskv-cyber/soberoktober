@@ -7,16 +7,19 @@
   let client;
   let offset = 0;
   let loading = false;
+  let revision = 0, pending = false;
   const pageSize = 50;
 
   async function loadPage() {
-    if (loading) return;
+    if (loading) { pending = true; return; }
     loading = true;
+    const requestRevision = revision;
     more.disabled = true;
     status.textContent = offset ? 'Laddar äldre aktivitet…' : 'Laddar aktivitet…';
     try {
-      client ||= await window.SoberActivity.createPublicClient();
-      const { data, error } = await client.rpc('get_activity_feed', { p_limit: pageSize + 1, p_offset: offset });
+      client ||= await window.SoberActivity.createClient();
+      const { data, error } = await window.SoberActivity.loadFeed(client, pageSize + 1, offset);
+      if (requestRevision !== revision) return;
       if (error) throw error;
       const records = data || [];
       const page = records.slice(0, pageSize).map(item => window.SoberActivity.createFeedItem(item, false)).filter(Boolean);
@@ -38,9 +41,17 @@
     } finally {
       loading = false;
       more.disabled = false;
+      if (pending) { pending = false; loadPage(); }
     }
   }
 
   more.addEventListener('click', loadPage);
+  document.addEventListener('soberoktober:activity-auth', () => {
+    revision++;
+    offset = 0;
+    list.replaceChildren();
+    loadPage();
+  });
+  document.addEventListener('soberoktober:kudos-ready', () => { revision++; offset = 0; loadPage(); });
   loadPage();
 })();

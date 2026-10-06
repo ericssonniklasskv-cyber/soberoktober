@@ -195,6 +195,32 @@
     data.forEach((entry) => ui.leaderboard.appendChild(createLeaderboardRow(entry)));
   }
 
+  async function writePeriod(userId, periodKey, avgSteps) {
+    const updateAverage = () => client
+      .from('step_period_results')
+      .update({ avg_steps: avgSteps })
+      .eq('user_id', userId)
+      .eq('period_key', periodKey);
+
+    // Keep the owner and period immutable: clients may only update avg_steps.
+    // Read existence separately: returning an updated row needs broader grants.
+    let result = await client.from('step_period_results')
+      .select('period_key')
+      .eq('user_id', userId)
+      .eq('period_key', periodKey);
+    if (result.error) return result;
+    if (result.data?.length) return updateAverage();
+
+    result = await client.from('step_period_results').insert({
+      user_id: userId, period_key: periodKey, avg_steps: avgSteps,
+    });
+    // Another tab may have created the same period since our update attempt.
+    if (result.error?.code === '23505') {
+      return updateAverage();
+    }
+    return result;
+  }
+
   async function savePeriod(form) {
     const periodKey = form.dataset.period;
     const input = form.elements.avg_steps;
@@ -218,21 +244,18 @@
     button.disabled = true;
     input.disabled = true;
     setStatus(feedback, 'Sparar…');
-    const { error } = await client
-      .from('step_period_results')
-      .upsert(
-        { user_id: session.user.id, period_key: periodKey, avg_steps: avgSteps },
-        { onConflict: 'user_id,period_key' },
-      );
-    button.disabled = false;
-    input.disabled = false;
-    if (error) {
+    try {
+      const { error } = await writePeriod(session.user.id, periodKey, avgSteps);
+      if (error) throw error;
+      setStatus(feedback, 'Perioden är sparad.');
+      setStatus(ui.pageStatus, '');
+      await Promise.all([loadOwnResults(), loadLeaderboard()]);
+    } catch (_error) {
       setStatus(feedback, 'Perioden kunde inte sparas. Försök igen.', true);
-      return;
+    } finally {
+      button.disabled = !session;
+      input.disabled = !session;
     }
-    setStatus(feedback, 'Perioden är sparad.');
-    setStatus(ui.pageStatus, '');
-    await Promise.all([loadOwnResults(), loadLeaderboard()]);
   }
 
   ui.forms.forEach((form) => form.addEventListener('submit', (event) => {

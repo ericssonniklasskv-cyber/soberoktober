@@ -1,0 +1,65 @@
+.kudos-inbox-button,.kudos-button,.kudos-more {
+  min-height:44px;
+  padding:8px 12px;
+  border:1px solid #ccd6c4;
+  border-radius:12px;
+  background:#fffcf5;
+  color:#214b3b;
+  font:inherit;
+  font-size:.78rem;
+  font-weight:800;
+  cursor:pointer;
+}
+.kudos-inbox-button { display:flex; align-items:center; gap:8px; margin:0 0 12px; }
+.kudos-inbox-button[hidden],.kudos-more[hidden] { display:none; }
+#kudos-unread-count:not(:empty) { display:grid; place-items:center; min-width:24px; height:24px; padding:0 5px; border-radius:50%; background:#f4b46e; }
+.kudos-button { flex:none; margin-top:8px; font-size:.7rem; }
+.kudos-button.is-sent { color:#507059; background:#edf1e6; cursor:default; }
+.kudos-button:hover:not(:disabled),.kudos-inbox-button:hover,.kudos-more:hover { border-color:#b94d1b; background:#fff0db; }
+.kudos-button:focus-visible,.kudos-inbox-button:focus-visible,.kudos-more:focus-visible,.kudos-send:focus-visible,.kudos-close:focus-visible { outline:3px solid #e28b45; outline-offset:3px; }
+.activity-list .activity-item { flex-wrap:wrap; }
+.activity-list .activity-message { flex:1 1 260px; }
+.activity-list .kudos-button { margin-top:0; }
+.activity-preview .activity-item { flex-wrap:wrap; }
+.activity-preview .kudos-button { width:100%; }
+.kudos-dialog {
+  box-sizing:border-box;
+  width:min(520px,calc(100% - 24px));
+  max-height:calc(100dvh - 32px);
+  padding:32px 28px 24px;
+  overflow:auto;
+  border:1px solid #d5dbc8;
+  border-radius:26px;
+  color:#214b3b;
+  background:#fcf7ea;
+  box-shadow:0 24px 80px #102d3350;
+  font-family:inherit;
+  animation:kudos-in .16s ease-out;
+}
+.kudos-dialog::backdrop { background:#173f3299; }
+.kudos-close { position:absolute; top:10px; right:10px; width:44px; height:44px; border:0; border-radius:50%; background:transparent; color:#214b3b; font-size:28px; cursor:pointer; }
+.kudos-title { margin:0 30px 14px 0; font-size:clamp(1.5rem,5vw,2rem); line-height:1.15; overflow-wrap:anywhere; }
+.kudos-context { margin:0 0 24px; padding:14px; border-radius:14px; background:#e6eddc; line-height:1.5; overflow-wrap:anywhere; }
+.kudos-label { display:block; margin-bottom:8px; font-weight:800; }
+.kudos-input { box-sizing:border-box; width:100%; padding:12px; border:1px solid #b6c3ab; border-radius:12px; background:white; font:inherit; font-size:1rem; color:#214b3b; resize:vertical; }
+.kudos-input:focus-visible { outline:3px solid #e28b45; outline-offset:2px; }
+.kudos-hint { color:#667567; font-size:.82rem; line-height:1.5; }
+.kudos-send { width:100%; min-height:48px; padding:12px 18px; border:0; border-radius:14px; background:#214b3b; color:#fff6e7; font:inherit; font-weight:850; cursor:pointer; }
+.kudos-send:disabled { opacity:.65; cursor:default; }
+.kudos-status { margin:12px 0 0; color:#a3461c; font-size:.85rem; line-height:1.5; }
+.kudos-status:empty { display:none; }
+.kudos-inbox-list { display:grid; gap:12px; padding:0; list-style:none; }
+.kudos-note { padding:16px; border:1px solid #d7dfcd; border-radius:16px; background:#fffdf8; }
+.kudos-note-title { margin:0; font-weight:800; line-height:1.4; overflow-wrap:anywhere; }
+.kudos-note-message { margin:10px 0; line-height:1.5; white-space:pre-wrap; overflow-wrap:anywhere; }
+.kudos-note-time { display:block; margin-top:10px; font-size:.75rem; color:#667567; }
+.kudos-empty { padding:18px 0; line-height:1.5; color:#667567; }
+.kudos-more { margin-top:12px; width:100%; }
+@keyframes kudos-in { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+@media(max-width:700px) {
+  .activity-list .activity-message { flex-basis:auto; }
+  .activity-preview .activity-time { flex-basis:100%; text-align:left; }
+  .activity-list .kudos-button { margin-top:5px; }
+  .kudos-dialog { padding:28px 18px 20px; }
+}
+@media(prefers-reduced-motion:reduce) { .kudos-dialog { animation:none; } }

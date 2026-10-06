@@ -949,6 +949,7 @@
           },
         },
       );
+      window.SoberActivity?.useClient(client);
 
       publicClient = window.supabase.createClient(
         config.supabaseUrl,
@@ -985,6 +986,7 @@
       });
     } catch (error) {
       console.error('Supabase Auth kunde inte startas', error);
+      window.SoberActivity?.failClient();
       ui.trigger.textContent = 'Login saknas';
       ui.trigger.title = 'Auth-konfigurationen kunde inte laddas';
       ui.entryStatus.textContent = 'Inloggningen kunde inte startas just nu.';

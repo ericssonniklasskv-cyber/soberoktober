@@ -5,6 +5,8 @@
   const status = document.getElementById('activity-preview-status');
   let client;
   let timer;
+  let loading = false;
+  let revision = 0, pending = false;
 
   function showMessage(message) {
     list.replaceChildren();
@@ -16,9 +18,13 @@
 
   async function refresh() {
     if (document.hidden) return;
+    if (loading) { pending = true; return; }
+    loading = true;
+    const requestRevision = revision;
     try {
-      client ||= await window.SoberActivity.createPublicClient();
-      const { data, error } = await client.rpc('get_activity_feed', { p_limit: 4, p_offset: 0 });
+      client ||= await window.SoberActivity.createClient();
+      const { data, error } = await window.SoberActivity.loadFeed(client, 4, 0);
+      if (requestRevision !== revision) return;
       if (error) throw error;
       const items = (data || []).slice(0, 4).map(item => window.SoberActivity.createFeedItem(item, true)).filter(Boolean);
       if (!items.length) showMessage('Inga aktiviteter än. Nästa lilla seger syns här!');
@@ -29,6 +35,9 @@
         showMessage('Aktiviteten kunde inte laddas just nu.');
       }
       status.textContent = 'Försök igen om en liten stund.';
+    } finally {
+      loading = false;
+      if (pending) { pending = false; refresh(); }
     }
   }
 
@@ -43,5 +52,12 @@
     else startPolling();
   });
   document.addEventListener('soberoktober:bingo-saved', refresh);
+  document.addEventListener('soberoktober:activity-auth', () => {
+    revision++;
+    // Clear personalized controls immediately when the session changes.
+    showMessage('Laddar senaste aktivitet…');
+    refresh();
+  });
+  document.addEventListener('soberoktober:kudos-ready', refresh);
   startPolling();
 })();
