@@ -77,28 +77,14 @@
   let stepResultsUnavailable = false;
   let finalReportData = null;
   const pointsFormatter = new Intl.NumberFormat('sv-SE', { maximumFractionDigits: 1 });
-  const reportSeenStorageKey = (userId) => `soberoktober:weekly-reports-seen:${userId}`;
   const finalReportSeenStorageKey = (userId) => `soberoktober:final-report-seen:${userId}`;
 
   function seenReportKeys() {
-    try {
-      const saved = JSON.parse(localStorage.getItem(reportSeenStorageKey(activeUserId)) || '[]');
-      return new Set(Array.isArray(saved) ? saved.filter((key) => typeof key === 'string') : []);
-    } catch (_error) {
-      return new Set();
-    }
+    return new Set(window.SoberOctoberReportSeen.read(activeUserId));
   }
 
   function markReportSeen(key) {
-    const seen = seenReportKeys();
-    const wasNew = !seen.has(key);
-    seen.add(key);
-    try {
-      localStorage.setItem(reportSeenStorageKey(activeUserId), JSON.stringify([...seen]));
-    } catch (_error) {
-      // The report remains available even when browser storage is unavailable.
-    }
-    return wasNew;
+    return window.SoberOctoberReportSeen.mark(activeUserId, key);
   }
 
   function markFinalReportSeen() {

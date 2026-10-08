@@ -174,6 +174,7 @@
     ui.historyLink.hidden = true;
     ui.adminLink.hidden = true;
     ui.homeWeeklyReport.hidden = true;
+    window.SoberOctoberWeeklyPopup?.update(null, null);
     showEntry();
   }
 
@@ -268,20 +269,16 @@
   }
 
   function renderWeeklyReportCta() {
-    if (!session?.user?.id || !window.SoberOctoberHistory?.nextUnseenReport) {
+    if (!session?.user?.id || !profile?.display_name || !window.SoberOctoberHistory?.nextUnseenReport) {
       ui.homeWeeklyReport.hidden = true;
+      window.SoberOctoberWeeklyPopup?.update(null, null);
       return;
     }
-    let seenKeys = [];
-    try {
-      const saved = JSON.parse(localStorage.getItem(`soberoktober:weekly-reports-seen:${session.user.id}`) || '[]');
-      if (Array.isArray(saved)) seenKeys = saved;
-    } catch (_error) {
-      seenKeys = [];
-    }
+    const seenKeys = window.SoberOctoberReportSeen.read(session.user.id);
     const period = window.SoberOctoberHistory.nextUnseenReport(stockholmDate(), seenKeys);
     ui.homeWeeklyReport.hidden = !period;
     if (period) ui.homeWeeklyReport.href = `/min-oktober/?rapport=${encodeURIComponent(period.key)}`;
+    window.SoberOctoberWeeklyPopup?.update(session.user.id, period);
   }
 
   async function loadResults() {
