@@ -13,12 +13,7 @@
     if (mobile.matches) layout.insertBefore(panel, activity);
     else hero.appendChild(panel);
   }
-  function tomorrow(date) {
-    // Calendar arithmetic on the Swedish date; never add 24 hours to local time.
-    const next = new Date(date + 'T12:00:00Z');
-    next.setUTCDate(next.getUTCDate() + 1);
-    return next.toISOString().slice(0, 10);
-  }
+  const tomorrow = date => window.SoberOctoberCalendar.shiftDate(date, 1);
   function text(tag, value, className) {
     const element = document.createElement(tag);
     element.textContent = value;
@@ -31,7 +26,7 @@
     requestedDate = date;
     const id = ++requestId;
     content.replaceChildren(text('p', 'Laddar morgondagens pass…', 'tomorrow-note'));
-    if (date < '2026-10-01' || date > '2026-10-31') {
+    if (!window.SoberOctoberCalendar.isCompetitionDay(date)) {
       content.replaceChildren(text('p', 'Inget nytt oktoberpass imorgon. Tack för den här månaden!', 'tomorrow-note'));
       return;
     }

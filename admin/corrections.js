@@ -2,7 +2,7 @@
   const $ = id => document.getElementById(id);
   let client, snapshot=null, busy=false, generation=0, pending=null;
   const number=new Intl.NumberFormat('sv-SE');
-  const today=()=>new Intl.DateTimeFormat('sv-SE',{timeZone:'Europe/Stockholm',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
+  const today=window.SoberOctoberCalendar.stockholmDate;
   const fields=()=>[$('correction-user'),$('correction-date'),$('correction-level'),$('correction-parts'),$('correction-reason'),$('correction-load'),$('correction-save')];
   function setBusy(value){busy=value;fields().forEach(field=>field.disabled=value);$('correction-save').disabled=value||!snapshot;}
   function clear(){snapshot=null;$('correction-details').hidden=true;$('correction-history').replaceChildren();$('correction-save').disabled=true;}

@@ -1,3 +1,4 @@
+const { browserOptions } = require('../../qa/browser.cjs');
 const { chromium } = require('playwright');
 const http = require('node:http');
 const fs = require('node:fs/promises');
@@ -22,7 +23,7 @@ const root = path.resolve(__dirname, '../..');
  const origin='http://127.0.0.1:'+server.address().port;
  let browser;
  try {
-  browser=await chromium.launch({headless:true,...(process.env.BINGO_BROWSER_PATH ? {executablePath:process.env.BINGO_BROWSER_PATH} : {})});
+  browser=await chromium.launch({headless:true,...browserOptions()});
   const context=await browser.newContext();
   let admin=true, signedIn=true;
   let state={board:fixtureBoard,completed_cells:{},activity_dates:[],simulated_date:'2026-10-05',elimination_date:null,elimination_reason:null,score:{cell_points:0,day_bonus_points:0,line_points:0,full_board_points:0,total_points:0,rows:[],columns:[]}};
@@ -114,4 +115,3 @@ const root = path.resolve(__dirname, '../..');
   await new Promise(resolve=>server.close(resolve));
  }
 })().catch(error=>{console.error(error);process.exitCode=1;});
-

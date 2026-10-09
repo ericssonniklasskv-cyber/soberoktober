@@ -1,14 +1,10 @@
 (function attachStepsLogic(root, factory) {
-  const api = factory();
+  const calendar = root?.SoberOctoberCalendar || (typeof require === 'function' ? require('../shared/calendar.js') : null);
+  const api = factory(calendar);
   if (typeof module === 'object' && module.exports) module.exports = api;
   if (root) root.SoberOctoberSteps = api;
-}(typeof globalThis !== 'undefined' ? globalThis : this, function createStepsLogic() {
-  const PERIODS = Object.freeze([
-    Object.freeze({ key: 'oct_01_07', days: 7 }),
-    Object.freeze({ key: 'oct_08_14', days: 7 }),
-    Object.freeze({ key: 'oct_15_21', days: 7 }),
-    Object.freeze({ key: 'oct_22_31', days: 10 }),
-  ]);
+}(typeof globalThis !== 'undefined' ? globalThis : this, function createStepsLogic(calendar) {
+  const PERIODS = calendar.PERIODS;
   const PERIOD_BY_KEY = new Map(PERIODS.map((period) => [period.key, period]));
   const SCORE_LEVELS = Object.freeze([
     Object.freeze({ minimum: 8000, points: 15 }),

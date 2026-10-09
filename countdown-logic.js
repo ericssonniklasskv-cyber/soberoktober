@@ -1,9 +1,10 @@
 (function (root, factory) {
-  const api = factory();
+  const calendar = root?.SoberOctoberCalendar || (typeof require === 'function' ? require('./shared/calendar.js') : null);
+  const api = factory(calendar);
   if (typeof module === 'object' && module.exports) module.exports = api;
   root.SoberOctoberCountdown = api;
-})(typeof globalThis === 'undefined' ? this : globalThis, function () {
-  const OCTOBER_START_AT = Date.parse('2026-10-01T00:00:00+02:00');
+})(typeof globalThis === 'undefined' ? this : globalThis, function (calendar) {
+  const { OCTOBER_START_AT } = calendar;
 
   function getCountdownState(nowMs = Date.now()) {
     const remainingMs = Math.max(0, OCTOBER_START_AT - nowMs);

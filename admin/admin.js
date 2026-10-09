@@ -1,5 +1,5 @@
 (() => {
-  const OCTOBER_DATES = Array.from({ length: 31 }, (_, index) => `2026-10-${String(index + 1).padStart(2, '0')}`);
+  const { OCTOBER_DATES } = window.SoberOctoberCalendar;
   const OCTOBER_START = OCTOBER_DATES[0];
   const OCTOBER_END = OCTOBER_DATES.at(-1);
 
@@ -51,19 +51,7 @@
   let challenges = new Map();
   let participantAction = null;
 
-  function stockholmDate() {
-    const parts = new Intl.DateTimeFormat('sv-SE', {
-      timeZone: 'Europe/Stockholm',
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-    }).formatToParts(new Date()).reduce((values, part) => {
-      if (part.type !== 'literal') values[part.type] = part.value;
-      return values;
-    }, {});
-
-    return `${parts.year}-${parts.month}-${parts.day}`;
-  }
+  const stockholmDate = window.SoberOctoberCalendar.stockholmDate;
 
   function formatDate(date, includeYear = false) {
     return new Intl.DateTimeFormat('sv-SE', {

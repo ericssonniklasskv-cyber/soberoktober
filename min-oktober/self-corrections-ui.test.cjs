@@ -1,3 +1,4 @@
+const { browserOptions } = require('../qa/browser.cjs');
 const {chromium}=require('playwright');
 const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
 const root=process.env.SOBER_TEST_ROOT || path.resolve(__dirname, '..');
@@ -13,7 +14,7 @@ if(args.p_action==='save'){const p=args.p_payload;if(p.multiplier){result={resul
 return {data:{result:result?{multiplier:result.multiplier,points:result.points,completed_parts:result.completed_parts,updated_at:result.updated_at}:null,bonus_points:bonus?.points??null,challenge:{...challenge,completion_mode:f.mode},restored:f.restored},error:null}}
 };window.supabase={createClient:()=>client};`;
 (async()=>{
-const browser=await chromium.launch({headless:true,...(process.env.SOBER_BROWSER_PATH ? {executablePath:process.env.SOBER_BROWSER_PATH} : {})});
+const browser=await chromium.launch({headless:true,...browserOptions()});
 try {
 const page=await browser.newPage();const errors=[];page.on('pageerror',e=>errors.push(e.message));
 await page.clock.install({time:new Date('2026-10-04T12:00:00+02:00')});

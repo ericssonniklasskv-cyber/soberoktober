@@ -5,6 +5,7 @@
   let ownStatus;
   let otherEvents = [];
   let activeNotice = null;
+  let revision = 0;
 
   function ensureDialog() {
     if (document.querySelector('#elimination-overlay')) return;
@@ -52,19 +53,19 @@
 
   async function closeActiveNotice() {
     if (!activeNotice) return;
-    const dismissed = activeNotice;
     activeNotice = null;
     const overlay = document.querySelector('#elimination-overlay');
     overlay.hidden = true;
     document.body.classList.remove('elimination-open');
 
     await loadNextOtherEvent();
-    showNextNotice();
+    notice.request();
   }
 
-  async function loadNextOtherEvent() {
+  async function loadNextOtherEvent(expectedRevision = revision) {
     if (!client || !userId) return;
     const { data, error } = await client.rpc('get_unseen_elimination_events');
+    if (expectedRevision !== revision || !userId) return;
     if (error) {
       console.warn('Utslagsnotiserna kunde inte hämtas ännu.', error);
       return;
@@ -73,7 +74,7 @@
   }
 
   function showNextNotice() {
-    if (activeNotice) return;
+    if (activeNotice) { openNotice(activeNotice); return; }
     if (ownStatus?.status === 'eliminated') {
       const eventId = ownStatus.current_elimination_event_id;
       let seenEvent = null;
@@ -93,6 +94,12 @@
   }
 
   async function refresh(nextClient, nextUserId, displayName) {
+    const expectedRevision = ++revision;
+    if (userId !== nextUserId) {
+      activeNotice = null;
+      document.querySelector('#elimination-overlay').hidden = true;
+      document.body.classList.remove('elimination-open');
+    }
     client = nextClient;
     userId = nextUserId;
     if (!client || !userId) return null;
@@ -101,6 +108,7 @@
     otherEvents = [];
     try {
       const { data, error } = await client.rpc('sync_competition_status');
+      if (expectedRevision !== revision || !userId) return null;
       if (error) throw error;
       const statusRow = Array.isArray(data) ? data[0] : data;
       ownStatus = statusRow ? { ...statusRow, display_name: displayName } : null;
@@ -110,12 +118,13 @@
       let seenEvent = null;
       try { seenEvent = localStorage.getItem(ownNoticeKey(userId)); } catch (_error) { /* Browser storage is optional. */ }
       if (ownStatus.status === 'eliminated' && ownStatus.current_elimination_event_id && seenEvent !== ownStatus.current_elimination_event_id) {
-        showNextNotice();
+        notice.request();
         ownWasShown = true;
       }
       if (!ownWasShown) {
-        await loadNextOtherEvent();
-        showNextNotice();
+        await loadNextOtherEvent(expectedRevision);
+        if (expectedRevision !== revision || !userId) return null;
+        notice.request();
       }
       return ownStatus;
     } catch (error) {
@@ -126,7 +135,10 @@
 
   function resetOnLogout(previousUserId) {
     if (!previousUserId) return;
+    revision += 1;
     try { localStorage.removeItem(ownNoticeKey(previousUserId)); } catch (_error) { /* Browser storage is optional. */ }
+    userId = null;
+    client = null;
     ownStatus = null;
     otherEvents = [];
     activeNotice = null;
@@ -135,6 +147,23 @@
     document.body.classList.remove('elimination-open');
   }
 
-  window.SoberOctoberEliminations = Object.freeze({ refresh, resetOnLogout });
   ensureDialog();
+  const notice = window.SoberOctoberPopups.register('elimination', {
+    priority: window.SoberOctoberPopups.priorities.elimination,
+    element: () => document.getElementById('elimination-overlay'),
+    isOpen: () => !document.getElementById('elimination-overlay').hidden,
+    canShow() {
+      if (!userId) return false;
+      if (activeNotice || otherEvents.length) return true;
+      if (ownStatus?.status !== 'eliminated' || !ownStatus.current_elimination_event_id) return false;
+      try { return localStorage.getItem(ownNoticeKey(userId)) !== ownStatus.current_elimination_event_id; }
+      catch { return true; }
+    },
+    show: showNextNotice,
+    suspend() {
+      document.getElementById('elimination-overlay').hidden = true;
+      document.body.classList.remove('elimination-open');
+    },
+  });
+  window.SoberOctoberEliminations = Object.freeze({ refresh, resetOnLogout });
 })();

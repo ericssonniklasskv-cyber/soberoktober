@@ -4,32 +4,20 @@
   if (!inboxButton || !window.SoberActivity) return;
   const badge = document.getElementById('kudos-unread-count');
   let client, userId, currentDialog, pollTimer, refreshing = false, refreshPending = false;
-  let unreadCount = 0, authRevision = 0, notificationTimer, pagePaused = false;
+  let unreadCount = 0, authRevision = 0, pagePaused = false;
   const automaticVisits = new Set();
   const sent = new Set();
 
-  function visitKey() {
-    const day = new Intl.DateTimeFormat('sv-SE', { timeZone: 'Europe/Stockholm',
-      year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
-    return `${userId}:${day}`;
-  }
+  const visitKey = () => `${userId}:${window.SoberOctoberCalendar.stockholmDate()}`;
 
-  function notificationBlocked() {
-    return pagePaused || document.hidden || currentDialog?.open
-      || document.body.classList.contains('entry-active')
-      || document.getElementById('app-shell')?.inert
-      || document.querySelector('#auth-overlay.open, #trump-quote-overlay:not([hidden]), #elimination-overlay:not([hidden]), dialog[open]');
-  }
-
-  function scheduleNotification() {
-    if (notificationTimer != null || pagePaused) return;
-    // Queue behind login/onboarding, elimination and weekly-report dialogs.
-    notificationTimer = setTimeout(() => {
-      notificationTimer = null;
-      if (!userId || !unreadCount || automaticVisits.has(visitKey()) || notificationBlocked()) return;
-      openInbox(true);
-    }, 0);
-  }
+  const notice = window.SoberOctoberPopups.register('kudos', {
+    priority: window.SoberOctoberPopups.priorities.kudos,
+    element: () => currentDialog,
+    isOpen: () => Boolean(currentDialog?.open),
+    canShow: () => Boolean(client && userId && unreadCount && !automaticVisits.has(visitKey()) && !currentDialog?.open),
+    show: () => openInbox(true),
+    suspend: () => currentDialog?.close(),
+  });
 
   function setUser(nextId) {
     if (nextId === userId) return;
@@ -185,7 +173,7 @@
       unreadCount = count;
       badge.textContent = count ? String(count) : '';
       inboxButton.setAttribute('aria-label', count ? `Dina kudos, ${count} nya` : 'Dina kudos');
-      scheduleNotification();
+      notice.request();
     } catch (_) {
       // Keep the feed usable when the notification request fails.
     } finally {
@@ -252,12 +240,6 @@
     setUser(event.detail.userId);
     refreshInbox();
   });
-  // Attribute-only observation ignores feed text updates and confetti nodes.
-  const observer = new MutationObserver(scheduleNotification);
-  const observe = () => observer.observe(document.body, {
-    subtree: true, attributes: true, attributeFilter: ['hidden', 'open', 'class', 'inert'],
-  });
-  observe();
   document.addEventListener('visibilitychange', () => {
     clearInterval(pollTimer);
     if (!document.hidden) { refreshInbox(); pollTimer = setInterval(refreshInbox, 30000); }
@@ -265,14 +247,10 @@
   window.addEventListener('pagehide', () => {
     pagePaused = true;
     clearInterval(pollTimer);
-    clearTimeout(notificationTimer);
-    notificationTimer = null;
-    observer.disconnect();
   });
   window.addEventListener('pageshow', event => {
     if (!event.persisted) return;
     pagePaused = false;
-    observe();
     refreshInbox();
     pollTimer = setInterval(refreshInbox, 30000);
   });

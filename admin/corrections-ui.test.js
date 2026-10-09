@@ -1,3 +1,4 @@
+const { browserOptions } = require('../qa/browser.cjs');
 const {chromium}=require('playwright');
 const http=require('node:http'),fs=require('node:fs/promises'),path=require('node:path'),assert=require('node:assert/strict');
 const root=path.resolve(__dirname,'..');
@@ -6,7 +7,7 @@ const server=http.createServer(async(req,res)=>{try{let file=decodeURIComponent(
 await new Promise(r=>server.listen(0,'127.0.0.1',r));
 let browser;
 try{
- browser=await chromium.launch({headless:true,executablePath:process.env.BINGO_BROWSER_PATH});
+ browser=await chromium.launch({headless:true,...browserOptions()});
  const page=await browser.newPage();const errors=[];page.on('pageerror',e=>errors.push(e.message));
  let calls=0,forceStale=false;
  let fixture={display_name:'QA deltagare',status:'active',result:null,history:[],bonus_points:0,challenge:{title:'Testpass',description:'15 squats',completion_mode:'or',second_description:'10 000 steg'}};

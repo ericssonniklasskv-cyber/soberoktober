@@ -1,6 +1,6 @@
-(function(root,factory){const api=factory();if(typeof module==='object'&&module.exports)module.exports=api;if(root)root.SoberOctoberCompetition=api;})(typeof globalThis!=='undefined'?globalThis:this,function(){
-  const START='2026-10-05',END='2026-10-11';
-  const START_INSTANT=Date.parse('2026-10-05T00:01:00+02:00'),END_INSTANT=Date.parse('2026-10-12T00:00:00+02:00');
+(function(root,factory){const calendar=root?.SoberOctoberCalendar||(typeof require==='function'?require('./shared/calendar.js'):null);const api=factory(calendar);if(typeof module==='object'&&module.exports)module.exports=api;if(root)root.SoberOctoberCompetition=api;})(typeof globalThis!=='undefined'?globalThis:this,function(calendar){
+  const {BINGO_START:START,BINGO_END:END}=calendar;
+  const {BINGO_START_AT:START_INSTANT,BINGO_END_AT:END_INSTANT}=calendar;
   const isBingoDate=date=>date>=START&&date<=END;
   const active=(enabled,now=Date.now())=>Boolean(enabled)&&now>=START_INSTANT&&now<END_INSTANT;
   function mergeResults(results=[],bingo=null){

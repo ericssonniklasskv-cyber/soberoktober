@@ -2,7 +2,7 @@
   const logic = window.SoberOctoberCompetition;
   let client, data = null, onChange = async () => {}, busy = false, boundaryTimer;
   const editors = new Map();
-  const dateToday = () => new Intl.DateTimeFormat('sv-SE', { timeZone: 'Europe/Stockholm', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
+  const dateToday = window.SoberOctoberCalendar.stockholmDate;
   const node = (tag, value, className) => {
     const el = document.createElement(tag);
     el.textContent = value;

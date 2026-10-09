@@ -228,6 +228,8 @@
       </div>
     </section>
   </div>
+  <script src="/shared/popup-coordinator.js" defer></script>
+  <script src="/shared/calendar.js" defer></script>
   <script>
     const parts=new Intl.DateTimeFormat('sv-SE',{timeZone:'Europe/Stockholm',year:'numeric',month:'numeric',day:'numeric'}).formatToParts(new Date()).reduce((a,p)=>({...a,[p.type]:Number(p.value)}),{});
     const {year,month,day}=parts,isOctober=month===10,hasPassed=month>10,octoberDay=isOctober?Math.min(day,31):hasPassed?31:0,percent=Math.round(octoberDay/31*100);
@@ -275,6 +277,7 @@
   <script src="/weekly-report-popup.js" defer></script>
   <script src="/tomorrow-preview.js" defer></script>
   <script src="/bonus-client.js?v=1" defer></script>
+  <script src="/home/participants.js" defer></script>
   <script src="/auth.js?v=daily-bonus-1" defer></script>
   <script src="/mohv-egg.js" defer></script>
   <script src="/trump-quote.js" defer></script>

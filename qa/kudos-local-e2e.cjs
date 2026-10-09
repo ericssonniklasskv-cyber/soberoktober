@@ -1,12 +1,16 @@
+const { browserOptions } = require('./browser.cjs');
 const assert = require('node:assert/strict');
 const fs = require('node:fs/promises');
 const http = require('node:http');
 const path = require('node:path');
+const { pathToFileURL } = require('node:url');
 const { chromium } = require('playwright');
 const root = path.resolve(__dirname, '..');
 
 (async () => {
-  const { localEnvironment, getLocalStack, runLocalSql, localRequest } = await import('/Users/niklasericsson/soberoktober/scripts/local-env.mjs');
+  const adapter = process.env.SOBER_LOCAL_ENV_MODULE;
+  if (!adapter) throw Error('Set SOBER_LOCAL_ENV_MODULE to your local test-stack adapter. This test must not target production.');
+  const { localEnvironment, getLocalStack, runLocalSql, localRequest } = await import(pathToFileURL(adapter).href);
   const env = localEnvironment(), stack = getLocalStack(env, { start: false });
   const sdk = await fetch('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.js').then(r => { if (!r.ok) throw Error('SDK unavailable'); return r.text(); });
   const created = [], users = [], errors = [];
@@ -59,7 +63,7 @@ const root = path.resolve(__dirname, '..');
     });
     await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
     const origin=`http://127.0.0.1:${server.address().port}`;
-    browser=await chromium.launch({headless:true,executablePath:'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'});
+    browser=await chromium.launch({headless:true,...browserOptions()});
     const contextFor=async(session)=>{
       const context=await browser.newContext();
       await context.route('**/supabase.js',r=>r.fulfill({contentType:'text/javascript',body:sdk}));

@@ -1,3 +1,4 @@
+const { browserOptions, artifactPath } = require('./browser.cjs');
 const assert = require('node:assert/strict');
 const fs = require('node:fs/promises');
 const http = require('node:http');
@@ -26,7 +27,7 @@ const root = path.resolve(__dirname, '..');
   let failCount = false, failRead = false, holdCount;
   const origin = `http://127.0.0.1:${server.address().port}`;
   try {
-    browser = await chromium.launch({ headless: true, executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome' });
+    browser = await chromium.launch({ headless: true, ...browserOptions() });
     const context = await browser.newContext();
     await context.addInitScript(() => {
       window.qaUser = 'anna';
@@ -39,7 +40,7 @@ const root = path.resolve(__dirname, '..');
     });
     await context.route('**/*.js*', route => {
       const p = new URL(route.request().url()).pathname;
-      if (['/aktivitet/kudos.js', '/min-oktober/history-logic.js', '/min-oktober/report-seen.js', '/weekly-report-popup.js'].includes(p)) return route.continue();
+      if (['/shared/calendar.js', '/shared/popup-coordinator.js', '/aktivitet/kudos.js', '/min-oktober/history-logic.js', '/min-oktober/report-seen.js', '/weekly-report-popup.js'].includes(p)) return route.continue();
       return route.fulfill({ contentType: 'text/javascript', body: '' });
     });
     await context.route('**/qa/rpc/*', async route => {
@@ -161,7 +162,7 @@ const root = path.resolve(__dirname, '..');
       const box = await dialog.boundingBox();
       assert.ok(box.x >= 0 && box.x + box.width <= width, 'dialog fits ' + width);
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
-      await page.screenshot({ path: `/private/tmp/sober-kudos-notification-${width}.png` });
+      await page.screenshot({ path: artifactPath(`sober-kudos-notification-${width}.png`) });
       await page.keyboard.press('Escape');
     }
     await page.emulateMedia({ reducedMotion: 'reduce' });

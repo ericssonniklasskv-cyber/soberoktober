@@ -1,0 +1,14 @@
+{
+  "name": "soberoktober",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Sober Oktober static frontend and regression tests",
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "test": "node scripts/test.mjs",
+    "test:ui": "node scripts/test.mjs --ui",
+    "test:all": "npm test && npm run test:ui",
+    "test:local-db": "node qa/kudos-local-e2e.cjs"
+  },
+  "devDependencies": { "playwright": "1.62.1" }
+}

@@ -2,25 +2,13 @@
   const challengeLogic = root?.SoberOctoberChallengeLogic
     || (typeof require === 'function' ? require('./challenge-logic.js') : null);
   const bingoLogic = root?.SoberOctoberCompetition || (typeof require === 'function' ? require('../bingo-logic.js') : null);
-  const api = factory(challengeLogic, bingoLogic);
+  const calendar = root?.SoberOctoberCalendar || (typeof require === 'function' ? require('../shared/calendar.js') : null);
+  const api = factory(challengeLogic, bingoLogic, calendar);
   if (typeof module === 'object' && module.exports) module.exports = api;
   if (root) root.SoberOctoberHistory = api;
-}(typeof globalThis !== 'undefined' ? globalThis : this, function createHistoryLogic(challengeLogic, bingoLogic) {
-  const OCTOBER_DATES = Array.from({ length: 31 }, (_, index) => `2026-10-${String(index + 1).padStart(2, '0')}`);
-  const OCTOBER_START = OCTOBER_DATES[0];
-  const OCTOBER_END = OCTOBER_DATES[OCTOBER_DATES.length - 1];
-  const REPORT_PERIODS = Object.freeze([
-    Object.freeze({ key: 'oct_01_07', title: 'Vecka 1', label: '1–7 oktober', start: '2026-10-01', end: '2026-10-07', days: 7 }),
-    Object.freeze({ key: 'oct_08_14', title: 'Vecka 2', label: '8–14 oktober', start: '2026-10-08', end: '2026-10-14', days: 7 }),
-    Object.freeze({ key: 'oct_15_21', title: 'Vecka 3', label: '15–21 oktober', start: '2026-10-15', end: '2026-10-21', days: 7 }),
-    Object.freeze({ key: 'oct_22_31', title: 'Slutspurten', label: '22–31 oktober', start: '2026-10-22', end: '2026-10-31', days: 10 }),
-  ]);
-
-  function previousDate(date) {
-    const value = new Date(`${date}T12:00:00Z`);
-    value.setUTCDate(value.getUTCDate() - 1);
-    return value.toISOString().slice(0, 10);
-  }
+}(typeof globalThis !== 'undefined' ? globalThis : this, function createHistoryLogic(challengeLogic, bingoLogic, calendar) {
+  const { OCTOBER_DATES, OCTOBER_START, OCTOBER_END, PERIODS: REPORT_PERIODS } = calendar;
+  const previousDate = date => calendar.shiftDate(date, -1);
 
   function calculate(results, today, competitionStatus = null, bonusClaims = []) {
     const octoberResults = results.filter(({ result_date: date }) => date >= OCTOBER_START && date <= OCTOBER_END);
@@ -155,21 +143,7 @@
     };
   }
 
-  function stockholmDateFromInstant(value) {
-    if (!value) return null;
-    const instant = new Date(value);
-    if (!Number.isFinite(instant.getTime())) return null;
-    const parts = new Intl.DateTimeFormat('sv-SE', {
-      timeZone: 'Europe/Stockholm',
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-    }).formatToParts(instant).reduce((values, part) => {
-      if (part.type !== 'literal') values[part.type] = part.value;
-      return values;
-    }, {});
-    return `${parts.year}-${parts.month}-${parts.day}`;
-  }
+  const stockholmDateFromInstant = calendar.stockholmDate;
 
   function isFinalReportAvailable({ today, results = [], stepResults = [], competitionStatus = null }) {
     if (today >= '2026-11-01') return true;

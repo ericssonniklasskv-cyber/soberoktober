@@ -20,9 +20,6 @@
     `"I think that I’m a very nice person."`,
   ];
   const storageKey = 'soberoktober-trump-quote-seen-date';
-  const dayFormatter = new Intl.DateTimeFormat('en-CA', {
-    timeZone: 'Europe/Stockholm', year: 'numeric', month: '2-digit', day: '2-digit',
-  });
   const modalQuote = document.querySelector('#trump-quote-modal-text');
   const overlay = document.querySelector('#trump-quote-overlay');
   const trigger = document.querySelector('#auth-trigger');
@@ -31,23 +28,17 @@
   const closeButtons = [...overlay.querySelectorAll('[data-trump-quote-close]')];
   let activeDay = '';
   let seenDay = '';
-  let previousFocus = null;
 
   function stockholmDay(date = new Date()) {
-    const parts = Object.fromEntries(dayFormatter.formatToParts(date)
-      .filter((part) => part.type !== 'literal')
-      .map((part) => [part.type, Number(part.value)]));
-    return {
-      key: `${parts.year}-${String(parts.month).padStart(2, '0')}-${String(parts.day).padStart(2, '0')}`,
-      number: Math.floor(Date.UTC(parts.year, parts.month - 1, parts.day) / 86400000),
-    };
+    const key = window.SoberOctoberCalendar.stockholmDate(date);
+    return { key, number: window.SoberOctoberCalendar.dayNumber(key) };
   }
 
   function refreshQuote() {
     const today = stockholmDay();
     if (today.key !== activeDay) {
       activeDay = today.key;
-      const firstOctoberDay = Math.floor(Date.UTC(2026, 9, 1) / 86400000);
+      const firstOctoberDay = window.SoberOctoberCalendar.dayNumber(window.SoberOctoberCalendar.OCTOBER_START);
       const index = ((today.number - firstOctoberDay) % quotes.length + quotes.length) % quotes.length;
       modalQuote.textContent = quotes[index];
     }
@@ -73,10 +64,8 @@
       && trigger.textContent.trim().startsWith('Hej, ');
   }
 
-  function maybeOpen() {
+  function showQuote() {
     const day = refreshQuote();
-    if (!mainIsReady() || !overlay.hidden || alreadySeen(day)) return;
-    previousFocus = document.activeElement;
     remember(day);
     overlay.hidden = false;
     document.body.classList.add('trump-quote-open');
@@ -86,8 +75,6 @@
   function close() {
     overlay.hidden = true;
     document.body.classList.remove('trump-quote-open');
-    if (previousFocus?.isConnected && !previousFocus.closest('[hidden]')) previousFocus.focus();
-    else trigger.focus();
   }
 
   closeButtons.forEach((button) => button.addEventListener('click', close));
@@ -95,22 +82,16 @@
     if (event.key === 'Escape') {
       event.preventDefault();
       close();
-    } else if (event.key === 'Tab') {
-      const target = event.shiftKey ? closeButtons[0] : closeButtons[closeButtons.length - 1];
-      if (document.activeElement === target) {
-        event.preventDefault();
-        (event.shiftKey ? closeButtons[closeButtons.length - 1] : closeButtons[0]).focus();
-      }
     }
   });
 
-  const observer = new MutationObserver(maybeOpen);
-  observer.observe(document.body, { attributes: true, attributeFilter: ['class'] });
-  observer.observe(appShell, { attributes: true, attributeFilter: ['inert'] });
-  observer.observe(authOverlay, { attributes: true, attributeFilter: ['class'] });
-  observer.observe(trigger, { childList: true, characterData: true, subtree: true });
-  document.addEventListener('visibilitychange', () => { if (!document.hidden) maybeOpen(); });
-  window.addEventListener('focus', maybeOpen);
-  window.setInterval(maybeOpen, 60000);
-  maybeOpen();
+  const notice = window.SoberOctoberPopups.register('quote', {
+    priority: window.SoberOctoberPopups.priorities.quote,
+    element: overlay,
+    isOpen: () => !overlay.hidden,
+    canShow: () => mainIsReady() && overlay.hidden && !alreadySeen(refreshQuote()),
+    show: showQuote,
+    suspend: close,
+  });
+  notice.request();
 })();

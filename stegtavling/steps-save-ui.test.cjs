@@ -1,3 +1,4 @@
+const { browserOptions } = require('../qa/browser.cjs');
 const { chromium } = require('playwright');
 const assert = require('node:assert/strict');
 const fs = require('node:fs/promises');
@@ -19,7 +20,7 @@ const root = path.resolve(__dirname, '..');
   await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
   let browser;
   try {
-    browser = await chromium.launch({ headless: true, executablePath: process.env.STEPS_BROWSER_PATH || '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome' });
+    browser = await chromium.launch({ headless: true, ...browserOptions() });
     const page = await browser.newPage();
     const rows = new Map();
     const writes = [], errors = [];

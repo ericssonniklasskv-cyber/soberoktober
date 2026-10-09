@@ -1,3 +1,4 @@
+const { browserOptions } = require('./qa/browser.cjs');
 const {chromium}=require('playwright');
 const fs=require('node:fs/promises'),path=require('node:path'),http=require('node:http'),assert=require('node:assert/strict');
 const root=__dirname;
@@ -17,7 +18,7 @@ const dailyScores=(cells)=>{
  await new Promise(r=>server.listen(0,'127.0.0.1',r));
  let browser;
  try{
- browser=await chromium.launch({headless:true,executablePath:process.env.BINGO_BROWSER_PATH||'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'});
+ browser=await chromium.launch({headless:true,...browserOptions()});
  const context=await browser.newContext({reducedMotion:'reduce'});
  const page=await context.newPage();let today='2026-10-05',enabled=true,signedIn=true,profileName='Testaren',cells={},repeat=[],queries=[],bonusClaims={},isAdmin=false;
  const state=()=>({enabled,board,completed_cells:cells,repeat_dates:repeat,activity_dates:[...new Set([...Object.values(cells),...repeat])].sort(),daily_scores:dailyScores(cells),score:score(cells),today});
@@ -46,7 +47,7 @@ const dailyScores=(cells)=>{
    }
    return {data:{result:null,bonus_points:bonusClaims[args.p_date]??null,challenge:challenges.get(args.p_date)||challenge},error:null};
   }
-  if(name==='get_activity_feed'){
+  if(name==='get_activity_feed'||name==='get_kudos_activity_feed'){
    const events=[...Object.keys(cells).reverse().map(index=>({display_name:'Testaren',activity_type:'bingo_cell',activity_label:board[Number(index)].description,multiplier:null,event_at:'2026-10-05T10:00:00Z'})),{display_name:'En annan',activity_type:'bingo_full',multiplier:null,event_at:'2026-10-05T09:59:00Z'},{display_name:'En annan',activity_type:'bingo_row',multiplier:null,event_at:'2026-10-05T09:58:00Z'},{display_name:'Förra passet',activity_type:'completed',multiplier:2,event_at:'2026-10-04T12:00:00Z'},{display_name:'Lång aktivitet',activity_type:'bingo_cell',activity_label:board[23].description,multiplier:null,event_at:'2026-10-05T09:57:00Z'}];
    return{data:events.slice(args.p_offset||0,(args.p_offset||0)+(args.p_limit||4)),error:null};
   }
@@ -65,7 +66,7 @@ const dailyScores=(cells)=>{
  await page.route('**/api/config',r=>r.fulfill({json:{supabaseUrl:'https://fixture.invalid',supabasePublishableKey:'fixture-only'}}));
  await page.route('https://cdn.jsdelivr.net/**',r=>r.fulfill({contentType:'application/javascript',body:`window.supabase={createClient:()=>({auth:{getSession:()=>window.fixtureSession(),onAuthStateChange:()=>({data:{subscription:{unsubscribe(){}}}})},from:(table)=>{const args=[];let single=false;const q=new Proxy({}, {get:(_,name)=>name==='then'?((resolve,reject)=>window.fixtureQuery(table,args,single).then(resolve,reject)):((...a)=>{args.push([name,...a]);if(name==='maybeSingle'||name==='single')single=true;return q;})});return q;},rpc:(name,args)=>window.fixtureRPC(name,args)})};` }));
  await page.clock.install({time:new Date('2026-10-05T12:00:00+02:00')});
- await page.addInitScript(()=>{const d=new Intl.DateTimeFormat('sv-SE',{timeZone:'Europe/Stockholm'}).format(new Date());localStorage.setItem('soberoktober-trump-quote-seen',d);});
+ await page.addInitScript(()=>{const d=new Intl.DateTimeFormat('sv-SE',{timeZone:'Europe/Stockholm'}).format(new Date());localStorage.setItem('soberoktober-trump-quote-seen-date',d);});
  page.on('dialog',dialog=>dialog.accept());
  for(const width of [320,390,768,1440]){
   await page.setViewportSize({width,height:950});await page.goto('http://127.0.0.1:'+server.address().port+'/');
@@ -89,7 +90,8 @@ const dailyScores=(cells)=>{
   assert.equal(await page.locator('#bonus-description').innerText(),'Promenera');
   assert.equal(await page.locator('#bonus-value').innerText(),'+1 poäng');
   assert.match(await page.locator('#competition-bingo .bingo-rules').innerText(),/rad ger 3 extra.*ytterligare 20.*Max 82/);
-  await page.waitForFunction(()=>document.querySelectorAll('#activity-preview-list .activity-item').length===4);
+  try { await page.waitForFunction(()=>document.querySelectorAll('#activity-preview-list .activity-item').length===4); }
+  catch (error) { console.error({errors, activity: await page.locator('#activity-preview-list').innerText()}); throw error; }
   assert.match(await page.locator('#activity-preview-list').innerText(),/hela bingobrickan/);
   assert.deepEqual(await page.locator('#competition-bingo .bingo-cell-copy').allTextContents(),board.map(t=>t.description));
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true,'Overflow '+width);
