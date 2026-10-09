@@ -11,6 +11,7 @@ Baseline: production/main `e5eef879de421724616baec460f48f3e06371242`.
 - Added stale-response protection to elimination notifications after logout/account switching.
 - Removed retired bulk-entry CSS; retained the `bulk-copy` style still used by corrections.
 - Added npm test commands, pinned Playwright dependency/lockfile and a read-only GitHub Actions test workflow. No deploy action or credentials are required by CI.
+- CI caught a pre-existing 320px admin heading overflow with its Linux fallback font. The heading now scales down on screens at or below 360px; the regression includes text/control overflow diagnostics.
 
 ## Validation
 
@@ -24,6 +25,6 @@ Tests do not perform real Google OAuth or writes to production Supabase. The opt
 
 ## Release state
 
-Changes are committed on local `main` for review and uploaded to an isolated Vercel preview. Remote `main` is not pushed, since the existing Git integration publishes that branch. Production remains on the baseline commit until explicitly approved.
+The isolated Vercel preview was approved for production on October 9. The maintenance release is published through GitHub `main`. Live checks cover both domains, runtime asset parity, signed-out entry/rules at all four widths and the key feature routes; no JavaScript page errors or Vercel runtime errors were found. No participant data was modified by these checks. The original local maintenance commit is retained on `checkpoint-maintenance-1d5fff3`.
 
 Further controller splitting can be done incrementally with future features; this pass keeps the current static frontend architecture.
