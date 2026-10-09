@@ -4,7 +4,43 @@
   if (!inboxButton || !window.SoberActivity) return;
   const badge = document.getElementById('kudos-unread-count');
   let client, userId, currentDialog, pollTimer, refreshing = false, refreshPending = false;
+  let unreadCount = 0, authRevision = 0, notificationTimer, pagePaused = false;
+  const automaticVisits = new Set();
   const sent = new Set();
+
+  function visitKey() {
+    const day = new Intl.DateTimeFormat('sv-SE', { timeZone: 'Europe/Stockholm',
+      year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
+    return `${userId}:${day}`;
+  }
+
+  function notificationBlocked() {
+    return pagePaused || document.hidden || currentDialog?.open
+      || document.body.classList.contains('entry-active')
+      || document.getElementById('app-shell')?.inert
+      || document.querySelector('#auth-overlay.open, #trump-quote-overlay:not([hidden]), #elimination-overlay:not([hidden]), dialog[open]');
+  }
+
+  function scheduleNotification() {
+    if (notificationTimer != null || pagePaused) return;
+    // Queue behind login/onboarding, elimination and weekly-report dialogs.
+    notificationTimer = setTimeout(() => {
+      notificationTimer = null;
+      if (!userId || !unreadCount || automaticVisits.has(visitKey()) || notificationBlocked()) return;
+      openInbox(true);
+    }, 0);
+  }
+
+  function setUser(nextId) {
+    if (nextId === userId) return;
+    authRevision++;
+    sent.clear();
+    unreadCount = 0;
+    badge.textContent = '';
+    currentDialog?.close();
+    userId = nextId;
+    inboxButton.hidden = !userId;
+  }
 
   function element(tag, className, text) {
     const node = document.createElement(tag);
@@ -125,27 +161,31 @@
   }
 
   async function refreshInbox() {
-    if (!client || document.hidden) return;
+    if (!client || document.hidden || pagePaused) return;
     if (refreshing) { refreshPending = true; return; }
     refreshing = true;
     try {
+      const revision = authRevision;
       const { data: authData, error: authError } = await client.auth.getSession();
+      if (revision !== authRevision) return;
       if (authError) throw authError;
       const nextId = authData.session?.user.id || null;
-      if (nextId !== userId) { sent.clear(); currentDialog?.close(); }
-      userId = nextId;
+      setUser(nextId);
       inboxButton.hidden = !userId;
       if (!userId) { badge.textContent = ''; return; }
       const owner = userId;
+      const ownerRevision = authRevision;
       const { data, error } = await client.rpc('get_my_kudos_unread_count');
-      if (owner !== userId) return;
+      if (owner !== userId || ownerRevision !== authRevision) return;
       if (error) {
         if (['PGRST202', '42883'].includes(error.code)) inboxButton.hidden = true;
         return;
       }
       const count = Number(data) || 0;
+      unreadCount = count;
       badge.textContent = count ? String(count) : '';
       inboxButton.setAttribute('aria-label', count ? `Dina kudos, ${count} nya` : 'Dina kudos');
+      scheduleNotification();
     } catch (_) {
       // Keep the feed usable when the notification request fails.
     } finally {
@@ -154,10 +194,11 @@
     }
   }
 
-  async function openInbox() {
+  async function openInbox(automatic = false) {
     if (!userId) return;
     const owner = userId;
-    const box = dialog('Lite pepp till dig 👏', inboxButton);
+    automaticVisits.add(visitKey());
+    const box = dialog(automatic ? 'Du har fått kudos 👏' : 'Lite pepp till dig 👏', inboxButton);
     box.append(element('p', 'kudos-hint', 'Dina kudos och hälsningar är bara för dig.'));
     const list = element('ol', 'kudos-inbox-list');
     const status = element('p', 'kudos-status', 'Laddar dina kudos…');
@@ -206,22 +247,35 @@
     load();
   }
 
-  inboxButton.addEventListener('click', openInbox);
+  inboxButton.addEventListener('click', () => openInbox());
   document.addEventListener('soberoktober:activity-auth', event => {
-    if (userId !== event.detail.userId) {
-      currentDialog?.close();
-      sent.clear();
-      badge.textContent = '';
-      inboxButton.hidden = true;
-    }
-    userId = event.detail.userId;
+    setUser(event.detail.userId);
     refreshInbox();
   });
+  // Attribute-only observation ignores feed text updates and confetti nodes.
+  const observer = new MutationObserver(scheduleNotification);
+  const observe = () => observer.observe(document.body, {
+    subtree: true, attributes: true, attributeFilter: ['hidden', 'open', 'class', 'inert'],
+  });
+  observe();
   document.addEventListener('visibilitychange', () => {
     clearInterval(pollTimer);
     if (!document.hidden) { refreshInbox(); pollTimer = setInterval(refreshInbox, 30000); }
   });
-  window.addEventListener('pagehide', () => clearInterval(pollTimer));
+  window.addEventListener('pagehide', () => {
+    pagePaused = true;
+    clearInterval(pollTimer);
+    clearTimeout(notificationTimer);
+    notificationTimer = null;
+    observer.disconnect();
+  });
+  window.addEventListener('pageshow', event => {
+    if (!event.persisted) return;
+    pagePaused = false;
+    observe();
+    refreshInbox();
+    pollTimer = setInterval(refreshInbox, 30000);
+  });
   window.SoberKudos = { attachButton };
   window.SoberActivity.createClient().then(async readyClient => {
     client = readyClient;
