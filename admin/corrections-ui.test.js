@@ -32,7 +32,8 @@ try{
   await page.setViewportSize({width,height:950});await page.goto('http://127.0.0.1:'+server.address().port+'/admin/');
   await page.locator('#correction-user').selectOption('qa-user');
   await page.locator('#correction-details').waitFor({state:'visible'});
-  assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'overflow '+width);
+  const layout=await page.evaluate(()=>({width:innerWidth,scrollWidth:document.documentElement.scrollWidth,overflow:[...document.querySelectorAll('body *')].filter(el=>{const rect=el.getBoundingClientRect();return rect.width&& (rect.left<0||rect.right>innerWidth);}).map(el=>({tag:el.tagName,id:el.id,className:el.className,width:el.getBoundingClientRect().width,right:el.getBoundingClientRect().right}))}));
+  assert(layout.scrollWidth<=layout.width,'overflow '+width+': '+JSON.stringify(layout));
   await page.locator('#correction-form').screenshot({path:path.join(require('node:os').tmpdir(),'sober-correction-'+width+'.png')});
  }
  await page.locator('#correction-level').selectOption('2');
