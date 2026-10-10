@@ -714,7 +714,7 @@
         competitionStatus = await window.SoberOctoberEliminations?.refresh(client, session.user.id, profile.display_name) || null;
         await refreshLeaderboard();
       });
-      window.SoberOctoberTomorrow?.init(client, stockholmDate);
+      window.SoberOctoberStepPreview?.init(publicClient);
       await Promise.all([loadTodayChallenge(), loadRegistered()]);
       const { data, error } = await client.auth.getSession();
       if (error) throw error;

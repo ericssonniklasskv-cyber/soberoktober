@@ -14,7 +14,7 @@
   <link rel="stylesheet" href="/styles/kudos.css">
   <link rel="stylesheet" href="/styles/weekly-report-popup.css">
   <link rel="stylesheet" href="/styles/elimination.css">
-  <link rel="stylesheet" href="/styles/tomorrow.css">
+  <link rel="stylesheet" href="/styles/home-step-leaderboard.css">
   <link rel="stylesheet" href="/styles/bingo.css?v=header-link-1">
   <link rel="stylesheet" href="/styles/daily-bonus.css?v=1">
 </head>
@@ -97,11 +97,11 @@
           <h1 id="page-title">Sober<br><span>Oktober</span></h1>
           <div class="progress-wrap" aria-label="Oktobers framsteg"><div class="progress-meta"><span id="progress-day">Snart kör vi</span><span id="progress-percent">0%</span></div><div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div></div>
         </section>
-        <aside class="tomorrow-preview hero-registered" id="tomorrow-preview" aria-label="Morgondagens pass">
-          <details id="tomorrow-details">
-            <summary><span class="tomorrow-kicker">Ett steg före</span><span class="tomorrow-invitation">Klicka här för en sneak peek på morgondagens pass</span><span class="tomorrow-toggle" aria-hidden="true">Visa morgondagen <b>↗</b></span></summary>
-            <div class="tomorrow-content" id="tomorrow-content" aria-live="polite"></div>
-          </details>
+        <aside class="home-step-preview hero-registered" id="home-step-preview" aria-labelledby="home-step-title">
+          <div class="home-step-head"><span aria-hidden="true">👟</span><h2 id="home-step-title">Stegtopplista</h2></div>
+          <p class="home-step-copy">Viktat snitt · steg per dag</p>
+          <ol class="home-step-list" id="home-step-list" tabindex="0" aria-label="Deltagarnas stegsnitt" aria-live="polite"><li class="home-step-empty">Laddar stegtopplistan…</li></ol>
+          <a class="home-step-link" href="/stegtavling/#step-leaderboard-title">Se hela stegtopplistan →</a>
         </aside>
       <aside class="leaderboard-preview hero-leaderboard-preview" aria-label="Topplista, topp 5">
         <div class="leaderboard-preview-head"><span class="leaderboard-preview-icon" aria-hidden="true">♛</span><h2 class="leaderboard-preview-title">Topplista</h2></div>
@@ -275,7 +275,7 @@
   <script src="/min-oktober/history-logic.js" defer></script>
   <script src="/min-oktober/report-seen.js" defer></script>
   <script src="/weekly-report-popup.js" defer></script>
-  <script src="/tomorrow-preview.js" defer></script>
+  <script src="/home/step-leaderboard.js" defer></script>
   <script src="/bonus-client.js?v=1" defer></script>
   <script src="/home/participants.js" defer></script>
   <script src="/auth.js?v=daily-bonus-1" defer></script>
