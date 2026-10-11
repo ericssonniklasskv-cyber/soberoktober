@@ -52,6 +52,7 @@
     else startPolling();
   });
   document.addEventListener('soberoktober:bingo-saved', refresh);
+  window.addEventListener('roulette-result-changed', refresh);
   document.addEventListener('soberoktober:activity-auth', () => {
     revision++;
     // Clear personalized controls immediately when the session changes.

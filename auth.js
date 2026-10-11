@@ -235,7 +235,7 @@
     currentTodayBonus = bonusClaims.find((claim) => claim.challenge_date === today) || null;
     const totalPoints = results.reduce((total, result) => total + Number(result.points || 0), 0)
       + bonusClaims.reduce((total, claim) => total + Number(claim.points || 0), 0);
-    ui.dailyResult.textContent = currentTodayResult ? (currentTodayResult.kind === 'bingo' ? 'Bingo' : `${currentTodayResult.multiplier}×`) : 'Inte registrerat';
+    ui.dailyResult.textContent = currentTodayResult ? (currentTodayResult.kind === 'roulette' ? 'Spinn The Wheel' : currentTodayResult.kind === 'bingo' ? 'Bingo' : `${currentTodayResult.multiplier}×`) : 'Inte registrerat';
     ui.dailyPoints.textContent = `${pointsFormatter.format(currentTodayResult ? Number(currentTodayResult.points) : 0)} poäng`;
     ui.dailyBonus.hidden = !currentChallenge?.bonus_description;
     ui.dailyBonus.textContent = ui.dailyBonus.hidden
@@ -263,17 +263,19 @@
   }
 
   async function loadResults() {
-    const [resultsResponse, bonusResponse, bingoResponse] = await Promise.all([
+    const [resultsResponse, bonusResponse, bingoResponse, rouletteResponse] = await Promise.all([
       client.from('daily_results').select('result_date, multiplier, points, completed_parts').order('result_date', { ascending: true }),
       client.from('daily_bonus_claims').select('challenge_date, points').order('challenge_date', { ascending: true }),
       profile?.display_name ? client.rpc('my_competition_bingo') : Promise.resolve({ data: null, error: null }),
+      client.from('roulette_daily_scores').select('result_date, points, completed_workouts'),
     ]);
     if (resultsResponse.error) throw resultsResponse.error;
     if (bonusResponse.error) throw bonusResponse.error;
     if (bingoResponse.error) throw bingoResponse.error;
+    if (rouletteResponse.error) throw rouletteResponse.error;
     window.SoberOctoberBingo.setState(bingoResponse.data);
     const logic = window.SoberOctoberCompetition;
-    renderResults(logic.mergeResults(resultsResponse.data || [], bingoResponse.data), logic.normalBonus(bonusResponse.data || [], bingoResponse.data));
+    renderResults(window.SoberRouletteLive.mergeResults(logic.mergeResults(resultsResponse.data || [], bingoResponse.data), rouletteResponse.data || []), logic.normalBonus(bonusResponse.data || [], bingoResponse.data));
   }
 
   async function loadTodayChallenge() {
@@ -351,6 +353,7 @@
   }
 
   async function saveDailyResult(multiplier) {
+    if (window.SoberRouletteLive?.replacesToday(stockholmDate())) { ui.saveStatus.textContent = 'Den här veckan registrerar du passen i Spinn The Wheel.'; return; }
     if (window.SoberOctoberBingo?.active()) { ui.saveStatus.textContent = 'Den här veckan registrerar du aktiviteter i bingot.'; return; }
     if (!validMultipliers.has(multiplier)) return;
 
@@ -652,6 +655,7 @@
       ui.saveStatus.textContent = 'Poängen kunde inte laddas. Ladda om sidan för att försöka igen.';
     }
     await Promise.all([refreshLeaderboard(), loadRegistered()]);
+    await window.SoberRouletteUI?.refresh?.();
     closeModal();
   });
 
@@ -715,6 +719,7 @@
         await refreshLeaderboard();
       });
       window.SoberOctoberStepPreview?.init(publicClient);
+      await window.SoberRouletteUI?.init(client, config);
       await Promise.all([loadTodayChallenge(), loadRegistered()]);
       const { data, error } = await client.auth.getSession();
       if (error) throw error;
@@ -736,5 +741,13 @@
     }
   }
 
+  window.addEventListener('roulette-result-changed', async () => {
+    if (!session?.user?.id) return;
+    try {
+      await loadResults();
+      competitionStatus = await window.SoberOctoberEliminations?.refresh(client, session.user.id, profile?.display_name) || null;
+      await refreshLeaderboard();
+    } catch { ui.saveStatus.textContent = 'Passet är sparat. Ladda om för att uppdatera summeringen.'; }
+  });
   init();
 })();

@@ -1,0 +1,115 @@
+-- Local database only: execute inside BEGIN/ROLLBACK, including the test clock.
+create temporary table roulette_checks(label text);
+grant insert,select on roulette_checks to authenticated;
+create function pg_temp.check_roulette(ok boolean,label text) returns void language plpgsql as $$
+begin if ok is distinct from true then raise exception 'FAILED: %',label; end if;
+insert into roulette_checks values(label); end; $$;
+create function pg_temp.action(action text,payload jsonb default '{}',day date default '2026-10-12') returns jsonb language sql as $$
+select public.my_training_roulette(action,day,payload||jsonb_build_object('revision',public.my_training_roulette('get',day)->'revision')); $$;
+insert into auth.users(id) values ('77777777-1111-4111-8111-111111111111'),('77777777-2222-4222-8222-222222222222');
+insert into public.profiles(id,email,display_name,auto_elimination_recheck_after) values
+('77777777-1111-4111-8111-111111111111','roulette-one@example.invalid','Roulette QA One','2026-10-11'),
+('77777777-2222-4222-8222-222222222222','roulette-two@example.invalid','Roulette QA Two','2026-10-11');
+select set_config('request.jwt.claims','{"sub":"77777777-1111-4111-8111-111111111111","role":"authenticated"}',true);
+create or replace function private.roulette_clock() returns timestamptz language sql stable set search_path='' as $$select timestamptz '2026-10-12 00:00:59+02';$$;
+set local role authenticated;
+select pg_temp.check_roulette(not(public.my_training_roulette()->>'active')::boolean,'Closed before 00:01 Stockholm');
+do $$begin
+begin perform pg_temp.action('draw','{"category":"strength"}');raise exception 'Early draw accepted';exception when insufficient_privilege then null;end;
+begin perform * from private.roulette_accounts;raise exception 'Private state exposed';exception when insufficient_privilege then null;end;
+begin perform * from private.roulette_catalog;raise exception 'Private catalog exposed';exception when insufficient_privilege then null;end;
+end;$$;
+reset role;
+create or replace function private.roulette_clock() returns timestamptz language sql stable set search_path='' as $$select timestamptz '2026-10-12 00:01:00+02';$$;
+set local role authenticated;
+select pg_temp.check_roulette((public.my_training_roulette()->>'active')::boolean,'Open at 00:01 Stockholm');
+select pg_temp.action('draw','{"category":"strength"}');
+do $$begin
+begin perform public.my_training_roulette('draw','2026-10-12','{"category":"strength","revision":0}');raise exception 'Stale draw accepted';exception when serialization_failure then null;end;
+end;$$;
+select pg_temp.action('draw','{"category":"cardio","slot":"extra:0"}');
+select pg_temp.action('draw','{"category":"mobility","slot":"extra:1"}');
+select pg_temp.action('start');
+select pg_temp.action('complete');
+select pg_temp.check_roulette((select completed_workouts=3 and points between 6 and 12 from public.roulette_daily_scores),'Three optional-checklist workouts score once');
+select pg_temp.check_roulette(public.my_training_roulette()->'state'->'days'->'2026-10-12'->'checkedSteps'='[]','Completing does not fill checklist');
+do $$begin
+begin perform pg_temp.action('draw','{"category":"strength"}');raise exception 'Fourth workout accepted';exception when insufficient_privilege then null;end;
+begin insert into public.daily_results(user_id,result_date,multiplier) values(auth.uid(),'2026-10-12',1);raise exception 'Old daily result accepted';exception when insufficient_privilege then null;end;
+begin update public.roulette_daily_scores set points=12;raise exception 'Client-controlled points';exception when insufficient_privilege then null;end;
+end;$$;
+select pg_temp.action('undo');
+select pg_temp.check_roulette((select count(*)=0 from public.roulette_daily_scores),'Undo removes current score');
+select pg_temp.action('complete');
+select pg_temp.check_roulette((select completed_workouts=3 from public.roulette_daily_scores),'Recompletion cannot duplicate workouts');
+reset role;
+select pg_temp.check_roulette(private.competition_day_complete('77777777-1111-4111-8111-111111111111','2026-10-12'),'Roulette completion prevents a missed day');
+select pg_temp.check_roulette((select total_points=(select points from public.roulette_daily_scores where user_id='77777777-1111-4111-8111-111111111111') from public.get_leaderboard() where display_name='Roulette QA One'),'Leaderboard counts exactly the roulette score');
+delete from private.roulette_accounts where user_id='77777777-1111-4111-8111-111111111111';
+delete from public.roulette_daily_scores where user_id='77777777-1111-4111-8111-111111111111';
+set local role authenticated;
+select pg_temp.action('draw','{"category":"strength"}');
+do $$begin for i in 1..5 loop perform pg_temp.action('draw','{"category":"strength"}'); end loop;
+begin perform pg_temp.action('draw','{"category":"strength"}');raise exception 'Sixth paid reroll accepted';exception when insufficient_privilege then null;end;
+end;$$;
+select pg_temp.action('complete');
+select pg_temp.action('draw','{"category":"cardio"}');
+select pg_temp.action('draw','{"category":"mobility","slot":"extra:0"}');
+select pg_temp.action('complete');
+select pg_temp.check_roulette((select completed_workouts=3 from public.roulette_daily_scores),'1+2 rounds share the daily cap');
+select pg_temp.check_roulette((public.my_training_roulette()->'state'->'days'->'2026-10-12'->>'rerolls')::integer=5,'Free category switches preserve the exhausted budget');
+reset role;
+create or replace function private.roulette_clock() returns timestamptz language sql stable set search_path='' as $$select timestamptz '2026-10-13 12:00:00+02';$$;
+set local role authenticated;
+select pg_temp.action('draw','{"category":"strength"}','2026-10-13');
+do $$begin
+begin perform pg_temp.action('draw','{"category":"strength"}','2026-10-12');raise exception 'Yesterday draw accepted';exception when insufficient_privilege then null;end;
+begin perform pg_temp.action('draw','{"category":"strength"}','2026-10-14');raise exception 'Future draw accepted';exception when invalid_parameter_value then null;end;
+end;$$;
+reset role;
+select set_config('request.jwt.claims','{"sub":"77777777-2222-4222-8222-222222222222","role":"authenticated"}',true);
+create or replace function private.roulette_clock() returns timestamptz language sql stable set search_path='' as $$select timestamptz '2026-10-12 13:00:00+02';$$;
+set local role authenticated;
+select pg_temp.check_roulette((select count(*)=0 from public.roulette_daily_scores),'Other accounts cannot read scores');
+select pg_temp.check_roulette(public.my_training_roulette()->'state'->'days'='{}','Other accounts cannot read saved rounds');
+select pg_temp.action('draw','{"category":"mobility"}');
+reset role;
+create or replace function private.roulette_clock() returns timestamptz language sql stable set search_path='' as $$select timestamptz '2026-10-13 13:00:00+02';$$;
+set local role authenticated;
+select pg_temp.action('complete');
+select pg_temp.check_roulette((select completed_workouts=1 from public.roulette_daily_scores),'Yesterday saved workout can complete the next day');
+reset role;
+create or replace function private.roulette_clock() returns timestamptz language sql stable set search_path='' as $$select timestamptz '2026-10-14 13:00:00+02';$$;
+set local role authenticated;
+do $$begin begin perform pg_temp.action('undo');raise exception 'Two-day-old edit accepted';exception when insufficient_privilege then null;end;end;$$;
+reset role;
+select private.apply_elimination('77777777-2222-4222-8222-222222222222','Alkohol');
+create or replace function private.roulette_clock() returns timestamptz language sql stable set search_path='' as $$select timestamptz '2026-10-13 13:00:00+02';$$;
+set local role authenticated;
+do $$begin
+begin perform pg_temp.action('undo');raise exception 'Alcohol-eliminated undo accepted';exception when insufficient_privilege then null;end;
+begin perform pg_temp.action('complete');raise exception 'Alcohol-eliminated completion accepted';exception when insufficient_privilege then null;end;
+begin perform pg_temp.action('draw','{"category":"strength"}','2026-10-13');raise exception 'Alcohol-eliminated draw accepted';exception when insufficient_privilege then null;end;
+end;$$;
+select pg_temp.check_roulette((select completed_workouts=1 from public.roulette_daily_scores),'Alcohol elimination cannot change saved roulette score');
+reset role;
+select set_config('request.jwt.claims','{"sub":"77777777-1111-4111-8111-111111111111","role":"authenticated"}',true);
+create or replace function private.roulette_clock() returns timestamptz language sql stable set search_path='' as $$select timestamptz '2026-10-18 13:00:00+02';$$;
+set local role authenticated;
+select pg_temp.action('draw','{"category":"strength"}','2026-10-18');
+reset role;
+create or replace function private.roulette_clock() returns timestamptz language sql stable set search_path='' as $$select timestamptz '2026-10-19 13:00:00+02';$$;
+set local role authenticated;
+select pg_temp.action('complete','{}','2026-10-18');
+select pg_temp.check_roulette((select completed_workouts=1 from public.roulette_daily_scores where result_date='2026-10-18'),'Sunday saved workout can complete on Monday');
+do $$begin begin perform pg_temp.action('draw','{"category":"strength"}','2026-10-18');raise exception 'Post-week draw accepted';exception when insufficient_privilege then null;end;end;$$;
+reset role;
+create or replace function private.roulette_clock() returns timestamptz language sql stable set search_path='' as $$select timestamptz '2026-10-20 00:00:00+02';$$;
+set local role authenticated;
+select pg_temp.check_roulette(not(public.my_training_roulette('get','2026-10-18')->>'active')::boolean,'Editing window closes after Monday');
+do $$begin begin perform pg_temp.action('undo','{}','2026-10-18');raise exception 'Expired edit accepted';exception when insufficient_privilege then null;end;end;$$;
+reset role;
+set local role anon;
+do $$begin begin perform public.my_training_roulette();raise exception 'Anonymous roulette access accepted';exception when insufficient_privilege then null;end;end;$$;
+reset role;
+select label from roulette_checks;

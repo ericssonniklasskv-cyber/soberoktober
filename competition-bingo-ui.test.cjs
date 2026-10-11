@@ -37,7 +37,8 @@ const dailyScores=(cells)=>{
   return {data,error:null};
  });
  await page.exposeFunction('fixtureRPC',(name,args={})=>{
-  if(name==='self_daily_result'){
+  if(name==='my_training_roulette')return {data:{state:{version:4,date:'2026-10-12',category:'strength',days:{}},revision:0,active:true,today:'2026-10-12'},error:null};
+ if(name==='self_daily_result'){
    const before=bonusClaims[args.p_date]??null;
    if(args.p_action==='save'){
     assert.equal(args.p_payload.multiplier,null,'Bonus never registers a workout');
@@ -146,7 +147,8 @@ const dailyScores=(cells)=>{
  await page.locator('#history-calendar .calendar-day').nth(4).click();await page.locator('#bingo-day-detail').waitFor({state:'visible'});assert.equal(await page.locator('#bingo-day-detail .bingo-cell').count(),25);await page.locator('#bingo-day-detail .bingo-cell').nth(2).click();await page.waitForFunction(()=>document.querySelector('#bingo-day-detail .bingo-stats').textContent.includes('3 poäng'));await page.locator('#bingo-day-bonus-button:not([disabled])').waitFor();await page.locator('#bingo-day-bonus-button').click();await page.waitForFunction(()=>document.querySelector('#bingo-day-bonus-button').getAttribute('aria-pressed')==='true');assert.equal(bonusClaims['2026-10-05'],1);await page.locator('#bingo-day-bonus-button').click();await page.waitForFunction(()=>document.querySelector('#bingo-day-bonus-button').getAttribute('aria-pressed')==='false');await page.locator('#bingo-day-detail .bingo-dialog-close').click();
  assert.equal(await page.locator('#history-calendar .day-result').nth(4).textContent(),'Bingo');
  await page.locator('.weekly-report-action').first().click();await page.locator('#weekly-bingo-report').waitFor({state:'visible'});assert.match(await page.locator('#weekly-bingo-report').innerText(),/2 rutor.*3 bingopoäng/s);await page.locator('#report-detail-close').click();
- today='2026-10-12';await page.clock.setFixedTime(new Date('2026-10-12T00:00:00+02:00'));await page.goto('http://127.0.0.1:'+server.address().port+'/');await page.locator('#score-summary').waitFor({state:'visible'});assert.equal(await page.locator('#dagens-pass').isVisible(),true);assert.equal(await page.locator('#competition-bingo').isVisible(),false);
+ today='2026-10-12';await page.clock.setFixedTime(new Date('2026-10-12T00:00:00+02:00'));await page.goto('http://127.0.0.1:'+server.address().port+'/');await page.locator('#training-roulette').waitFor({state:'hidden'});assert.equal(await page.locator('#dagens-pass').isVisible(),false,'Old daily card never returns on October 12');assert.equal(await page.locator('#competition-bingo').isVisible(),false);
+ await page.clock.setFixedTime(new Date('2026-10-12T00:01:00+02:00'));await page.reload();await page.locator('#training-roulette').waitFor({state:'visible'});await page.locator('#score-summary').waitFor({state:'visible'});assert.equal(await page.locator('#dagens-pass').isVisible(),false,'Roulette replaces daily workout at launch');
  today='2026-10-05';enabled=false;await page.clock.setFixedTime(new Date('2026-10-05T12:00:00+02:00'));await page.reload();await page.locator('#score-summary').waitFor({state:'visible'});assert.equal(await page.locator('#competition-bingo').isVisible(),false);
  enabled=true;profileName=null;await page.reload();await page.locator('#auth-onboarding').waitFor({state:'visible'});await page.locator('#display-name').fill('Ny deltagare');await page.locator('#name-form button[type=submit]').click();await page.locator('#competition-bingo').waitFor({state:'visible'});await page.locator('#auth-onboarding').waitFor({state:'hidden'});assert.equal(await page.locator('#dagens-pass').isVisible(),false,'Onboarding immediately activates own bingo');
  isAdmin=true;profileName='Admin';today='2026-10-05';await page.clock.setFixedTime(new Date('2026-10-05T12:00:00+02:00'));

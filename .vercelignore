@@ -1,0 +1,13 @@
+.env*
+.git/
+.vercel-linked-backup/
+.local-backups/
+node_modules/
+scripts/
+supabase/
+qa/
+**/*.test.js
+**/*.test.cjs
+**/*.test.mjs
+**/README.md
+LOCAL_DEVELOPMENT.md

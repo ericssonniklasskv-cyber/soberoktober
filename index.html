@@ -17,6 +17,7 @@
   <link rel="stylesheet" href="/styles/home-step-leaderboard.css">
   <link rel="stylesheet" href="/styles/bingo.css?v=header-link-1">
   <link rel="stylesheet" href="/styles/daily-bonus.css?v=1">
+  <link rel="stylesheet" href="/roulette/roulette.css">
 </head>
 <body class="page-home entry-active">
   <section class="entry-gate" id="entry-gate" aria-labelledby="entry-title">
@@ -112,6 +113,12 @@
       </aside>
       </div>
       <div class="challenge-layout">
+      <section class="challenge-card roulette-launch-card" id="training-roulette" aria-labelledby="roulette-invite" hidden>
+        <p class="challenge-label">Dagens pass</p>
+        <button class="roulette-invite" id="open-roulette" type="button" aria-haspopup="dialog" aria-controls="roulette-dialog"><strong id="roulette-invite">Klicka här för att få vara med i Dagens Spinn The Wheel!</strong><span aria-hidden="true">↗</span></button>
+        <p id="roulette-launch-summary">Välj kondition, styrka eller rörlighet. Ditt pass väntar ett snurr bort.</p>
+        <small class="roulette-local-note">Lokal testversion · nästa veckas tema</small>
+      </section>
       <section class="challenge-card" id="dagens-pass" aria-labelledby="challenge-title">
         <div class="feedback" id="feedback" role="status" aria-live="polite">
           <span class="feedback-icon" aria-hidden="true">✓</span>
@@ -192,6 +199,100 @@
       </div>
     </section>
   </div>
+  <dialog class="roulette-feature roulette-dialog" id="roulette-dialog" aria-labelledby="roulette-dialog-title">
+    <header class="roulette-modal-head"><div><p class="kicker">Dagens Spinn The Wheel!</p><h2 id="roulette-dialog-title" tabindex="-1">Vad är herrn sugen på för pass idag?</h2></div><button id="close-roulette" class="roulette-close" type="button" aria-label="Stäng Dagens Spinn The Wheel!">×</button><nav class="roulette-navigation" aria-label="Tillbaka i träningsvyn"><button id="back-to-categories" class="subtle-button" type="button" hidden>← Välj annan kategori</button><button id="return-result" class="subtle-button" type="button" hidden>← Tillbaka till min runda</button><button id="back-from-checklist" class="subtle-button" type="button" hidden>← Tillbaka till passen</button></nav></header>
+    <section id="access-panel" class="access-panel" aria-live="polite">
+      <div id="loading-state"><p>Laddar ditt pass…</p></div>
+      <div id="signed-out-state" hidden><h3>Logga in för att snurra</h3><button id="roulette-login" class="complete-button" type="button">Logga in</button></div>
+      <div id="error-state" hidden><p id="load-error"></p><button id="retry-load" type="button">Försök igen</button></div>
+    </section>
+    <div id="sandbox" hidden>
+
+      <section id="category-step"><p id="selection-caption">Välj den träning du känner för idag.</p>
+          <p class="category-prompt">Du kan välja mellan</p>
+          <div class="category-picker" role="group" aria-label="Träningskategori">
+            <div class="category-choice"><button class="category-option" type="button" data-category="strength" aria-pressed="true"><span class="category-icon" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 11v10M9 8v16M23 8v16M27 11v10M9 16h14"/></svg></span><span><strong>Styrka</strong><small>Bygg lite pannben.</small></span></button></div>
+            <div class="category-choice"><button class="category-option" type="button" data-category="cardio" aria-pressed="false"><span class="category-icon" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18h6l4-10 6 18 4-11h6"/></svg></span><span><strong>Kondition</strong><small>Höj pulsen, tack.</small></span></button></div>
+            <div class="category-choice"><button class="category-option" type="button" data-category="mobility" aria-pressed="false"><span class="category-icon" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="16" cy="6" r="3"/><path d="M16 11v10M6 16l10-3 10 3M16 21l-9 6M16 21l9 6"/></svg></span><span><strong>Rörlighet</strong><small>Väck din inre yogi.</small></span></button></div>
+          </div>
+      </section>
+
+      <section class="roulette-category-intro" id="category-intro" hidden><p id="category-intro-message" tabindex="-1" role="status" aria-live="polite"></p></section>
+
+      <div class="roulette-layout" id="wheel-step" hidden>
+          <section class="wheel-stage" aria-labelledby="wheel-title">
+            <div class="wheel-stage-head"><div><p class="stage-kicker">Ditt öde för dagen</p><h2 id="wheel-title">Styrka</h2></div><span class="stage-date" id="stage-date">12 oktober</span></div>
+            <div id="wheel-play">
+              <div class="wheel-frame" aria-hidden="true">
+                <span class="wheel-pointer"></span>
+                <svg class="wheel-svg" id="roulette-wheel" viewBox="0 0 500 500"><g id="wheel-segments"></g></svg>
+                <div class="wheel-hub"><span>SO</span><small>LYCKA TILL</small></div>
+                <span class="roulette-spin-flash" id="spin-flash" aria-hidden="true" hidden></span>
+                <span class="wheel-star star-one">✦</span><span class="wheel-star star-two">✳</span>
+              </div>
+              <div class="wheel-controls">
+                <div class="wheel-legend" aria-label="Svårighetsgrader"><span><i class="calm"></i>Lugn · 2 p</span><span><i class="steady"></i>Medel · 3 p</span><span><i class="spicy"></i>Utmaning · 4 p</span></div>
+                <button class="spin-button" id="spin-button" type="button"><span aria-hidden="true">↻</span> Snurra fram mitt pass</button>
+                <p class="spin-caption" id="spin-caption">Ett gratis första snurr per dag. Lite tur hjälper.</p>
+                <p class="spin-status" id="spin-status" role="status" aria-live="polite"></p>
+              </div>
+            </div>
+            <div class="roulette-winner" id="wheel-winner" hidden>
+              <div class="winner-message">
+                <span class="winner-star" aria-hidden="true">✦</span>
+                <p class="winner-kicker">Grattis, du har vunnit!</p>
+                <h3 id="winner-title" tabindex="-1"></h3>
+                <p class="winner-meta" id="winner-meta"></p>
+                <span class="roulette-spin-flash roulette-result-flash" id="winner-flash" aria-hidden="true" hidden></span>
+              </div>
+              <button class="spin-button" id="continue-result" type="button">Visa mitt pass →</button>
+            </div>
+          </section>
+      </div>
+      <section id="result-card" class="roulette-result" tabindex="-1" aria-labelledby="result-title" hidden>
+        <h3 id="result-title" hidden>Din träningsrunda</h3>
+        <p id="round-meta" class="round-meta"></p>
+        <div id="combined-workouts" class="combined-workouts"></div>
+        <div class="round-actions">
+          <button id="show-checklist" class="checklist-open" type="button"><span><strong>Starta träningsrundan</strong><small>En checklista för dina moment</small></span><span aria-hidden="true">→</span></button>
+          <button id="combine-button" class="combine-button" type="button">Kombinera med ett pass till · 1/3 pass valda <span aria-hidden="true">＋</span></button>
+          <p id="result-feedback" class="result-feedback" role="status" aria-live="polite"></p>
+        </div>
+      </section>
+      <section id="checklist-view" class="roulette-checklist" aria-labelledby="roulette-dialog-title" hidden>
+        <div class="checklist-toolbar">
+          <div class="checklist-progress-heading"><strong id="checklist-progress-text" tabindex="-1" role="status" aria-live="polite">0 moment klara</strong><span id="checklist-meta"></span></div>
+          <progress id="checklist-progress" max="1" value="0" aria-labelledby="checklist-progress-text"></progress>
+        </div>
+        <p class="checklist-intro">Använd checklistan om du vill hålla koll på momenten. Du kan klarmarkera rundan utan att bocka i något.</p>
+        <div id="checklist-workouts" class="checklist-workouts"></div>
+        <div class="checklist-finish">
+          <p id="checklist-hint"></p>
+          <button id="checklist-complete" class="complete-button" type="button" aria-pressed="false" disabled>✓ Jag har klarat hela rundan</button>
+          <p id="checklist-feedback" class="result-feedback" role="status" aria-live="polite"></p>
+        </div>
+        <span class="roulette-spin-flash roulette-result-flash" id="checklist-flash" aria-hidden="true" hidden></span>
+      </section>
+      <section id="completed-view" class="roulette-completed" aria-labelledby="completed-title" hidden>
+        <span class="completed-star" aria-hidden="true">✓</span>
+        <h3 id="completed-title" tabindex="-1">Snyggt jobbat!</h3>
+        <p id="completed-points" class="completed-points"></p>
+        <p id="completed-meta"></p>
+        <p id="completed-limit"></p>
+        <button id="completed-home" class="complete-button" type="button">Till startsidan</button>
+        <button id="new-round-button" class="combine-button" type="button">Snurra en ny runda <span aria-hidden="true">↻</span></button>
+        <button id="review-round" class="subtle-button" type="button">Visa min genomförda runda</button>
+        <button id="undo-completion" class="subtle-button" type="button">Ångra klarmarkering</button>
+        <p id="completed-feedback" class="result-feedback" role="status" aria-live="polite"></p>
+        <span class="roulette-spin-flash roulette-result-flash" id="completed-flash" aria-hidden="true" hidden></span>
+      </section>
+      <button id="cancel-extra" class="subtle-button" type="button" hidden>← Tillbaka till mina pass</button>
+      <p id="previous-points" class="roulette-credit-note" hidden></p>
+      <p class="roulette-credit-note"><span id="free-spin-count">5/5</span> frispinn kvar denna vecka · <span id="roulette-identity"></span></p>
+      <details class="roulette-test-tools"><summary>Testvecka och testpoäng</summary><p>12–18 oktober · exempelpass och testpoäng</p><div class="week-days" id="week-days"></div><p><strong id="week-points">0</strong> testpoäng · <span id="week-completed">0 av 7 dagar</span></p><button id="reset-test" class="reset-test" type="button">Nollställ mitt test</button></details>
+      <p id="storage-status" class="storage-status" role="status" aria-live="polite"></p>
+    </div>
+  </dialog>
   <div class="auth-overlay" id="auth-overlay" aria-hidden="true">
     <section class="auth-panel" role="dialog" aria-modal="true" aria-labelledby="auth-title">
       <button class="auth-close" id="auth-close" type="button" aria-label="Stäng">×</button>
@@ -270,6 +371,7 @@
   <script src="/aktivitet/activity-preview.js?v=bingo-feed-1" defer></script>
   <script src="/elimination.js" defer></script>
   <script src="/min-oktober/challenge-logic.js" defer></script>
+  <script src="/roulette/live-logic.js" defer></script>
   <script src="/bingo-logic.js?v=daily-bonus-1" defer></script>
   <script src="/bingo-ui.js" defer></script>
   <script src="/min-oktober/history-logic.js" defer></script>
@@ -278,6 +380,8 @@
   <script src="/home/step-leaderboard.js" defer></script>
   <script src="/bonus-client.js?v=1" defer></script>
   <script src="/home/participants.js" defer></script>
+  <script src="/roulette/roulette-logic.js" defer></script>
+  <script src="/roulette/roulette.js" defer></script>
   <script src="/auth.js?v=daily-bonus-1" defer></script>
   <script src="/mohv-egg.js" defer></script>
   <script src="/trump-quote.js" defer></script>

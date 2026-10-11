@@ -95,6 +95,7 @@
   }
 
   function completedChallengeDescription(challenge, result) {
+    if (result?.kind === 'roulette') return 'Dagens Spinn The Wheel';
     if (result?.kind === 'bingo') return 'Träningsbingo';
     if (!challenge) return 'Passinformationen saknas';
     const logic = window.SoberOctoberChallengeLogic;
@@ -175,6 +176,11 @@
   bingoDialog.addEventListener('close', () => { bingoBonusRequest += 1; });
   async function openDetail(day) {
     if (bingoBonusBusy) return;
+    if (window.SoberRouletteLive.isDate(day.date)) {
+      // Saved rounds are shown in the roulette itself, never as the old 1×/2×/3× editor.
+      location.href = '/?roulette-date=' + encodeURIComponent(day.date);
+      return;
+    }
     if (bingoState?.enabled && window.SoberOctoberCompetition.isBingoDate(day.date)) {
       document.querySelector('#bingo-day-title').textContent = formatDate(day.date);
       window.SoberOctoberBingo.mount(bingoDialog.querySelector('.bingo-editor'), day.date);
@@ -193,7 +199,7 @@
     ui.detailDate.textContent = formatDate(day.date);
     ui.detailTitle.textContent = challengesByDate.get(day.date)?.title || 'Dagens pass';
     ui.detailDescription.textContent = '';
-    ui.detailLevel.textContent = day.result ? (day.result.kind === 'bingo' ? 'Bingo' : `${day.result.multiplier}×`) : 'Inte registrerat';
+    ui.detailLevel.textContent = day.result ? (day.result.kind === 'roulette' ? 'Spinn The Wheel' : day.result.kind === 'bingo' ? 'Bingo' : `${day.result.multiplier}×`) : 'Inte registrerat';
     ui.detailPoints.textContent = day.result ? `${pointsFormatter.format(Number(day.result.points))} poäng` : '–';
     ui.detailBonus.hidden = true;
     ui.detail.showModal();
@@ -309,7 +315,7 @@
       const result = document.createElement('span');
       result.className = 'day-result';
       result.textContent = day.state === 'completed'
-        ? (day.result.kind === 'bingo' ? 'Bingo' : `${day.result.multiplier}×`)
+        ? (day.result.kind === 'roulette' ? 'Spinn The Wheel' : day.result.kind === 'bingo' ? 'Bingo' : `${day.result.multiplier}×`)
         : (day.state === 'missed' ? 'Missad' : (day.date === today ? 'Idag' : 'Senare'));
       cell.append(result);
 
@@ -320,7 +326,7 @@
         cell.append(points);
         const challenge = challengesByDate.get(day.date);
         const bonus = bonusClaimsByDate.get(day.date);
-        cell.setAttribute('aria-label', `${formatDate(day.date)}, genomförd ${day.result.kind === 'bingo' ? 'bingo' : `${day.result.multiplier} gånger`}, ${pointsFormatter.format(Number(day.result.points))} poäng${bonus ? `, ${pointsFormatter.format(Number(bonus.points))} bonuspoäng` : ''}, ${completedChallengeDescription(challenge, day.result)}`);
+        cell.setAttribute('aria-label', `${formatDate(day.date)}, genomförd ${day.result.kind === 'roulette' ? 'Spinn The Wheel' : day.result.kind === 'bingo' ? 'bingo' : `${day.result.multiplier} gånger`}, ${pointsFormatter.format(Number(day.result.points))} poäng${bonus ? `, ${pointsFormatter.format(Number(bonus.points))} bonuspoäng` : ''}, ${completedChallengeDescription(challenge, day.result)}`);
       } else {
         cell.setAttribute('aria-label', `${formatDate(day.date)}, ${day.state === 'missed' ? 'missad' : 'framtida'}`);
       }
@@ -352,7 +358,7 @@
     ui.historyStatus.textContent = '';
     const today = stockholmDate();
     const reportPlacementsAvailable = today >= window.SoberOctoberCalendar.OCTOBER_END;
-    const [resultsResponse, challengesResponse, stepResultsResponse, bonusClaimsResponse, profileResponse, trainingLeaderboardResponse, stepLeaderboardResponse, bingoResponse] = await Promise.all([
+    const [resultsResponse, challengesResponse, stepResultsResponse, bonusClaimsResponse, profileResponse, trainingLeaderboardResponse, stepLeaderboardResponse, bingoResponse, rouletteResponse] = await Promise.all([
       client
         .from('daily_results')
         .select('result_date, multiplier, points, completed_parts')
@@ -384,6 +390,7 @@
       reportPlacementsAvailable ? client.rpc('get_leaderboard') : Promise.resolve({ data: [], error: null }),
       reportPlacementsAvailable ? client.rpc('get_step_leaderboard') : Promise.resolve({ data: [], error: null }),
       client.rpc('my_competition_bingo'),
+      client.from('roulette_daily_scores').select('result_date, points, completed_workouts'),
     ]);
 
     if (resultsResponse.error) throw resultsResponse.error;
@@ -393,7 +400,8 @@
     if (bingoResponse.error) throw bingoResponse.error;
     bingoState = bingoResponse.data;
     window.SoberOctoberBingo.setState(bingoState);
-    const results = window.SoberOctoberCompetition.mergeResults(resultsResponse.data || [], bingoState);
+    if (rouletteResponse.error) throw rouletteResponse.error;
+    const results = window.SoberRouletteLive.mergeResults(window.SoberOctoberCompetition.mergeResults(resultsResponse.data || [], bingoState), rouletteResponse.data || []);
     const challenges = challengesResponse.data || [];
     if (bonusClaimsResponse.error) throw bonusClaimsResponse.error;
     const bonusClaims = window.SoberOctoberCompetition.normalBonus(bonusClaimsResponse.data || [], bingoState);

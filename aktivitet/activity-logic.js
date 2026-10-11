@@ -29,6 +29,10 @@
     }
     if (item.activity_type === 'bingo_row') return `${name} fick en hel bingorad!`;
     if (item.activity_type === 'bingo_full') return `${name} klarade hela bingobrickan!`;
+    if (item.activity_type === 'roulette_pass') {
+      const label = String(item.activity_label || '').trim();
+      return label ? `${name} klarade Spinn The Wheel: ${label}` : '';
+    }
     const level = Number(item.multiplier);
     if (![1, 2, 3].includes(level)) return '';
     return item.activity_type === 'upgraded'

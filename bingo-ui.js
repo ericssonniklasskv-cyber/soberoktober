@@ -88,13 +88,14 @@
   function syncMain() {
     const main = document.querySelector('#competition-bingo');
     if (!main) return;
-    const shown = logic.active(data?.enabled);
+    const rouletteShown = window.SoberRouletteLive?.replacesToday(dateToday());
+    const shown = !rouletteShown && logic.active(data?.enabled);
     main.hidden = !shown;
-    document.querySelector('#dagens-pass').hidden = shown;
-    const workoutNav = document.querySelector('.main-nav a[href="#dagens-pass"], .main-nav a[href="#competition-bingo"]');
+    document.querySelector('#dagens-pass').hidden = shown || Boolean(rouletteShown);
+    const workoutNav = document.querySelector('.main-nav a[href="#dagens-pass"], .main-nav a[href="#competition-bingo"], .main-nav a[href="#training-roulette"]');
     if (workoutNav) {
-      workoutNav.href = shown ? '#competition-bingo' : '#dagens-pass';
-      workoutNav.textContent = shown ? 'Dagens bingo' : 'Dagens pass';
+      workoutNav.href = rouletteShown ? '#training-roulette' : shown ? '#competition-bingo' : '#dagens-pass';
+      workoutNav.textContent = rouletteShown ? 'Spinn The Wheel' : shown ? 'Dagens bingo' : 'Dagens pass';
     }
     if (shown) mount(main.querySelector('.bingo-editor'), dateToday());
   }
