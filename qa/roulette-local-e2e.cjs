@@ -56,7 +56,32 @@ const root = path.resolve(__dirname, '..');
     assert.equal(await page.locator('#competition-bingo').isVisible(),false);
     assert.equal(await page.locator('.main-nav a[href="#training-roulette"]').textContent(),'Spinn The Wheel');
     await page.locator('#weekly-release-close').click();
+    await page.locator('#roulette-steps').click();
+    await page.waitForFunction(()=>document.querySelector('#roulette-steps').getAttribute('aria-pressed')==='true');
+    let stepState=await rpc(one.session,'my_training_roulette');
+    assert.deepEqual(stepState.state.steps,['2026-10-12']);
+    const stepScores=()=>localRequest(stack.api+'/rest/v1/roulette_daily_scores?select=*',{headers:{...headers,Authorization:'Bearer '+one.session.access_token}});
+    assert.equal((await stepScores())[0].points,1);
+    assert.equal((await stepScores())[0].completed_workouts,0);
+    const stepShots=await fs.mkdtemp(path.join(tmpdir(),'roulette-steps-e2e-'));
+    for(const width of [320,390,1440]) {
+      await page.setViewportSize({width,height:900});
+      await page.waitForFunction(()=>document.documentElement.scrollWidth<=innerWidth);
+      await page.locator('#training-roulette').screenshot({path:path.join(stepShots,'steps-'+width+'.png')});
+    }
+    await page.setViewportSize({width:1440,height:900});
+    assert.equal(Number((await rpc(one.session,'get_leaderboard')).find(e=>e.display_name==='Roulette E2E One').total_points),1);
+    await page.waitForFunction(()=>document.querySelector('#activity-preview-list').textContent.includes('10 000 steg'));
+    const stepHistory=await context.newPage();await stepHistory.clock.install({time:new Date('2026-10-12T12:00:00+02:00')});
+    await stepHistory.goto(origin+'/min-oktober/');await stepHistory.locator('#history-state').waitFor({state:'visible'});
+    assert((await stepHistory.locator('body').innerText()).includes('10 000 steg'));await stepHistory.close();
     await page.locator('#open-roulette').click();
+    await page.locator('#roulette-steps-view').waitFor({state:'visible'});
+    assert.equal(await page.locator('#category-step').isVisible(),false);
+    await page.locator('#roulette-undo-steps').click();
+    await page.locator('#category-step').waitFor({state:'visible'});
+    assert.equal((await stepScores()).length,0);
+    assert.equal((await rpc(two.session,'get_kudos_activity_feed')).some(e=>e.activity_type==='roulette_steps'&&e.display_name==='Roulette E2E One'),false);
     async function draw(category) {
       await page.locator('[data-category="'+category+'"]').click();
       await page.locator('#spin-button').waitFor({state:'visible'});
@@ -68,6 +93,17 @@ const root = path.resolve(__dirname, '..');
     await draw('strength');
     await page.locator('#show-checklist').click();
     const check=page.locator('[data-check-step]').first();await check.check();
+    const pending=await rpc(one.session,'my_training_roulette');
+    await page.locator('#close-roulette').click();await page.locator('#roulette-steps').click();
+    await page.waitForFunction(()=>document.querySelector('#roulette-steps').getAttribute('aria-pressed')==='true');
+    const marked=await rpc(one.session,'my_training_roulette');
+    assert.deepEqual(marked.state.days,pending.state.days,'Steps keep pending workouts/checks');
+    await assert.rejects(()=>rpc(one.session,'my_training_roulette',{p_action:'complete',p_date:'2026-10-12',p_payload:{revision:marked.revision}}),/Klicka ur/);
+    await page.locator('#roulette-steps').click();
+    await page.waitForFunction(()=>document.querySelector('#roulette-steps').getAttribute('aria-pressed')==='false');
+    await page.locator('#open-roulette').click();
+    await page.locator('#checklist-view').waitFor({state:'visible'});
+    assert.equal(await page.locator('[data-check-step]:checked').count(),1);
     await page.locator('#checklist-complete').click();
     await page.locator('#completed-view').waitFor({state:'visible'});
     const first=await rpc(one.session,'my_training_roulette');
@@ -75,6 +111,7 @@ const root = path.resolve(__dirname, '..');
     const other=await rpc(two.session,'my_training_roulette');assert.deepEqual(other.state.days,{});
     const scores=()=>localRequest(stack.api+'/rest/v1/roulette_daily_scores?select=*',{headers:{...headers,Authorization:'Bearer '+one.session.access_token}});
     assert.equal((await scores())[0].completed_workouts,1);
+    assert.equal(await page.locator('#roulette-steps').isDisabled(),true);
     await page.locator('#new-round-button').click();await draw('cardio');
     await page.locator('#combine-button').click();await draw('mobility');
     await page.locator('#show-checklist').click();
@@ -108,6 +145,14 @@ const root = path.resolve(__dirname, '..');
     assert((await second.locator('body').innerText()).includes('Spinn The Wheel'));
     await second.close();
     // Simultaneous callers share a single revision and cannot get two independent draws.
+    const beforeRace=await rpc(two.session,'my_training_roulette');
+    const race=await Promise.allSettled([
+      rpc(two.session,'my_training_roulette',{p_action:'steps',p_date:'2026-10-12',p_payload:{checked:true,revision:beforeRace.revision}}),
+      rpc(two.session,'my_training_roulette',{p_action:'draw',p_date:'2026-10-12',p_payload:{category:'strength',revision:beforeRace.revision}})
+    ]);
+    assert.equal(race.filter(r=>r.status==='fulfilled').length,1,'Steps/draw race accepts one revision');
+    const raced=await rpc(two.session,'my_training_roulette');
+    if(raced.state.steps?.includes('2026-10-12')) await rpc(two.session,'my_training_roulette',{p_action:'steps',p_date:'2026-10-12',p_payload:{checked:false,revision:raced.revision}});
     const start=await rpc(two.session,'my_training_roulette');
     const concurrent=await Promise.allSettled([0,1].map(()=>rpc(two.session,'my_training_roulette',{p_action:'draw',p_date:'2026-10-12',p_payload:{category:'strength',revision:start.revision}})));
     assert.equal(concurrent.filter(result=>result.status==='fulfilled').length,1);
@@ -128,6 +173,7 @@ const root = path.resolve(__dirname, '..');
     assert.equal(await boundary.locator('#dagens-pass').isVisible(),false);
     await boundary.close();
     assert.deepEqual(errors,[]);
+    console.log('Step alternative/screenshots: '+stepShots);
     console.log('PASS: real local Auth → roulette RPC → server state → points/leaderboard/history/feed; 1+2 daily cap, optional checks, reload, responsive UI, account isolation, concurrent draw rejection, yesterday completion and automatic midnight/00:01 transition without the old workout. Screenshots: '+shots);
   } catch (error) {
     if(page) console.error('UI feedback:',await page.locator('#checklist-feedback,#storage-status,#completed-feedback,#spin-status').allTextContents());

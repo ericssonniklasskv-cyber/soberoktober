@@ -1,0 +1,50 @@
+-- Run on the local database inside BEGIN/ROLLBACK only.
+create function pg_temp.assert_steps(ok boolean,label text) returns void language plpgsql as $$begin if ok is distinct from true then raise exception 'FAILED: %',label; end if; raise notice 'PASS: %',label; end;$$;
+create function pg_temp.steps_action(action text,payload jsonb default '{}',day date default '2026-10-12') returns jsonb language sql as $$select public.my_training_roulette(action,day,payload||jsonb_build_object('revision',public.my_training_roulette('get',day)->'revision'));$$;
+insert into auth.users(id) values ('88888888-1111-4111-8111-111111111111'),('88888888-2222-4222-8222-222222222222');
+insert into public.profiles(id,email,display_name,auto_elimination_recheck_after) values
+('88888888-1111-4111-8111-111111111111','steps-one@example.invalid','Steps QA One','2026-10-11'),
+('88888888-2222-4222-8222-222222222222','steps-two@example.invalid','Steps QA Two','2026-10-11');
+select set_config('request.jwt.claims','{"sub":"88888888-1111-4111-8111-111111111111","role":"authenticated"}',true);
+create or replace function private.roulette_clock() returns timestamptz language sql stable set search_path='' as $$select timestamptz '2026-10-12 00:00:59+02';$$;
+set local role authenticated;
+do $$begin begin perform pg_temp.steps_action('steps','{"checked":true}');raise exception 'Early steps accepted';exception when insufficient_privilege then null;end;end;$$;
+reset role;
+create or replace function private.roulette_clock() returns timestamptz language sql stable set search_path='' as $$select timestamptz '2026-10-12 12:00:00+02';$$;
+set local role authenticated;
+select pg_temp.steps_action('steps','{"checked":true}');
+select pg_temp.steps_action('steps','{"checked":true}');
+select pg_temp.assert_steps((select count(*)=1 and max(points)=1 and max(completed_workouts)=0 from public.roulette_daily_scores),'Repeated step claim gives exactly one point');
+do $$begin
+begin perform pg_temp.steps_action('draw','{"category":"strength"}');raise exception 'Roulette draw alongside steps';exception when insufficient_privilege then null;end;
+begin perform public.my_training_roulette('steps','2026-10-12','{"checked":false,"revision":0}');raise exception 'Stale undo';exception when serialization_failure then null;end;
+end;$$;
+reset role;
+select pg_temp.assert_steps(private.competition_day_complete('88888888-1111-4111-8111-111111111111','2026-10-12'),'Step day prevents a missed day');
+select pg_temp.assert_steps((select total_points=1 from public.get_leaderboard() where display_name='Steps QA One'),'Leaderboard includes the one point');
+select pg_temp.assert_steps((select count(*)=1 from private.kudos_feed_events() where user_id='88888888-1111-4111-8111-111111111111' and activity_type='roulette_steps'),'One active step activity event');
+set local role authenticated;
+select pg_temp.steps_action('steps','{"checked":false}');
+select pg_temp.assert_steps((select count(*)=0 from public.roulette_daily_scores),'Uncheck removes point');
+select pg_temp.steps_action('draw','{"category":"strength"}');
+select pg_temp.steps_action('steps','{"checked":true}');
+select pg_temp.assert_steps(public.my_training_roulette()->'state'->'days'->'2026-10-12'->>'taskId' is not null,'Pending workout kept');
+do $$begin begin perform pg_temp.steps_action('complete');raise exception 'Double credit';exception when insufficient_privilege then null;end;end;$$;
+select pg_temp.steps_action('steps','{"checked":false}');
+select pg_temp.steps_action('complete');
+do $$begin begin perform pg_temp.steps_action('steps','{"checked":true}');raise exception 'Steps after completed roulette';exception when insufficient_privilege then null;end;end;$$;
+select pg_temp.assert_steps((select points between 2 and 4 and completed_workouts=1 from public.roulette_daily_scores),'Uncheck allows normal roulette score');
+reset role;
+select set_config('request.jwt.claims','{"sub":"88888888-2222-4222-8222-222222222222","role":"authenticated"}',true);
+set local role authenticated;
+select pg_temp.assert_steps((select count(*)=0 from public.roulette_daily_scores),'Owner-only score access');
+reset role;
+create or replace function private.roulette_clock() returns timestamptz language sql stable set search_path='' as $$select timestamptz '2026-10-13 12:00:00+02';$$;
+set local role authenticated;
+select pg_temp.steps_action('steps','{"checked":true}','2026-10-12');
+select pg_temp.assert_steps((select points=1 from public.roulette_daily_scores),'Yesterday can be recorded too');
+reset role;
+select private.apply_elimination('88888888-2222-4222-8222-222222222222','Alkohol');
+set local role authenticated;
+do $$begin begin perform pg_temp.steps_action('steps','{"checked":true}','2026-10-13');raise exception 'Alcohol exclusion bypassed';exception when insufficient_privilege then null;end;end;$$;
+reset role;

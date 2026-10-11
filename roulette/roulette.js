@@ -51,6 +51,10 @@
     $('#access-panel').hidden = false; $('#sandbox').hidden = true; $('.roulette-navigation').hidden = true;
     accessStates.forEach(name => $('#' + name).hidden = name !== id);
     state = null; storageKey = null;
+    document.querySelector('#roulette-steps').disabled = id === 'loading-state';
+    document.querySelector('#roulette-steps').setAttribute('aria-pressed', 'false');
+    document.querySelector('#roulette-steps-label').textContent = 'Hoppar Spinn the wheel men har gått 10 000 steg idag - 1 poäng';
+    document.querySelector('#roulette-steps-status').textContent = '';
     if (feature.open && id === 'signed-out-state') feature.close();
   }
   function persist(next) {
@@ -89,7 +93,7 @@
       }
       state = R.restore(data.state); revision = data.revision; liveToday = data.today;
       $('#storage-status').textContent = '';
-      if (action === 'complete' || action === 'undo') window.dispatchEvent(new Event('roulette-result-changed'));
+      if (action === 'complete' || action === 'undo' || action === 'steps') window.dispatchEvent(new Event('roulette-result-changed'));
       return true;
     } catch (error) {
       if (token === epoch && state === optimistic) state = before;
@@ -282,7 +286,7 @@
       button.type = 'button'; button.dataset.date = date; button.disabled = busy;
       if (live) button.hidden = date !== liveToday && date !== window.SoberOctoberCalendar.shiftDate(liveToday, -1);
       button.setAttribute('aria-pressed', String(date === state.date));
-      button.append(node('span', Number(date.slice(-2)) + ' okt'), node('strong', R.dayPoints(item) ? R.dayPoints(item) + ' p' : item ? 'Lottat' : '–'));
+      button.append(node('span', Number(date.slice(-2)) + ' okt'), node('strong', (state.steps || []).includes(date) ? '1 p · steg' : R.dayPoints(item) ? R.dayPoints(item) + ' p' : item ? 'Lottat' : '–'));
       return button;
     }));
     const progress = day ? R.checklistSummary(day) : null;
@@ -306,6 +310,23 @@
       while (text.nextNode()) text.currentNode.nodeValue = text.currentNode.nodeValue.replace(/testpoäng/g, 'poäng');
       document.querySelector('#roulette-invite').textContent = document.querySelector('#roulette-invite').textContent.replace(/testpoäng/g, 'poäng');
       document.querySelector('#roulette-launch-summary').textContent = document.querySelector('#roulette-launch-summary').textContent.replace(/testpoäng/g, 'poäng');
+    }
+    const stepsSelected = (state.steps || []).includes(state.date);
+    const pastDate = live && state.date !== liveToday;
+    const stepsReadOnly = live && (!window.SoberRouletteLive.active() || state.date < window.SoberOctoberCalendar.shiftDate(liveToday, -1));
+    const stepButton = document.querySelector('#roulette-steps');
+    stepButton.setAttribute('aria-pressed', String(stepsSelected));
+    stepButton.disabled = busy || stepsReadOnly || R.dayPoints(day) > 0;
+    document.querySelector('#roulette-steps-label').textContent = stepsSelected ? '10 000 steg registrerade - 1 poäng · klicka för att ångra' : 'Hoppar Spinn the wheel men har gått 10 000 steg ' + (pastDate ? dateLabel(state.date) : 'idag') + ' - 1 poäng';
+    document.querySelector('#roulette-steps-status').textContent = R.dayPoints(day) > 0 ? 'Du har valt roulette för den här dagen.' : stepsSelected ? 'Stegen är dagens val. Klicka ur dem för att köra roulette istället.' : '';
+    $('#roulette-steps-view').hidden = !stepsSelected;
+    $('#roulette-undo-steps').disabled = busy || stepsReadOnly;
+    if (stepsSelected) {
+      ['#category-step','#category-intro','#wheel-step','#result-card','#checklist-view','#completed-view'].forEach(id => $(id).hidden = true);
+      $('.roulette-navigation').hidden = true;
+      $('#roulette-dialog-title').textContent = 'Dagens steg är klara';
+      document.querySelector('#roulette-invite').textContent = '10 000 steg är klara · 1 poäng!';
+      document.querySelector('#roulette-launch-summary').textContent = 'Klicka ur stegen ovanför om du vill köra Spinn The Wheel istället.';
     }
     updateHeaderHeight();
   }
@@ -362,6 +383,23 @@
     if (state && phase === 'completed') $('#completed-title').focus({ preventScroll: true });
     if (state && phase === 'choose') $('#roulette-dialog-title').focus({ preventScroll: true });
   });
+  async function toggleSteps() {
+    if (busy) return;
+    if (!state || !session) { document.querySelector('#auth-trigger')?.click(); return; }
+    if (!updateFromStorage()) return;
+    const checked = !(state.steps || []).includes(state.date);
+    try {
+      if (await saveOperation('steps', { checked }, () => R.setSteps(state, checked))) {
+        phase = resumePhase(); render();
+        if (feature.open) $('#roulette-dialog-title').focus({preventScroll:true});
+      }
+    } catch (error) {
+      document.querySelector('#roulette-steps-status').textContent = error.message;
+      $('#roulette-steps-feedback').textContent = error.message;
+    }
+  }
+  document.querySelector('#roulette-steps').addEventListener('click', toggleSteps);
+  $('#roulette-undo-steps').addEventListener('click', toggleSteps);
   $('#close-roulette').addEventListener('click', () => feature.close());
   feature.addEventListener('close', () => {
     cancelSpin(); document.body.classList.remove('roulette-modal-open');

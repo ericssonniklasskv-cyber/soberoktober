@@ -95,7 +95,7 @@
   }
 
   function completedChallengeDescription(challenge, result) {
-    if (result?.kind === 'roulette') return 'Dagens Spinn The Wheel';
+    if (result?.kind === 'roulette') return result.completed_workouts === 0 ? '10 000 steg istället för Spinn The Wheel' : 'Dagens Spinn The Wheel';
     if (result?.kind === 'bingo') return 'Träningsbingo';
     if (!challenge) return 'Passinformationen saknas';
     const logic = window.SoberOctoberChallengeLogic;
@@ -199,7 +199,7 @@
     ui.detailDate.textContent = formatDate(day.date);
     ui.detailTitle.textContent = challengesByDate.get(day.date)?.title || 'Dagens pass';
     ui.detailDescription.textContent = '';
-    ui.detailLevel.textContent = day.result ? (day.result.kind === 'roulette' ? 'Spinn The Wheel' : day.result.kind === 'bingo' ? 'Bingo' : `${day.result.multiplier}×`) : 'Inte registrerat';
+    ui.detailLevel.textContent = day.result ? (day.result.kind === 'roulette' ? (day.result.completed_workouts === 0 ? '10 000 steg' : 'Spinn The Wheel') : day.result.kind === 'bingo' ? 'Bingo' : `${day.result.multiplier}×`) : 'Inte registrerat';
     ui.detailPoints.textContent = day.result ? `${pointsFormatter.format(Number(day.result.points))} poäng` : '–';
     ui.detailBonus.hidden = true;
     ui.detail.showModal();
@@ -315,7 +315,7 @@
       const result = document.createElement('span');
       result.className = 'day-result';
       result.textContent = day.state === 'completed'
-        ? (day.result.kind === 'roulette' ? 'Spinn The Wheel' : day.result.kind === 'bingo' ? 'Bingo' : `${day.result.multiplier}×`)
+        ? (day.result.kind === 'roulette' ? (day.result.completed_workouts === 0 ? '10 000 steg' : 'Spinn The Wheel') : day.result.kind === 'bingo' ? 'Bingo' : `${day.result.multiplier}×`)
         : (day.state === 'missed' ? 'Missad' : (day.date === today ? 'Idag' : 'Senare'));
       cell.append(result);
 
@@ -326,7 +326,7 @@
         cell.append(points);
         const challenge = challengesByDate.get(day.date);
         const bonus = bonusClaimsByDate.get(day.date);
-        cell.setAttribute('aria-label', `${formatDate(day.date)}, genomförd ${day.result.kind === 'roulette' ? 'Spinn The Wheel' : day.result.kind === 'bingo' ? 'bingo' : `${day.result.multiplier} gånger`}, ${pointsFormatter.format(Number(day.result.points))} poäng${bonus ? `, ${pointsFormatter.format(Number(bonus.points))} bonuspoäng` : ''}, ${completedChallengeDescription(challenge, day.result)}`);
+        cell.setAttribute('aria-label', `${formatDate(day.date)}, genomförd ${day.result.kind === 'roulette' ? (day.result.completed_workouts === 0 ? '10 000 steg' : 'Spinn The Wheel') : day.result.kind === 'bingo' ? 'bingo' : `${day.result.multiplier} gånger`}, ${pointsFormatter.format(Number(day.result.points))} poäng${bonus ? `, ${pointsFormatter.format(Number(bonus.points))} bonuspoäng` : ''}, ${completedChallengeDescription(challenge, day.result)}`);
       } else {
         cell.setAttribute('aria-label', `${formatDate(day.date)}, ${day.state === 'missed' ? 'missad' : 'framtida'}`);
       }

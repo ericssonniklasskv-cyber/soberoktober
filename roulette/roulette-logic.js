@@ -265,6 +265,10 @@
       // The retired +1 bonus is not included in this prototype's totals.
       state.days[date] = target;
     }
+    if (raw.steps !== undefined) {
+      if (!Array.isArray(raw.steps) || new Set(raw.steps).size !== raw.steps.length || raw.steps.some(date => !DATES.includes(date) || dayPoints(state.days[date]) > 0)) throw Error('Ogiltiga stegdagar.');
+      state.steps = [...raw.steps];
+    }
     if (usedSpins(state) > FREE_SPINS) throw Error('För många frispinn i testdata. Nollställ testet.');
     return state;
   }
@@ -289,6 +293,7 @@
     return drawHistory(state.days[state.date], slot)[category] ? 1 : 0;
   }
   function checkDraw(state, category, slot, random) {
+    if ((state.steps || []).includes(state.date)) throw Error('Klicka ur dina 10 000 steg först.');
     if (!Number.isFinite(random) || random < 0 || random >= 1) throw Error('Ogiltigt slumpvärde.');
     const cost = spinCost(state, category, slot);
     if (cost && remaining(state) <= 0) throw Error('Veckans fem frispinn är slut. Välj en kategori du inte har snurrat idag.');
@@ -372,6 +377,7 @@
   }
   const plannedPoints = day => taskIds(day).reduce((total, id) => total + LEVELS[getTask(id).level].points, 0);
   function toggleCompleted(state) {
+    if ((state.steps || []).includes(state.date)) throw Error('Klicka ur dina 10 000 steg först.');
     const next = clone(state), day = next.days[next.date];
     if (!day) throw Error('Snurra fram ett pass först.');
     if (!day.completed && archivedWorkouts(day) + taskIds(day).length > MAX_WORKOUTS) throw Error('Du kan göra högst tre pass per dag.');
@@ -384,11 +390,18 @@
   function dayPoints(day) {
     return completedRounds(day).reduce((sum, round) => sum + plannedPoints(round), 0);
   }
+  function setSteps(state, checked) {
+    if (typeof checked !== 'boolean' || (checked && dayPoints(state.days[state.date]) > 0)) throw Error('Välj antingen steg eller roulette.');
+    const next = clone(state);
+    next.steps = (next.steps || []).filter(date => date !== state.date);
+    if (checked) next.steps.push(state.date);
+    return next;
+  }
   function summary(state) {
     const days = Object.values(state.days), completed = days.flatMap(completedRounds);
     const workoutPoints = completed.reduce((sum, round) => sum + plannedPoints(round), 0);
-    return { days: days.filter(day => completedRounds(day).length).length, workoutPoints,
-      total: workoutPoints, remaining: remaining(state) };
+    return { days: days.filter(day => completedRounds(day).length).length + (state.steps || []).length, workoutPoints,
+      total: workoutPoints + (state.steps || []).length, remaining: remaining(state) };
   }
   // Segment 0 is centered at 12 o'clock. The fixed pointer must land on the chosen task.
   function landingRotation(current, index, turns = 5, count = 8) {
@@ -397,5 +410,5 @@
     const offset = ((target - (current % 360)) % 360 + 360) % 360;
     return current + turns * 360 + offset;
   }
-  return { VERSION, FREE_SPINS, MAX_WORKOUTS, DATES, CATEGORIES, LEVELS, TASKS, fresh, restore, getTask, categoryFor, taskIds, taskEntries, slotTaskId, checklistItems, checklistNotes, checklistSummary, startTraining, setStepChecked, nextExtraSlot, archivedWorkouts, completedWorkouts, canStartRound, remaining, spinCost, availableTasks, changeDate, chooseCategory, spin, combine, replaceExtra, rerollExtra, removeExtra, plannedPoints, dayPoints, toggleCompleted, summary, landingRotation };
+  return { VERSION, FREE_SPINS, MAX_WORKOUTS, DATES, CATEGORIES, LEVELS, TASKS, fresh, restore, getTask, categoryFor, taskIds, taskEntries, slotTaskId, checklistItems, checklistNotes, checklistSummary, startTraining, setStepChecked, nextExtraSlot, archivedWorkouts, completedWorkouts, canStartRound, remaining, spinCost, availableTasks, changeDate, chooseCategory, spin, combine, replaceExtra, rerollExtra, removeExtra, plannedPoints, dayPoints, toggleCompleted, setSteps, summary, landingRotation };
 });

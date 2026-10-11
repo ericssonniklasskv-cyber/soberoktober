@@ -42,3 +42,5 @@ npm run test:ui
 `supabase/roulette-rollback-tests.sql` ska köras mot lokal databas inom `BEGIN`/`ROLLBACK`. Det prövar behörigheter, tider, frispinn, poäng och dagsgräns utan att lämna testdata.
 
 Se [releaseunderlaget](../qa/spin-wheel-release.md) för migration, produktionens historikskillnader, godkännande och återställning. Använd inte gamla lokala restore-skript på releasebranchen: de skriver över nyare serverintegration.
+
+Stegalternativ under 12–18 oktober: deltagaren kan välja 10 000 steg för 1 poäng istället för roulette. Valet kan klickas ur; poängen och aktivitetsnotisen tas då bort, och sparade pass/checklistor/frispinn finns kvar. Dagens eller gårdagens val kan ändras, och completed_workouts=0 skiljer stegdagar från roulettepass i den gemensamma poängtabellen. Servern serialiserar valen per deltagare och spärrar dubbel poäng.

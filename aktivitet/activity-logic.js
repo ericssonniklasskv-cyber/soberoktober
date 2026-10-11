@@ -29,6 +29,7 @@
     }
     if (item.activity_type === 'bingo_row') return `${name} fick en hel bingorad!`;
     if (item.activity_type === 'bingo_full') return `${name} klarade hela bingobrickan!`;
+    if (item.activity_type === 'roulette_steps') return `${name} gick 10 000 steg · 1 poäng`;
     if (item.activity_type === 'roulette_pass') {
       const label = String(item.activity_label || '').trim();
       return label ? `${name} klarade Spinn The Wheel: ${label}` : '';

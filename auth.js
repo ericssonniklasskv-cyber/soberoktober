@@ -235,7 +235,7 @@
     currentTodayBonus = bonusClaims.find((claim) => claim.challenge_date === today) || null;
     const totalPoints = results.reduce((total, result) => total + Number(result.points || 0), 0)
       + bonusClaims.reduce((total, claim) => total + Number(claim.points || 0), 0);
-    ui.dailyResult.textContent = currentTodayResult ? (currentTodayResult.kind === 'roulette' ? 'Spinn The Wheel' : currentTodayResult.kind === 'bingo' ? 'Bingo' : `${currentTodayResult.multiplier}×`) : 'Inte registrerat';
+    ui.dailyResult.textContent = currentTodayResult ? (currentTodayResult.kind === 'roulette' ? (currentTodayResult.completed_workouts === 0 ? '10 000 steg' : 'Spinn The Wheel') : currentTodayResult.kind === 'bingo' ? 'Bingo' : `${currentTodayResult.multiplier}×`) : 'Inte registrerat';
     ui.dailyPoints.textContent = `${pointsFormatter.format(currentTodayResult ? Number(currentTodayResult.points) : 0)} poäng`;
     ui.dailyBonus.hidden = !currentChallenge?.bonus_description;
     ui.dailyBonus.textContent = ui.dailyBonus.hidden
