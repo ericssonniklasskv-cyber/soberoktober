@@ -1,5 +1,6 @@
 const assert = require('node:assert/strict');
 const fs = require('node:fs/promises'), path = require('node:path'), http = require('node:http');
+const { tmpdir } = require('node:os');
 const { pathToFileURL } = require('node:url');
 const { chromium } = require('playwright');
 const { browserOptions } = require('./browser.cjs');
@@ -97,7 +98,7 @@ const root = path.resolve(__dirname, '..');
     const publicFeed=await localRequest(stack.api+'/rest/v1/rpc/get_activity_feed',{method:'POST',headers,body:'{}'});
     assert(publicFeed.some(item=>item.activity_type==='roulette_pass'&&item.display_name==='Roulette E2E One'));
     await page.waitForFunction(()=>document.querySelector('#activity-preview-list').textContent.includes('Spinn The Wheel'));
-    const shots=await fs.mkdtemp('/private/tmp/roulette-live-e2e-');
+    const shots=await fs.mkdtemp(path.join(tmpdir(), 'roulette-live-e2e-'));
     for(const width of [320,390,768,1440]){await page.setViewportSize({width,height:900});await page.screenshot({path:path.join(shots,'completed-'+width+'.png')});}
     await page.reload();await page.locator('#weekly-release-close').click();await page.locator('#open-roulette').click();await page.locator('#completed-view').waitFor({state:'visible'});
     assert.equal(await page.locator('#new-round-button').isVisible(),false);

@@ -1,5 +1,6 @@
 const { chromium } = require('playwright');
 const fs = require('node:fs/promises'), path = require('node:path'), http = require('node:http'), assert = require('node:assert/strict');
+const { tmpdir } = require('node:os');
 const root = path.resolve(__dirname, '..');
 const { browserOptions } = require('../qa/browser.cjs');
 const R = require('./roulette-logic.js');
@@ -47,7 +48,7 @@ const R = require('./roulette-logic.js');
     context.on('request', request => { requests.push(request.url()); if (request.method() !== 'GET') errors.push('Unexpected write request'); });
     const origin = 'http://127.0.0.1:' + server.address().port;
     const url = origin + '/';
-    const screenshots = await fs.mkdtemp('/private/tmp/roulette-home-check-');
+    const screenshots = await fs.mkdtemp(path.join(tmpdir(), 'roulette-home-check-'));
     const getState = () => page.evaluate(k => JSON.parse(localStorage.getItem(k)), 'soberoktober:roulette-test:v4:2026-10-12:' + userId);
 
     const card = slot => page.locator('.workout-piece').filter({ has: page.locator('[data-reroll="'+slot+'"]') });
@@ -249,7 +250,7 @@ const R = require('./roulette-logic.js');
     await page.locator('#roulette-login').click();
     assert.equal(await page.evaluate(()=>window.fixtureLoginRequested),true,'Roulette uses the normal login');
     assert.equal(await page.locator('#roulette-dialog').isVisible(),false);
-    configUrl='https://production-fixture.invalid';await page.reload();await page.waitForLoadState('networkidle');assert.equal(await page.locator('#training-roulette').isVisible(),false);
+    configUrl='https://production-fixture.invalid';await page.clock.setFixedTime(new Date('2026-10-11T12:00:00+02:00'));await page.reload();await page.waitForLoadState('networkidle');assert.equal(await page.locator('#training-roulette').isVisible(),false);
     assert(!requests.some(url=>url.includes('/rest/v1/')||url.includes('/rpc/')));assert.deepEqual(errors,[]);
     console.log('PASS: compact overview; 1–3 workout checklist; resume, keyboard, two-tab sync; sticky mobile navigation/actions and 320/390/768/1440 layouts; interval migration and rollback-safe v1/v2/v3/v4; daily three-workout cap and optional checklists; three mobility segments and exhausted-pool blocking; separate completion/undo/new round; cost previews and five shared spins; separate automatic category intro, canceled intro transitions, original automatic humor, animation cancellation, account isolation and local-only activation. Screenshots: '+screenshots);
   } finally { if(browser)await browser.close();await new Promise(resolve=>server.close(resolve)); }
