@@ -1,4 +1,5 @@
 (() => {
+  const L = window.SoberOctoberAdminChallenge;
   const { OCTOBER_DATES } = window.SoberOctoberCalendar;
   const OCTOBER_START = OCTOBER_DATES[0];
   const OCTOBER_END = OCTOBER_DATES.at(-1);
@@ -151,11 +152,26 @@
     await loadCompetitionParticipants();
   }
 
+  function updateEditorMode() {
+    const onlyBonus = L.bonusOnly(selectedDate);
+    [ui.title,ui.description,ui.amount,ui.unit,ui.completionMode,ui.secondDescription,ui.secondAmount,ui.secondUnit].forEach(control => {
+      control.closest('.field').hidden = onlyBonus;
+      control.disabled = onlyBonus || ui.form.classList.contains('busy');
+    });
+    ui.title.required = !onlyBonus;
+    ui.secondPartFields.hidden = onlyBonus || ui.completionMode.value === 'single';
+    ui.form.querySelector('[type="submit"]').textContent = onlyBonus ? 'Spara bonus' : 'Spara dagen';
+    document.querySelector('#bonus-editor-note').textContent = onlyBonus
+      ? 'Välj dag och skriv bonusuppgiften. Förvalt värde är 1 poäng. Bonusen visas på startsidan och räknas separat från ' + (selectedDate <= '2026-10-11' ? 'bingot.' : 'Spinn The Wheel och 10 000 steg.')
+      : 'Bonusen är valfri och räknas separat från dagens pass.';
+    if (onlyBonus) ui.editorTitle.textContent = `Dagens bonus · ${formatDate(selectedDate)}`;
+  }
   function setBusy(busy) {
     ui.form.classList.toggle('busy', busy);
     ui.form.querySelectorAll('button, input, textarea, select').forEach((control) => {
       control.disabled = busy;
     });
+    updateEditorMode();
   }
 
   function clearFields() {
@@ -204,6 +220,7 @@
 
     const cards = OCTOBER_DATES.map((date) => {
       const challenge = challenges.get(date);
+      const onlyBonus = L.bonusOnly(date);
       const card = document.createElement('button');
       card.type = 'button';
       card.className = `day-card ${challenge ? 'saved' : 'missing'}`;
@@ -218,8 +235,8 @@
       top.append(makeText('day-date', `${formatDate(date)}${date === today ? ' · idag' : ''}`));
       top.append(makeText('day-status', challenge ? 'Sparat' : 'Saknas'));
       card.append(top);
-      card.append(makeText('day-title', challenge?.title || 'Inget pass ännu'));
-      card.append(makeText('day-description', challengeDescription(challenge)));
+      card.append(makeText('day-title', onlyBonus ? 'Dagens bonus' : challenge?.title || 'Inget pass ännu'));
+      card.append(makeText('day-description', onlyBonus ? (challenge?.bonus_description ? `${challenge.bonus_description} (+${challenge.bonus_points} p)` : 'Ingen bonus publicerad') : challengeDescription(challenge)));
 
       const meta = document.createElement('span');
       meta.className = 'day-meta';
@@ -228,7 +245,7 @@
         meta.append(makeText('', `Del 2: ${challenge.second_base_amount ?? '—'} ${challenge.second_unit || ''}`.trim()));
         meta.append(makeText('', challenge.completion_mode === 'and' ? 'Båda krävs' : 'Valfri del'));
       }
-      card.append(meta);
+      if (!onlyBonus) card.append(meta);
       card.addEventListener('click', () => selectDate(date, true));
       return card;
     });
@@ -261,10 +278,10 @@
       ui.existingStatus.textContent = 'Den här dagen saknar pass. Fyll i fälten för att skapa ett.';
     }
 
-    if (selectedDate >= '2026-10-05' && selectedDate <= '2026-10-11') {
-      if (!challenge) ui.title.value = 'Dagens bingo';
-      ui.existingStatus.textContent = 'Bingovecka. Fyll i dagens bonus nedan; bingobrickan hanterar dagens aktivitet.';
+    if (L.bonusOnly(selectedDate)) {
+      ui.existingStatus.textContent = selectedDate <= '2026-10-11' ? 'Bingovecka. Här styr du enbart dagens bonus.' : 'Spinn The Wheel-vecka. Här styr du enbart dagens bonus; roulettepassen väljs på startsidan.';
     }
+    updateEditorMode();
     const index = OCTOBER_DATES.indexOf(selectedDate);
     ui.previousDay.disabled = index <= 0;
     ui.nextDay.disabled = index >= OCTOBER_DATES.length - 1;
@@ -373,6 +390,7 @@
 
   ui.form.addEventListener('submit', async (event) => {
     event.preventDefault();
+    const onlyBonus = L.bonusOnly(ui.date.value);
     const title = ui.title.value.trim();
     const amount = ui.amount.value ? Number(ui.amount.value) : null;
     const unit = ui.unit.value.trim();
@@ -394,7 +412,7 @@
       && (!validAmount(amount) || !unit || !validAmount(secondAmount) || !secondUnit);
     const invalidBonus = Boolean(bonusDescription) !== (bonusPoints !== null)
       || (bonusPoints !== null && (!Number.isInteger(bonusPoints) || bonusPoints < 1 || bonusPoints > 100));
-    if (!title || invalidFirst || invalidSecond || invalidBonus) {
+    if ((!onlyBonus && (!title || invalidFirst || invalidSecond)) || invalidBonus) {
       ui.formStatus.textContent = invalidBonus
         ? 'Fyll i både bonusuppgift och ett heltal mellan 1 och 100 bonuspoäng.'
         : invalidSecond
@@ -404,10 +422,10 @@
     }
 
     setBusy(true);
-    ui.formStatus.textContent = 'Sparar passet…';
+    ui.formStatus.textContent = onlyBonus ? 'Sparar bonusen…' : 'Sparar passet…';
     const { data, error } = await client
       .from('daily_challenges')
-      .upsert({
+      .upsert(onlyBonus ? L.bonusPayload(ui.date.value, bonusDescription, bonusPoints, challenges.get(ui.date.value)) : {
         challenge_date: ui.date.value,
         title,
         description: ui.description.value.trim() || null,
@@ -426,7 +444,7 @@
 
     if (error) {
       console.error('Kunde inte spara passet', error);
-      ui.formStatus.textContent = 'Passet kunde inte sparas.';
+      ui.formStatus.textContent = onlyBonus ? 'Bonusen kunde inte sparas.' : 'Passet kunde inte sparas.';
       return;
     }
 
@@ -435,7 +453,9 @@
     renderDays();
     ui.editorTitle.textContent = `Redigera ${formatDate(selectedDate)}`;
     ui.existingStatus.textContent = 'Sparat pass. Ändra fälten och spara för att uppdatera.';
-    ui.formStatus.textContent = 'Passet är sparat.';
+    updateEditorMode();
+    ui.existingStatus.textContent = onlyBonus ? 'Bonusen visas på startsidan för den valda dagen.' : ui.existingStatus.textContent;
+    ui.formStatus.textContent = onlyBonus ? 'Bonusen är sparad.' : 'Passet är sparat.';
   });
 
   ui.refreshParticipants.addEventListener('click', loadCompetitionParticipants);
