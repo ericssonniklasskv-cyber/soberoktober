@@ -160,10 +160,10 @@ const dailyScores=(cells)=>{
  }
  await page.locator('#challenge-date').fill('2026-10-06');await page.locator('#challenge-date').dispatchEvent('change');
  assert.equal(await page.locator('#challenge-title').inputValue(),'Dagens bingo');assert.equal(await page.locator('#bonus-points').inputValue(),'1');
- await page.locator('#bonus-description').fill('  Gå en extra promenad  ');await page.locator('#challenge-form button[type=submit]').click();await page.waitForFunction(()=>document.querySelector('#form-status').textContent==='Passet är sparat.');
+ await page.locator('#bonus-description').fill('  Gå en extra promenad  ');await page.locator('#challenge-form button[type=submit]').click();await page.waitForFunction(()=>document.querySelector('#form-status').textContent==='Bonusen är sparad.');
  assert.equal(challenges.get('2026-10-06').bonus_description,'Gå en extra promenad');assert.equal(challenges.get('2026-10-06').bonus_points,1);
  await page.reload();await page.locator('#admin-state').waitFor({state:'visible'});await page.locator('#challenge-date').fill('2026-10-06');await page.locator('#challenge-date').dispatchEvent('change');assert.equal(await page.locator('#bonus-description').inputValue(),'Gå en extra promenad');
- await page.locator('#bonus-description').fill('Drick ett glas vatten');await page.locator('#challenge-form button[type=submit]').click();await page.waitForFunction(()=>document.querySelector('#form-status').textContent==='Passet är sparat.');assert.equal(challenges.get('2026-10-06').bonus_description,'Drick ett glas vatten');
+ await page.locator('#bonus-description').fill('Drick ett glas vatten');await page.locator('#challenge-form button[type=submit]').click();await page.waitForFunction(()=>document.querySelector('#form-status').textContent==='Bonusen är sparad.');assert.equal(challenges.get('2026-10-06').bonus_description,'Drick ett glas vatten');
  await page.screenshot({path:path.join(root,'qa','daily-bonus-admin.png'),fullPage:true,animations:'disabled'});
  isAdmin=false;await page.reload();await page.locator('#denied-state').waitFor({state:'visible'});assert.equal(await page.locator('#admin-state').isVisible(),false);
  assert.deepEqual(errors,[],'Console/page errors');console.log('PASS: 320/390/768/1440 home/admin layouts; independent bonus claim before bingo, reload/undo, empty bonus state, history bonus backfill/undo; admin default one point, create/update and denied non-admin; bingo/feed/report regression; no page or console errors.');

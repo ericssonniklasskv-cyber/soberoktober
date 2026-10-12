@@ -279,6 +279,7 @@
     }
 
     if (L.bonusOnly(selectedDate)) {
+      if (!challenge) ui.title.value = L.themeTitle(selectedDate);
       ui.existingStatus.textContent = selectedDate <= '2026-10-11' ? 'Bingovecka. Här styr du enbart dagens bonus.' : 'Spinn The Wheel-vecka. Här styr du enbart dagens bonus; roulettepassen väljs på startsidan.';
     }
     updateEditorMode();
