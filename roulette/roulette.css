@@ -229,10 +229,12 @@
 .roulette-home-preview #dagens-pass,.roulette-home-preview #competition-bingo,.roulette-live #dagens-pass,.roulette-live #competition-bingo{display:none!important}
 .roulette-launch-card[hidden]{display:none}
 .roulette-launch-card{min-height:220px}
-.roulette-invite{display:flex;align-items:center;justify-content:space-between;gap:22px;width:100%;padding:4px 0 12px;border:0;background:transparent;color:var(--paper);text-align:left;cursor:pointer}
-.roulette-invite strong{font-size:clamp(1.55rem,3vw,2.45rem);line-height:1.2;letter-spacing:-.045em;text-wrap:balance}
-.roulette-invite>span{font-size:2rem;color:var(--orange-dark)}
-.roulette-invite:focus-visible{outline:3px solid var(--orange);outline-offset:6px;border-radius:6px}
+.roulette-invite-title{color:var(--paper)}
+.roulette-invite{display:flex;align-items:center;justify-content:space-between;gap:16px;width:100%;min-height:58px;margin:20px 0 10px;padding:16px 22px;border:2px solid transparent;border-radius:14px;background:var(--orange);color:var(--forest);box-shadow:0 4px 0 var(--orange-dark);font:inherit;font-size:1.05rem;font-weight:800;text-align:left;cursor:pointer;position:relative;z-index:1;transition:background .15s ease,transform .15s ease}
+.roulette-invite>span:last-child{font-size:1.6rem;line-height:1;flex:none}
+.roulette-invite:hover{background:#f39a59;transform:translateY(-1px)}
+.roulette-invite:active{transform:translateY(2px);box-shadow:0 2px 0 var(--orange-dark)}
+.roulette-invite:focus-visible{outline:3px solid var(--paper);outline-offset:5px}
 .roulette-launch-card>p:not(.challenge-label){font-size:.85rem;color:#d4dfc9;line-height:1.55;max-width:540px}
 .roulette-local-note{font-size:.65rem;color:#c7d1b5}
 body.roulette-modal-open{overflow:hidden}
@@ -538,11 +540,11 @@ body.roulette-modal-open{overflow:hidden}
 .roulette-dialog #completed-limit{max-width:560px;margin:0 0 8px;color:var(--muted);font-size:.95rem;line-height:1.5}
 
 /* A light, reversible alternative above the main roulette invitation. */
-.roulette-steps-button{display:flex;align-items:center;gap:12px;width:100%;min-height:48px;margin:0 0 8px;padding:16px 18px;border:2px solid var(--orange);border-radius:16px;background:var(--paper);color:var(--forest);font:inherit;font-weight:700;text-align:left;cursor:pointer;position:relative;z-index:1}
+.roulette-steps-button{display:flex;align-items:center;gap:8px;width:fit-content;max-width:100%;min-height:44px;margin:0 0 16px;padding:9px 12px;border:1px solid var(--orange);border-radius:10px;background:var(--paper);color:var(--forest);font:inherit;font-size:.84rem;line-height:1.4;font-weight:600;text-align:left;cursor:pointer;position:relative;z-index:1}
 .roulette-steps-button:focus-visible{outline:3px solid var(--orange);outline-offset:4px}
 .roulette-steps-button[aria-pressed="true"]{background:var(--orange);color:var(--forest)}
 .roulette-steps-button:disabled{opacity:.65;cursor:default}
-.roulette-steps-check{display:grid;place-items:center;flex:0 0 24px;width:24px;height:24px;border:2px solid var(--forest);border-radius:6px;color:transparent}
+.roulette-steps-check{display:grid;place-items:center;flex:0 0 18px;width:18px;height:18px;border:2px solid var(--forest);border-radius:6px;color:transparent}
 .roulette-steps-button[aria-pressed="true"] .roulette-steps-check{color:var(--forest)}
 .roulette-launch-card>.roulette-steps-status{margin:0 0 18px;position:relative;z-index:1}
 .roulette-steps-status:empty{display:none}

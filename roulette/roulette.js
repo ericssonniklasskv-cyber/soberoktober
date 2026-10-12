@@ -51,6 +51,7 @@
     $('#access-panel').hidden = false; $('#sandbox').hidden = true; $('.roulette-navigation').hidden = true;
     accessStates.forEach(name => $('#' + name).hidden = name !== id);
     state = null; storageKey = null;
+    document.querySelector('#roulette-open-label').textContent = 'Öppna Spinn The Wheel';
     document.querySelector('#roulette-steps').disabled = id === 'loading-state';
     document.querySelector('#roulette-steps').setAttribute('aria-pressed', 'false');
     document.querySelector('#roulette-steps-label').textContent = 'Hoppar Spinn the wheel men har gått 10 000 steg idag - 1 poäng';
@@ -290,7 +291,7 @@
       return button;
     }));
     const progress = day ? R.checklistSummary(day) : null;
-    document.querySelector('#roulette-invite').textContent = day?.completed ? 'Dagens runda är klar · ' + R.plannedPoints(day) + ' testpoäng!' : day && (day.trainingStarted || progress.done) ? 'Fortsätt din träningsrunda · ' + progress.done + ' av ' + progress.total + ' moment klara' : day ? 'Din träningsrunda väntar på dig!' : 'Klicka här för att få vara med i Dagens Spinn The Wheel!';
+    document.querySelector('#roulette-invite').textContent = day?.completed ? 'Dagens runda är klar · ' + R.plannedPoints(day) + ' testpoäng!' : day && (day.trainingStarted || progress.done) ? 'Fortsätt din träningsrunda · ' + progress.done + ' av ' + progress.total + ' moment klara' : day ? 'Din träningsrunda väntar på dig!' : 'Dagens Spinn The Wheel!';
     document.querySelector('#roulette-launch-summary').textContent = day ? roundLabel(day) : 'Välj kondition, styrka eller rörlighet. Ditt pass väntar ett snurr bort.';
     if (live) {
       $('#reset-test').hidden = true;
@@ -312,6 +313,7 @@
       document.querySelector('#roulette-launch-summary').textContent = document.querySelector('#roulette-launch-summary').textContent.replace(/testpoäng/g, 'poäng');
     }
     const stepsSelected = (state.steps || []).includes(state.date);
+    document.querySelector('#roulette-open-label').textContent = stepsSelected ? 'Byt till Spinn The Wheel' : day?.completed ? 'Visa min runda' : day ? 'Fortsätt min runda' : 'Öppna Spinn The Wheel';
     const pastDate = live && state.date !== liveToday;
     const stepsReadOnly = live && (!window.SoberRouletteLive.active() || state.date < window.SoberOctoberCalendar.shiftDate(liveToday, -1));
     const stepButton = document.querySelector('#roulette-steps');
