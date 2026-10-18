@@ -31,3 +31,11 @@ Behåll tidigare deployment och releasebranch. Frontend kan återpromoveras vid 
 Supabase registrerade version 20261018134749. Filnamnet följer serverns registrerade version; SQL-innehållet är oförändrat. Production har 20 katalogpass, 28 alternativ, fyra unika per dag och noll överträdelser av tvådagarsspärren. Nya röster, vinnare och registreringar är tomma inför öppningen. Topplistans hash är identisk före och efter migrationen (5e099a716919083eab457baf1fa17b5c), och roulettpoängen bevaras. Cron-jobbet är aktivt och första öppningen är 18 oktober kl. 19 UTC = kl. 21 svensk tid.
 
 Security advisor: privata tabeller har avsiktligt RLS utan klientpolicyer och nås via kontrollerad RPC. Kvarvarande varningar gäller redan befintliga, avsiktligt publika topplistan/bonus-RPC samt Auth-inställningen för läckta lösenord; inga nya exponerade SECURITY DEFINER-funktioner för röstningen.
+
+## Bonus och övergångskontroll 18 oktober
+
+Uppföljningen hittade att adminens bonusläge slutade 18 oktober. Det är förlängt till 25 oktober: bonus kan skapas/ändras utan ett vanligt träningspass och visas som tidigare i startsidans separata bonusruta. Startsidan hämtar nästa dags bonus automatiskt när en öppen flik passerar svensk midnatt; sena äldre svar ignoreras och gårdagens bock följer inte med.
+
+Verifiering: 105 logiktester, 16 webbläsarsviter inklusive ett nytt sammanhängande bonus/röstningsflöde över söndag kl. 21 och midnatt, samt lokala rollback-tester för riktiga admin-/deltagarbehörigheter. Bonus 2 poäng ger totalt 5 med pass eller 3 med steg, men räknas inte ensam som genomförd träningsdag. Bonus kan ångras utan att pass/steg påverkas. Lika röster lottas endast bland ledarna och vinnaren ändras inte vid omladdning; noll röster ger en sparad vinnare bland fyra.
+
+Production lästes utan att skapa testresultat: samtliga deltagare och datum genom oktober saknar möjlighet till automatisk utslagning för missade dagar. Alkoholadministrationen är oförändrad. Röstningscron har lyckade körningar; första öppningen är 21 svensk tid och nästa dags röstning öppnar 15. Ingen ny production-migration behövs för bonusfixen.

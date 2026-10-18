@@ -1,9 +1,9 @@
 const test = require('node:test'), assert = require('node:assert/strict');
 const L = require('./challenge-logic.js');
-test('bonus-only editing applies to bingo and roulette, then returns to normal workouts', () => {
+test('bonus-only editing applies to bingo, roulette and voting, then returns to normal workouts', () => {
   assert.equal(L.bonusOnly('2026-10-04'), false);
-  for (const date of ['2026-10-05','2026-10-11','2026-10-12','2026-10-18']) assert.equal(L.bonusOnly(date), true);
-  assert.equal(L.bonusOnly('2026-10-19'), false);
+  for (const date of ['2026-10-05','2026-10-11','2026-10-12','2026-10-18','2026-10-19','2026-10-25']) assert.equal(L.bonusOnly(date), true);
+  assert.equal(L.bonusOnly('2026-10-26'), false);
 });
 test('a roulette bonus creates a valid challenge without requiring a workout', () => {
   const result = L.bonusPayload('2026-10-12','Ta en promenad',1);
@@ -20,5 +20,10 @@ test('bonus edits preserve any existing compound workout and can remove the bonu
   assert.equal(saved.bonus_points,3);
   const cleared = L.bonusPayload('2026-10-18','',null,existing);
   assert.equal(cleared.bonus_description,null);assert.equal(cleared.bonus_points,null);
-  assert.throws(()=>L.bonusPayload('2026-10-19','Bonus',1), /vanligt/);
+  assert.throws(()=>L.bonusPayload('2026-10-26','Bonus',1), /vanligt/);
+});
+
+test('voting bonus needs no normal workout and preserves an existing admin challenge',()=>{
+ const row=L.bonusPayload('2026-10-19','Gå ut i solen',2);assert.equal(row.title,'Dagens val');assert.equal(row.base_amount,null);assert.equal(row.description,null);assert.equal(row.bonus_points,2);
+ const updated=L.bonusPayload('2026-10-25','Ny bonus',3,{...row,title:'Egen rubrik',description:'Sparad beskrivning',base_amount:10,unit:'steg'});assert.equal(updated.title,'Egen rubrik');assert.equal(updated.description,'Sparad beskrivning');assert.equal(updated.base_amount,10);
 });

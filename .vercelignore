@@ -15,3 +15,6 @@ LOCAL_DEVELOPMENT.md
 dev/
 test-results/
 playwright-report/
+
+/bingo-*.png
+/board-*.png

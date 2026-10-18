@@ -58,7 +58,7 @@
   let authReady = false;
   let sessionWork = Promise.resolve();
   let competitionStatus = null;
-  let loadedChallengeDate = null;
+  let loadedChallengeDate = null,challengeReadVersion=0,dayRefresh=null;
   let availableChallengeDate = null;
   let currentChallenge = null;
   let currentTodayResult = null;
@@ -284,7 +284,7 @@
 
   async function loadTodayChallenge() {
     const today = stockholmDate();
-    loadedChallengeDate = today;
+    const version=++challengeReadVersion;
     availableChallengeDate = null;
     currentChallenge = null;
     ui.bonusStatus.textContent = '';
@@ -292,6 +292,7 @@
     refreshBonusButton();
 
     if (!isCompetitionDay(today)) {
+      loadedChallengeDate=today;
       ui.challengeTitle.textContent = 'Dagens pass kommer snart';
       ui.challengeDescription.hidden = true;
       ui.challengeParts.hidden = true;
@@ -305,11 +306,13 @@
       .eq('challenge_date', today)
       .maybeSingle();
 
+    if(version!==challengeReadVersion||today!==stockholmDate())return;
     if (error) {
       console.error('Kunde inte läsa dagens pass', error);
       return;
     }
 
+    loadedChallengeDate=today;
     if (!data) {
       ui.challengeTitle.textContent = 'Dagens pass kommer snart';
       ui.challengeDescription.hidden = true;
@@ -568,9 +571,17 @@
   });
   ui.bonusButton.addEventListener('click', saveBonusClaim);
 
-  document.addEventListener('visibilitychange', () => {
-    if (!document.hidden && loadedChallengeDate !== stockholmDate()) void loadTodayChallenge();
-  });
+  async function refreshDayIfNeeded(){
+    if(document.hidden||bonusBusy||levelBusy||!client||loadedChallengeDate===stockholmDate())return;
+    if(dayRefresh)return dayRefresh;
+    dayRefresh=(async()=>{await loadTodayChallenge();if(session?.user?.id&&profile?.display_name)await loadResults();})()
+      .catch(()=>{ui.bonusStatus.textContent='Dagens bonus kunde inte uppdateras. Försöker igen.';})
+      .finally(()=>{dayRefresh=null;});
+    return dayRefresh;
+  }
+  const dayTimer=setInterval(()=>void refreshDayIfNeeded(),15000);
+  document.addEventListener('visibilitychange',()=>void refreshDayIfNeeded());
+  window.addEventListener('pagehide',event=>{if(!event.persisted)clearInterval(dayTimer);});
 
   ui.close.addEventListener('click', closeModal);
   ui.overlay.addEventListener('click', (event) => {

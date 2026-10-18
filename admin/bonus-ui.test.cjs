@@ -36,8 +36,14 @@ const root = path.resolve(__dirname,'..');
     const dir=await fs.mkdtemp(path.join(tmpdir(),'admin-roulette-bonus-'));
     for(const width of [320,390,1440]){await page.setViewportSize({width,height:950});await page.waitForFunction(()=>document.documentElement.scrollWidth<=innerWidth);await page.locator('#challenge-editor').screenshot({path:path.join(dir,'bonus-'+width+'.png')});}
     await page.locator('[data-date="2026-10-18"]').click();assert.equal(await page.locator('#challenge-title').isVisible(),false);
-    await page.locator('[data-date="2026-10-19"]').click();assert.equal(await page.locator('#challenge-title').isVisible(),true);assert.equal(await page.locator('#challenge-title').isEnabled(),true);
-    await page.locator('#challenge-form [type="submit"]').click();assert.equal(writes.length,1,'Normal workout still needs a title');
+    await page.locator('[data-date="2026-10-19"]').click();assert.equal(await page.locator('#challenge-title').isVisible(),false);assert.equal(await page.locator('#challenge-title').isDisabled(),true);
+    assert.match(await page.locator('#existing-status').textContent(),/Röstvecka/);
+    await page.locator('#bonus-description').fill('Måndagens röstbonus');await page.locator('#bonus-points').fill('2');await page.locator('#challenge-form [type="submit"]').click();await page.waitForFunction(()=>document.querySelector('#form-status').textContent==='Bonusen är sparad.');
+    assert.equal(writes.length,2);assert.equal(writes[1].title,'Dagens val');assert.equal(writes[1].base_amount,null);assert.equal(writes[1].bonus_points,2);
+    await page.reload();await page.locator('#admin-state').waitFor({state:'visible'});await page.locator('[data-date="2026-10-19"]').click();assert.equal(await page.locator('#bonus-description').inputValue(),'Måndagens röstbonus');
+    await page.locator('[data-date="2026-10-25"]').click();assert.equal(await page.locator('#challenge-title').isVisible(),false);
+    await page.locator('[data-date="2026-10-26"]').click();assert.equal(await page.locator('#challenge-title').isVisible(),true);assert.equal(await page.locator('#challenge-title').isEnabled(),true);
+    await page.locator('#challenge-form [type="submit"]').click();assert.equal(writes.length,2,'Normal workout still needs a title');
     await page.locator('[data-date="2026-10-11"]').click();assert.equal(await page.locator('#challenge-title').isVisible(),false,'Bingo retains bonus-only editing');
     admin=false;await page.reload();await page.locator('#denied-state').waitFor({state:'visible'});assert.equal(await page.locator('#challenge-form').isVisible(),false);
     assert.deepEqual(errors,[]);console.log('PASS: actual admin form saves/reloads bonus-only dates without a workout, keeps normal validation after the theme, admin access and responsive layouts. Screenshots: '+dir);
