@@ -3,12 +3,25 @@
   "version": "1.0.0",
   "private": true,
   "description": "Sober Oktober static frontend and regression tests",
-  "engines": { "node": ">=22" },
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "test": "node scripts/test.mjs",
     "test:ui": "node scripts/test.mjs --ui",
     "test:all": "npm test && npm run test:ui",
-    "test:local-db": "node qa/kudos-local-e2e.cjs"
+    "test:local-db": "node qa/kudos-local-e2e.cjs",
+    "dev:local": "node scripts/dev-local.mjs",
+    "seed:local": "node scripts/seed-local.mjs",
+    "test:local": "node --test scripts/local-env.test.mjs",
+    "dev:vote": "node scripts/dev-local.mjs --voting",
+    "seed:vote": "node scripts/seed-vote.mjs",
+    "test:vote": "node qa/voting-local-e2e.cjs",
+    "test:vote-completion": "node qa/voting-completion-local-e2e.cjs"
   },
-  "devDependencies": { "playwright": "1.62.1" }
+  "devDependencies": {
+    "playwright": "1.62.1",
+    "supabase": "2.119.0",
+    "vercel": "62.4.0"
+  }
 }

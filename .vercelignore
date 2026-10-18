@@ -11,3 +11,7 @@ qa/
 **/*.test.mjs
 **/README.md
 LOCAL_DEVELOPMENT.md
+
+dev/
+test-results/
+playwright-report/

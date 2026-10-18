@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="sv">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lokal testinloggning – Sober Oktober</title>
+<style>
+body{font-family:system-ui,sans-serif;background:#faf5e9;color:#173f32;margin:0;padding:24px}main{max-width:540px;margin:8vh auto;background:white;padding:28px;border-radius:18px;border:1px solid #deded5}h1{font-size:1.7rem}button{display:block;width:100%;padding:15px;margin:12px 0;border:0;border-radius:10px;background:#173f32;color:white;font:inherit;cursor:pointer}button:disabled{opacity:.5;cursor:wait}button:focus-visible{outline:3px solid #e78a3c;outline-offset:3px}p{line-height:1.5}small{color:#606860}#status{min-height:2em}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.js" defer></script>
+<script defer src="/dev/login.js"></script>
+</head>
+<body><main>
+<p><strong>Endast lokal testmiljö</strong></p>
+<h1>Välj ett testkonto</h1>
+<p>Logga in utan Google och fortsätt till appen. Kontona skapas med <code>npm run seed:local</code>.</p>
+<button type="button" data-email="admin@local.soberoktober.test" disabled>Lokal admin</button>
+<button type="button" data-email="anna@local.soberoktober.test" disabled>Test Anna</button>
+<button type="button" data-email="erik@local.soberoktober.test" disabled>Test Erik</button>
+<p id="status" role="status" aria-live="polite">Kontrollerar lokal anslutning…</p>
+<small>Inloggningen sparas för den här lokala webbadressen. Öppna samma sida igen för att byta konto.</small>
+</main></body></html>

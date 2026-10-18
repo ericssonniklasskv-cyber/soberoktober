@@ -1,4 +1,5 @@
 (() => {
+  let votingEnabled=false,voteRpc='my_workout_vote';
   const ui = {
     trigger: document.querySelector('#auth-trigger'),
     overlay: document.querySelector('#auth-overlay'),
@@ -235,7 +236,7 @@
     currentTodayBonus = bonusClaims.find((claim) => claim.challenge_date === today) || null;
     const totalPoints = results.reduce((total, result) => total + Number(result.points || 0), 0)
       + bonusClaims.reduce((total, claim) => total + Number(claim.points || 0), 0);
-    ui.dailyResult.textContent = currentTodayResult ? (currentTodayResult.kind === 'roulette' ? (currentTodayResult.completed_workouts === 0 ? '10 000 steg' : 'Spinn The Wheel') : currentTodayResult.kind === 'bingo' ? 'Bingo' : `${currentTodayResult.multiplier}×`) : 'Inte registrerat';
+    ui.dailyResult.textContent = currentTodayResult ? (currentTodayResult.kind === 'vote' ? (currentTodayResult.completion_kind==='steps'?'10 000 steg':'Dagens val') : currentTodayResult.kind === 'roulette' ? (currentTodayResult.completed_workouts === 0 ? '10 000 steg' : 'Spinn The Wheel') : currentTodayResult.kind === 'bingo' ? 'Bingo' : `${currentTodayResult.multiplier}×`) : 'Inte registrerat';
     ui.dailyPoints.textContent = `${pointsFormatter.format(currentTodayResult ? Number(currentTodayResult.points) : 0)} poäng`;
     ui.dailyBonus.hidden = !currentChallenge?.bonus_description;
     ui.dailyBonus.textContent = ui.dailyBonus.hidden
@@ -263,11 +264,12 @@
   }
 
   async function loadResults() {
-    const [resultsResponse, bonusResponse, bingoResponse, rouletteResponse] = await Promise.all([
+    const [resultsResponse, bonusResponse, bingoResponse, rouletteResponse, voteResponse] = await Promise.all([
       client.from('daily_results').select('result_date, multiplier, points, completed_parts').order('result_date', { ascending: true }),
       client.from('daily_bonus_claims').select('challenge_date, points').order('challenge_date', { ascending: true }),
       profile?.display_name ? client.rpc('my_competition_bingo') : Promise.resolve({ data: null, error: null }),
       client.from('roulette_daily_scores').select('result_date, points, completed_workouts'),
+      votingEnabled?client.rpc(voteRpc):Promise.resolve({data:null,error:null}),
     ]);
     if (resultsResponse.error) throw resultsResponse.error;
     if (bonusResponse.error) throw bonusResponse.error;
@@ -275,7 +277,9 @@
     if (rouletteResponse.error) throw rouletteResponse.error;
     window.SoberOctoberBingo.setState(bingoResponse.data);
     const logic = window.SoberOctoberCompetition;
-    renderResults(window.SoberRouletteLive.mergeResults(logic.mergeResults(resultsResponse.data || [], bingoResponse.data), rouletteResponse.data || []), logic.normalBonus(bonusResponse.data || [], bingoResponse.data));
+    if(voteResponse.error)throw voteResponse.error;
+    const merged=window.SoberRouletteLive.mergeResults(logic.mergeResults(resultsResponse.data || [], bingoResponse.data), rouletteResponse.data || []);
+    renderResults(votingEnabled?window.SoberVoteLogic.mergeResults(merged,voteResponse.data):merged,logic.normalBonus(bonusResponse.data || [], bingoResponse.data));
   }
 
   async function loadTodayChallenge() {
@@ -681,6 +685,8 @@
       if (!response.ok) throw new Error('Konfigurationen saknas');
 
       const config = await response.json();
+      votingEnabled=config.votingEnabled===true||config.votingPreview===true;
+      voteRpc=config.votingPreview===true?'local_workout_vote':'my_workout_vote';
       if (!config.supabaseUrl || !config.supabasePublishableKey || !window.supabase) {
         throw new Error('Ogiltig auth-konfiguration');
       }
@@ -720,6 +726,7 @@
       });
       window.SoberOctoberStepPreview?.init(publicClient);
       await window.SoberRouletteUI?.init(client, config);
+      await window.SoberVotePreview?.init(client, config);
       await Promise.all([loadTodayChallenge(), loadRegistered()]);
       const { data, error } = await client.auth.getSession();
       if (error) throw error;
@@ -740,6 +747,8 @@
       ui.entryStatus.textContent = 'Inloggningen kunde inte startas just nu.';
     }
   }
+
+  window.addEventListener('vote-result-changed', async () => {if(session?.user?.id){try{await loadResults();await refreshLeaderboard();}catch{ui.saveStatus.textContent='Passet är sparat. Ladda om för att uppdatera summeringen.';}}});
 
   window.addEventListener('roulette-result-changed', async () => {
     if (!session?.user?.id) return;

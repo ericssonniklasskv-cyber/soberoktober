@@ -1,0 +1,41 @@
+-- Everything, including test-clock changes, rolls back. Local Docker only.
+begin;
+do $$
+declare one uuid:=gen_random_uuid(); two uuid:=gen_random_uuid(); admin_id uuid:=gen_random_uuid(); s jsonb; n integer;
+begin
+ insert into auth.users(id,email) values(one,one::text||'@example.invalid'),(two,two::text||'@example.invalid'),(admin_id,admin_id::text||'@example.invalid');
+ insert into public.profiles(id,email,display_name,is_admin) values(one,one::text||'@example.invalid','Completion SQL one',false),(two,two::text||'@example.invalid','Completion SQL two',false),(admin_id,admin_id::text||'@example.invalid','Completion SQL admin',true);
+ perform set_config('request.jwt.claim.sub',one::text,true);
+ update private.vote_preview_settings set test_now='2026-10-18 21:00+02' where singleton;
+ begin perform public.local_workout_vote('complete','2026-10-19');raise exception 'Expected early completion rejection';exception when insufficient_privilege then null;end;
+ update private.vote_preview_settings set test_now='2026-10-19 00:00+02' where singleton;
+ s:=public.local_workout_vote('get');
+ if s#>'{days,0,completion}'<>'null'::jsonb then raise exception 'New participant inherits completion';end if;
+ if s#>'{days,0,own_vote}'<>'null'::jsonb then raise exception 'New participant inherits vote';end if;
+ perform public.local_workout_vote('complete','2026-10-19');
+ perform public.local_workout_vote('complete','2026-10-19');
+ select count(*) into n from private.vote_preview_completions where user_id=one;
+ if n<>1 then raise exception 'Duplicate completion creates extra rows';end if;
+ if not exists(select 1 from public.get_leaderboard() where is_current_user and total_points=3 and completed_days=1) then raise exception 'Expected three points and one day';end if;
+ begin insert into public.daily_results(user_id,result_date,multiplier)values(one,'2026-10-19',1);raise exception 'Expected old result path rejection';exception when insufficient_privilege then null;end;
+ perform set_config('request.jwt.claim.sub',two::text,true);
+ s:=public.local_workout_vote('get');
+ if s#>'{days,0,completion}'<>'null'::jsonb then raise exception 'Completion leaks between users';end if;
+ perform set_config('request.jwt.claim.sub',one::text,true);
+ update private.vote_preview_settings set test_now='2026-10-20 00:00+02' where singleton;
+ begin perform public.local_workout_vote('complete','2026-10-19');raise exception 'Expected past-day rejection';exception when insufficient_privilege then null;end;
+ perform public.local_workout_vote('complete','2026-10-20');
+ if not exists(select 1 from public.get_leaderboard() where is_current_user and total_points=6 and completed_days=2) then raise exception 'Expected three points each day';end if;
+ perform public.local_workout_vote('uncomplete','2026-10-20');
+ perform public.local_workout_vote('uncomplete','2026-10-20');
+ if not exists(select 1 from public.get_leaderboard() where is_current_user and total_points=3 and completed_days=1) then raise exception 'Undo did not reverse points/day exactly once';end if;
+ perform private.apply_elimination(one,'alcohol');
+ begin perform public.local_workout_vote('complete','2026-10-20');raise exception 'Expected inactive participant rejection';exception when insufficient_privilege then null;end;
+ if has_table_privilege('authenticated','private.vote_preview_completions','INSERT') or has_table_privilege('authenticated','private.vote_preview_completions','SELECT') then raise exception 'Private completion table exposed';end if;
+ if has_function_privilege('anon','public.local_workout_vote(text,date,integer)','EXECUTE') then raise exception 'Anonymous RPC access';end if;
+ perform set_config('request.jwt.claim.sub',admin_id::text,true);
+ perform public.local_workout_vote_admin('reset');
+ if exists(select 1 from private.vote_preview_completions) then raise exception 'Preview reset leaves test points behind';end if;
+ raise notice 'PASS: early/late rejection, no vote needed, fixed three points, duplicate prevention, per-day count, account privacy, undo, inactive block, old path block, private permissions and reset.';
+end $$;
+rollback;

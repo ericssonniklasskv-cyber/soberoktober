@@ -4,7 +4,7 @@ import { resolve, relative } from 'node:path';
 import { spawnSync } from 'node:child_process';
 const root = fileURLToPath(new URL('../', import.meta.url));
 const ui = process.argv.includes('--ui');
-const ignored = new Set(['.git', 'node_modules', '.vercel', '.github', 'supabase']);
+const ignored = new Set(['.git', 'node_modules', '.vercel', '.github', 'supabase', '.local-backups', '.vercel-linked-backup']);
 function find(directory) {
   return readdirSync(directory, { withFileTypes: true }).flatMap(entry => {
     if (ignored.has(entry.name)) return [];

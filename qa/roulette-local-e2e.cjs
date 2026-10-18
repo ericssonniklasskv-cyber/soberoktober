@@ -93,6 +93,7 @@ const root = path.resolve(__dirname, '..');
     await draw('strength');
     await page.locator('#show-checklist').click();
     const check=page.locator('[data-check-step]').first();await check.check();
+    await page.waitForFunction(()=>document.querySelector('#sandbox').getAttribute('aria-busy')==='false');
     const pending=await rpc(one.session,'my_training_roulette');
     await page.locator('#close-roulette').click();await page.locator('#roulette-steps').click();
     await page.waitForFunction(()=>document.querySelector('#roulette-steps').getAttribute('aria-pressed')==='true');

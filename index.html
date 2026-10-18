@@ -18,6 +18,7 @@
   <link rel="stylesheet" href="/styles/bingo.css?v=header-link-1">
   <link rel="stylesheet" href="/styles/daily-bonus.css?v=1">
   <link rel="stylesheet" href="/roulette/roulette.css">
+  <link rel="stylesheet" href="/voting/vote.css">
 </head>
 <body class="page-home entry-active">
   <section class="entry-gate" id="entry-gate" aria-labelledby="entry-title">
@@ -113,6 +114,43 @@
       </aside>
       </div>
       <div class="challenge-layout">
+      <aside class="vote-admin-tools" id="vote-admin-tools" hidden aria-label="Lokala testkontroller">
+        <strong id="vote-clock-label">Lokal testklocka</strong><p id="vote-clock-state"></p>
+        <div class="vote-admin-buttons"><button id="vote-open-sunday" data-vote-admin type="button">Öppna söndag kl. 21</button><button id="vote-open-next" data-vote-admin type="button" hidden>Öppna röstningen kl. 15</button><button id="vote-next-midnight" data-vote-admin type="button">Gå till nästa midnatt →</button><button id="vote-real-time" data-vote-admin type="button">Använd verklig tid</button><button id="vote-reset" data-vote-admin type="button">Återställ omröstningstestet</button></div>
+        <p id="vote-admin-feedback" role="status" aria-live="polite"></p>
+      </aside>
+      <section class="vote-preview" id="vote-preview" aria-labelledby="vote-title" hidden>
+        <div class="vote-heading">
+          <div><p class="vote-kicker">Dagens val · 19–25 oktober</p><h2 id="vote-title">Vad kör vi<br>imorgon?</h2><p class="vote-lead">Du väljer din favorit. Vi gör det tillsammans.</p></div>
+          <div class="vote-ballot-art" aria-hidden="true"><span class="vote-art-spark">✦</span><span class="vote-art-ticket">✓</span><span class="vote-art-box">SO</span></div>
+        </div>
+        <p id="vote-sunday-note" class="vote-sunday-note" hidden>Rösta på morgondagens pass här. Dagens Spinn The Wheel finns kvar nedanför och kan köras klart fram till midnatt.</p>
+        <div id="vote-access" hidden><p>En röst per deltagare. Vinnaren avgörs vid svensk midnatt.</p><button id="vote-login" class="vote-submit" type="button">Logga in för att vara med →</button></div>
+        <section class="vote-today" id="vote-today" hidden aria-labelledby="vote-today-title">
+          <div class="vote-winner-label"><p class="vote-kicker">Folket har talat!</p><span aria-hidden="true">✦ Dagens pass</span></div>
+          <p id="vote-today-date" class="vote-today-date"></p><h3 id="vote-today-title"></h3><p id="vote-today-description"></p>
+          <div class="vote-completion" id="vote-completion"><p id="vote-completion-summary"></p><button id="vote-complete" class="vote-complete" type="button">Jag har klarat passet · 3 poäng</button><button id="vote-undo-complete" class="vote-undo-complete" type="button" hidden>Ångra klarmarkering</button><p id="vote-completion-feedback" role="status" aria-live="polite" tabindex="-1"></p></div>
+          <div class="vote-steps-alternative"><button id="vote-steps-choice" class="vote-steps-choice" type="button" aria-pressed="false"><span class="vote-steps-check" aria-hidden="true">✓</span><span>Hoppar passet, men har gått 10 000 steg · 1 poäng</span></button><p id="vote-steps-hint"></p></div>
+          <p id="vote-today-outcome" class="vote-outcome"></p>
+          <details class="vote-winner-details"><summary>Se hur rösterna föll <span aria-hidden="true">↗</span></summary><div id="vote-winner-breakdown"></div></details>
+        </section>
+        <section id="vote-waiting" class="vote-waiting" hidden aria-labelledby="vote-waiting-title"><p class="vote-kicker">Nästa omröstning</p><h3 id="vote-waiting-title">Vi laddar för nästa val.</h3><p id="vote-waiting-copy"></p></section>
+        <section id="vote-ballot" hidden>
+          <div class="vote-poll-meta"><span class="vote-open-badge"><i aria-hidden="true"></i> Omröstningen är öppen</span><span id="vote-countdown"></span></div>
+          <div class="vote-target"><div><p class="vote-kicker">Vi röstar om</p><h3 id="vote-target"></h3></div><span id="vote-total"></span></div>
+          <ol class="vote-steps" aria-label="Så går det till"><li data-vote-stage="1"><span>1</span> Välj favorit</li><li data-vote-stage="2"><span>2</span> Lägg din röst</li><li data-vote-stage="3"><span>3</span> Följ spänningen</li></ol>
+          <section id="vote-receipt" class="vote-receipt" hidden aria-labelledby="vote-receipt-title"><span class="vote-receipt-check" aria-hidden="true">✓</span><div><h4 id="vote-receipt-title" tabindex="-1">Klappat och klart!</h4><p id="vote-receipt-copy"></p></div><span class="vote-receipt-star" aria-hidden="true">✦</span></section>
+          <div id="vote-race" class="vote-race" hidden><strong id="vote-race-title"></strong><p id="vote-race-copy"></p></div>
+          <form id="vote-form"><fieldset><legend id="vote-ballot-intro"></legend><div class="vote-options" id="vote-options"></div></fieldset><button class="vote-submit" id="vote-submit" type="submit" disabled>Lägg min röst <span aria-hidden="true">→</span></button></form>
+          <p id="vote-selection-copy" class="vote-selection-copy" aria-live="polite"></p>
+          <p id="vote-once-note" class="vote-note"></p><p id="vote-deadline" class="vote-note"></p>
+        </section>
+        <p id="vote-week-finished" hidden></p>
+        <p id="vote-feedback" class="vote-feedback" role="status" aria-live="polite" tabindex="-1"></p>
+        <button class="vote-refresh" id="vote-refresh" type="button">Uppdatera röster ↻</button><button class="vote-retry" id="vote-retry" type="button" hidden>Försök igen</button>
+        <details id="vote-history-section" class="vote-history-section" hidden><summary>Tidigare vinnare <span aria-hidden="true">↓</span></summary><ol id="vote-history" class="vote-history"></ol></details>
+        <div id="vote-celebration" class="vote-celebration" aria-hidden="true"></div>
+      </section>
       <section class="challenge-card roulette-launch-card" id="training-roulette" aria-labelledby="roulette-invite" hidden>
         <button class="roulette-steps-button" id="roulette-steps" type="button" aria-pressed="false"><span class="roulette-steps-check" aria-hidden="true">✓</span><span id="roulette-steps-label">Hoppar Spinn the wheel men har gått 10 000 steg idag - 1 poäng</span></button>
         <p class="roulette-steps-status" id="roulette-steps-status" role="status" aria-live="polite"></p>
@@ -386,6 +424,8 @@
   <script src="/home/participants.js" defer></script>
   <script src="/roulette/roulette-logic.js" defer></script>
   <script src="/roulette/roulette.js" defer></script>
+  <script src="/voting/vote-logic.js" defer></script>
+  <script src="/voting/vote.js" defer></script>
   <script src="/auth.js?v=daily-bonus-1" defer></script>
   <script src="/mohv-egg.js" defer></script>
   <script src="/trump-quote.js" defer></script>

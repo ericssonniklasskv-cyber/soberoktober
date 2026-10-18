@@ -12,3 +12,7 @@ test-results/
 /bingo-*.png
 /board-*.png
 /qa/*.png
+
+# Local development state and recovery snapshots
+.vercel-linked-backup/
+.local-backups/
