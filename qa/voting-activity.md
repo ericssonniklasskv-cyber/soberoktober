@@ -55,3 +55,14 @@ antal gick från 122 till 124. RLS och privata åtkomstspärrar består.
 Läsande kontroll av den riktiga sidan/API:t vid 320/390/768/1440 visar rätt
 texter, enbart avsedda publika fält, inget overflow och inga sidfel.
 Security/performance advisors har samma befintliga fynd som före ändringen.
+
+## Kortare text
+
+Aktivitetstexten använder nu passets korta katalognamn: exempelvis
+”MikeB klarade av 3 × 15 squats”. Stegalternativet visas som ”Erik gick
+10 000 steg”. Varken temat eller poängen upprepas i raden.
+Migration `20261019193324_shorten_voting_activity_labels.sql` ändrar endast
+etiketterna i den befintliga källan, även för kudos. Sparade resultat,
+leaderboard och aktivitetsnycklar verifierades oförändrade efter migreringen.
+106 logiktester, befintligt mobil-/desktoptest och lokalt SQL-rollbacktest
+passerar, inklusive kontroll av att etiketten är det korta katalognamnet.

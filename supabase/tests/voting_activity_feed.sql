@@ -24,6 +24,10 @@ begin
   if key is null or key not like 'vote:%' or position(actor::text in key)>0 then raise exception 'Missing or unsafe vote activity key';end if;
   if not exists(select 1 from private.kudos_feed_events() e join private.workout_vote_completions c on c.user_id=e.user_id and c.workout_date=e.result_date
     where e.user_id=actor and e.event_at=c.completed_at and nullif(e.activity_label,'') is not null) then raise exception 'Wrong workout label or timestamp';end if;
+  if not exists(select 1 from private.kudos_feed_events() e
+    join private.workout_vote_results r on r.workout_date=e.result_date
+    join private.workout_vote_options o on o.workout_date=r.workout_date and o.option_id=r.option_id
+    where e.user_id=actor and e.activity_label=o.task->>'label' and e.kudos_label=o.task->>'label') then raise exception 'Feed must use the short workout name for activity and kudos';end if;
   select to_jsonb(l) into score_before from public.get_leaderboard() l where is_current_user;
   if (score_before->>'total_points')::numeric<>3 or (score_before->>'completed_days')::bigint<>1 then raise exception 'Workout scoring changed';end if;
   perform public.my_workout_vote('complete','2026-10-19');

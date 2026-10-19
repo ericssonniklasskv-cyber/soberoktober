@@ -34,10 +34,10 @@
       const label = String(item.activity_label || '').trim();
       return label ? `${name} klarade Spinn The Wheel: ${label}` : '';
     }
-    if (item.activity_type === 'vote_steps') return `${name} gick 10 000 steg istället för dagens framröstade pass · 1 poäng`;
+    if (item.activity_type === 'vote_steps') return `${name} gick 10 000 steg`;
     if (item.activity_type === 'vote_pass') {
       const label = String(item.activity_label || '').trim();
-      return label ? `${name} klarade dagens framröstade pass: ${label} · 3 poäng` : '';
+      return label ? `${name} klarade av ${label}` : '';
     }
     const level = Number(item.multiplier);
     if (![1, 2, 3].includes(level)) return '';
