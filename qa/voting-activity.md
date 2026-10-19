@@ -34,10 +34,24 @@ Startsidan lyssnade dessutom inte på `vote-result-changed`.
   pass/steg, dubbelsparning, ångring/ommärkning, privata behörigheter, publik
   payload utan e-post/UUID, egenmarkering och kudos exakt en gång.
 
-Inga production-data har ändrats. Inför publicering behövs den riktade
-migreringen `20261019192359_add_voting_completion_activity_feed.sql` samt
+Inför publicering behövs den riktade
+migreringen `20261019192912_add_voting_completion_activity_feed.sql` samt
 frontend-deployen tillsammans. Publicera frontend först så att de nya
 aktivitetstyperna stöds när databaskällan börjar returnera dem.
 Kör inte generell `db push` och återspela inte den ursprungliga röstningsmigreringen.
 Efter godkänd publicering: kontrollera befintliga klarmarkeringar via RPC och
 kör Supabase security/performance advisors.
+
+## Publicerat 19 oktober
+
+Godkänt av användaren och publicerat på main (cba57e8), Vercel-deployment
+`dpl_G2itC7dcdYH47fG5BVKWpV6WfC92`, båda soberoktober-domänerna.
+Databasen registrerade migreringen som `20261019192912`; filnamnet följer
+den registrerade versionen och SQL-innehållet är samma testade rättning.
+
+Livekontrollen visar två befintliga röstningsaktiviteter. Hasharna för
+leaderboard och sparade klarmarkeringar är identiska före/efter. Feedens
+antal gick från 122 till 124. RLS och privata åtkomstspärrar består.
+Läsande kontroll av den riktiga sidan/API:t vid 320/390/768/1440 visar rätt
+texter, enbart avsedda publika fält, inget overflow och inga sidfel.
+Security/performance advisors har samma befintliga fynd som före ändringen.
