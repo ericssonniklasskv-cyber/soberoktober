@@ -25,3 +25,9 @@ test('bingo cells use their activity text and milestones never invent multiplier
   assert.equal(ActivityLogic.sentence({ display_name: 'Jacob', activity_type: 'bingo_full', multiplier: null }), 'Jacob klarade hela bingobrickan!');
   assert.equal(ActivityLogic.sentence({ activity_type: 'bingo_cell', activity_label: ' ' }), '');
 });
+
+test('voted workouts and their step alternative have their own activity text', () => {
+  assert.equal(ActivityLogic.sentence({ display_name: 'Anna', activity_type: 'vote_pass', activity_label: ' 30 minuter löpning ', multiplier: null }), 'Anna klarade dagens framröstade pass: 30 minuter löpning · 3 poäng');
+  assert.equal(ActivityLogic.sentence({ display_name: 'Erik', activity_type: 'vote_steps', multiplier: null }), 'Erik gick 10 000 steg istället för dagens framröstade pass · 1 poäng');
+  assert.equal(ActivityLogic.sentence({ activity_type: 'vote_pass', activity_label: ' ' }), '');
+});
