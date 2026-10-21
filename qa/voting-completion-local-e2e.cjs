@@ -49,7 +49,7 @@ const root=path.resolve(__dirname,'..');
   assert.equal(await history.locator('#total-points').textContent(),'3');assert.equal(await history.locator('#completed-days').textContent(),'1');
   const day=history.locator('.calendar-day').filter({has:history.locator('.day-number',{hasText:new RegExp('^'+Number(today.date.slice(-2))+'$')})});
   assert.match(await day.textContent(),/Dagens val/);await day.click();await history.locator('#day-detail').waitFor({state:'visible'});
-  assert.equal(await history.locator('#detail-points').textContent(),'3 poäng');assert.equal(await history.locator('#day-edit-form').isVisible(),false);
+  assert.equal(await history.locator('#detail-points').textContent(),'3 poäng');await history.waitForFunction(()=>!document.querySelector('#day-edit-fields').disabled);assert.equal(await history.locator('#day-edit-form').isVisible(),true);assert.equal(await history.locator('#day-edit-level').inputValue(),'workout');
   assert.equal(await history.locator('#detail-title').textContent(),today.options.find(option=>option.id===today.result.option_id).title);
   await history.close();
   await page.locator('#vote-undo-complete').click();await page.locator('#vote-complete').waitFor({state:'visible'});

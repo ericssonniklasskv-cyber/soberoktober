@@ -115,6 +115,95 @@
   }
 
   let bingoState = null;
+
+  function setLevelOptions(voted) {
+    const choices = voted ? [['', 'Inte registrerat'], ['workout', 'Dagens pass · 3 poäng'], ['steps', '10 000 steg · 1 poäng']]
+      : [['', 'Välj nivå'], ['1', '1× · 1 poäng'], ['2', '2× · 1,5 poäng'], ['3', '3× · 2 poäng']];
+    edit.level.replaceChildren(...choices.map(([value, text]) => new Option(text, value)));
+    document.querySelector('label[for="day-edit-level"]').textContent = voted ? 'Vad gjorde du?' : 'Nivå';
+    edit.form.querySelector('.day-edit-intro').textContent = voted
+      ? 'Glömt att registrera? Välj passet eller 10 000 steg för den här dagen. Du får poäng för ett alternativ.'
+      : 'Glömt att registrera eller valt fel nivå? Rätta ditt eget resultat här.';
+  }
+
+  function showVoteDay(data) {
+    const day = data.voteDay, completion = day.completion;
+    const winner = day.options.find(option => option.id === day.result?.option_id);
+    const stepped = completion?.kind === 'steps';
+    ui.detailTitle.textContent = stepped ? '10 000 steg' : winner?.title || 'Dagens val';
+    ui.detailDescription.textContent = stepped ? '10 000 steg istället för dagens framröstade pass.' : winner?.description || 'Passet är inte avgjort ännu.';
+    ui.detailLevel.textContent = completion ? (stepped ? '10 000 steg · klart' : 'Dagens val · klart') : 'Inte registrerat';
+    ui.detailPoints.textContent = completion ? `${pointsFormatter.format(Number(completion.points))} poäng` : '–';
+    ui.detailBonus.hidden = data.bonus_points === null;
+    ui.detailBonus.textContent = data.bonus_points === null ? '' : `Bonuspoäng: ${pointsFormatter.format(Number(data.bonus_points))}`;
+    edit.level.value = completion?.kind || '';
+    edit.bonusWrap.hidden = !data.challenge?.bonus_description || !data.challenge?.bonus_points;
+    edit.bonus.checked = data.bonus_points !== null;
+    edit.bonusLabel.textContent = `${data.challenge?.bonus_description || ''} · ${pointsFormatter.format(Number(data.challenge?.bonus_points || 0))} bonuspoäng`;
+  }
+
+  async function openVoteDay(day) {
+    const request = ++editRequest, userId = currentSession?.user.id;
+    editDate = day.date; editData = null;
+    setLevelOptions(true);
+    edit.form.hidden = false; edit.fields.disabled = true;
+    edit.parts.replaceChildren(); edit.bonusWrap.hidden = true;
+    edit.status.textContent = 'Hämtar passet…';
+    ui.detailDate.textContent = formatDate(day.date);
+    ui.detailTitle.textContent = challengesByDate.get(day.date)?.title || 'Dagens val';
+    ui.detailDescription.textContent = ''; ui.detailLevel.textContent = '–';
+    ui.detailPoints.textContent = '–'; ui.detailBonus.hidden = true;
+    ui.detail.showModal();
+    try {
+      const [vote, bonus] = await Promise.all([
+        client.rpc(voteRpc), client.rpc('self_daily_result', { p_date: day.date }),
+      ]);
+      if (request !== editRequest || !ui.detail.open || currentSession?.user.id !== userId) return;
+      if (vote.error) throw vote.error;
+      // A theme day need not have a daily_challenges row unless it has a bonus.
+      if (bonus.error && !(bonus.error.code === '22023' && /saknar ett publicerat pass/.test(bonus.error.message || ''))) throw bonus.error;
+      const voteDay = vote.data?.days?.find(item => item.date === day.date);
+      if (!voteDay?.result || day.date > vote.data.today) throw new Error('Du kan registrera ett avgjort pass för idag eller en tidigare dag under röstveckan.');
+      editData = { voteDay, challenge: bonus.data?.challenge || null, bonus_points: bonus.data?.bonus_points ?? null };
+      showVoteDay(editData); edit.status.textContent = ''; edit.fields.disabled = false;
+    } catch (error) {
+      if (request === editRequest) edit.status.textContent = error.message || 'Passet kunde inte hämtas. Försök igen.';
+    }
+  }
+
+  async function saveVoteDay() {
+    if (savingDay || !editData?.voteDay || !currentSession) return;
+    const session = currentSession, request = editRequest, date = editDate;
+    const choice = { '': 0, workout: 1, steps: 2 }[edit.level.value];
+    const claimBonus = edit.bonus.checked && editData.bonus_points === null;
+    const unclaimBonus = !edit.bonus.checked && editData.bonus_points !== null;
+    let resultSaved = false;
+    savingDay = true; ui.detailClose.disabled = true; edit.fields.disabled = true;
+    edit.save.textContent = 'Sparar…'; edit.status.textContent = '';
+    try {
+      const { data, error } = await client.rpc(voteRpc, { p_action: 'save_result', p_date: date, p_option: choice });
+      if (error) throw error;
+      if (request !== editRequest || currentSession?.user.id !== session.user.id) return;
+      editData.voteDay = data.days.find(day => day.date === date); resultSaved = true;
+      if (claimBonus || unclaimBonus) {
+        const bonus = await window.SoberOctoberBonus.setClaim(client, date, claimBonus, editData.bonus_points);
+        if (request !== editRequest || currentSession?.user.id !== session.user.id) return;
+        editData.bonus_points = bonus.bonus_points;
+      }
+      showVoteDay(editData);
+      edit.status.textContent = 'Sparat! Din oktober är uppdaterad.';
+      try { await loadHistory(session); }
+      catch (_) { edit.status.textContent += ' Historiken kunde inte uppdateras just nu. Ladda om sidan.'; }
+    } catch (error) {
+      if (request !== editRequest || currentSession?.user.id !== session.user.id) return;
+      if (resultSaved) { showVoteDay(editData); await loadHistory(session).catch(() => {}); }
+      edit.status.textContent = (resultSaved ? 'Passresultatet är sparat, men bonusen kunde inte sparas. ' : '') + (error.message || 'Försök igen.');
+    } finally {
+      savingDay = false; ui.detailClose.disabled = false; edit.save.textContent = 'Spara resultat';
+      if (request === editRequest) edit.fields.disabled = false;
+    }
+  }
+
   const bingoDialog = document.querySelector('#bingo-day-detail');
   bingoDialog.querySelector('button').addEventListener('click', () => bingoDialog.close());
   bingoDialog.addEventListener('click', event => { if (event.target === bingoDialog) bingoDialog.close(); });
@@ -177,7 +266,7 @@
   bingoDialog.addEventListener('cancel', event => { if (bingoBonusBusy) event.preventDefault(); });
   bingoDialog.addEventListener('close', () => { bingoBonusRequest += 1; });
   async function openDetail(day) {
-    if (bingoBonusBusy) return;
+    if (bingoBonusBusy || savingDay) return;
     if (window.SoberRouletteLive.isDate(day.date)) {
       // Saved rounds are shown in the roulette itself, never as the old 1×/2×/3× editor.
       location.href = '/?roulette-date=' + encodeURIComponent(day.date);
@@ -191,12 +280,9 @@
       return;
     }
     if (votingPreview&&day.date>='2026-10-19'&&day.date<='2026-10-25') {
-      const challenge=challengesByDate.get(day.date),stepped=day.result?.completion_kind==='steps';edit.form.hidden=true;
-      ui.detailDate.textContent=formatDate(day.date);ui.detailTitle.textContent=stepped?'10 000 steg':challenge?.title||'Dagens val';
-      ui.detailDescription.textContent=stepped?day.result.description:challenge?.description||'Det framröstade passet visas när omröstningen är avgjord.';
-      ui.detailLevel.textContent=day.result?(stepped?'10 000 steg · klart':'Dagens val · klart'):'Inte registrerat';ui.detailPoints.textContent=day.result?pointsFormatter.format(Number(day.result.points))+' poäng':'–';ui.detailBonus.hidden=true;
-      ui.detail.showModal();return;
+      await openVoteDay(day); return;
     }
+    setLevelOptions(false);
     edit.form.hidden=false;
     if (savingDay) return;
     const request = ++editRequest;
@@ -254,6 +340,7 @@
 
   edit.form.addEventListener('submit', async (event) => {
     event.preventDefault();
+    if (editData?.voteDay) { await saveVoteDay(); return; }
     if (savingDay || !editData || !currentSession) return;
     const multiplier = edit.level.value ? Number(edit.level.value) : null;
     const claimBonus = edit.bonus.checked && editData.bonus_points === null;
@@ -463,6 +550,7 @@
   }
 
   async function handleSession(session) {
+    if (currentSession?.user.id !== session?.user.id && ui.detail.open) ui.detail.close();
     window.SoberOctoberBingo.init(client, async () => { if (currentSession) await loadHistory(currentSession); });
     currentSession = session;
     ui.loginStatus.textContent = '';

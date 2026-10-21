@@ -847,6 +847,7 @@ h1 {
 .day-edit-form legend { font-weight: 800; margin-bottom: 12px; }
 .day-edit-form select { width: 100%; min-height: 48px; padding: 10px 12px; border: 1px solid #b7c2ac; border-radius: 12px; background: #faf6e9; color: #204b3b; font: inherit; }
 .day-edit-parts label, .day-edit-bonus { display: flex; align-items: flex-start; gap: 10px; padding: 12px; background: #f4f0e3; border-radius: 12px; line-height: 1.5; overflow-wrap: anywhere; }
+.day-edit-bonus[hidden] { display: none; }
 .day-edit-form input[type="checkbox"] { flex: 0 0 auto; width: 22px; height: 22px; accent-color: #204b3b; margin: 1px 0 0; }
 .day-edit-parts { display: grid; gap: 8px; }
 .day-edit-parts p { margin: 0; font-size: .9rem; }
