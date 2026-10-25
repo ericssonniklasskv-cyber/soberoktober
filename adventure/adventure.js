@@ -396,9 +396,15 @@
     const dialogue = boss.dialogue.map(line => `<p>”${esc(line)}”</p>`).join('');
     return `<p class="boss-story">${esc(boss.story)}</p><blockquote class="boss-dialogue" aria-label="${esc(boss.name + ' säger')}">${dialogue}</blockquote><p class="boss-challenge-story">${esc(boss.challengeStory)}</p>`;
   }
+  function canOpenBossCard(boss) {
+    const completed = G.progress(state).completedBossIds;
+    const next = G.BOSSES.find(item => !completed.includes(item.id));
+    return !!boss && next?.id === boss.id && G.isBossOpen(boss.id, testDay);
+  }
   function showBoss(boss) {
     clearTimeout(bossPopupTimeout);
     if (!G.isBossOpen(boss.id, testDay)) { feedback('Bakrusbaronen öppnar den 31 oktober. Nå slottet för att börja samla poäng under tiden.'); return; }
+    if (!canOpenBossCard(boss)) { feedback('Ett bosskort i taget. Klara din nästa frestelse för att låsa upp följande boss.'); return; }
     stopBossAudio(); F.stop();
     document.querySelector('[data-close=boss-dialog]').setAttribute('aria-label', 'Stäng bosskortet');
     currentBoss = boss; selectedChoice = null;
@@ -484,9 +490,10 @@
       occupants.forEach(player => addPlayerDetail(content, player));
     } else content.append(element('p', 'no-results', 'Ingen äventyrare står här just nu.'));
     if (boss) {
-      const open = G.isBossOpen(boss.id, testDay);
-      if (!open) content.append(element('p', 'preview-note', 'Bakrusbaronen öppnar den 31 oktober. När du når slottet på ruta 36 kan du börja samla poäng medan du väntar.'));
-      const button = element('button', 'primary-button', !open ? 'Öppnar 31 oktober' : G.progress(state).pendingBoss?.id === boss.id ? 'Möt frestelsen ↗' : 'Se bosskortet ↗');
+      const open = canOpenBossCard(boss), progress = G.progress(state);
+      const done = progress.completedBossIds.includes(boss.id), waitingForDate = !G.isBossOpen(boss.id, testDay);
+      if (!open) content.append(element('p', 'preview-note', done ? 'Den här bossen är besegrad. Bara nästa obesegrade bosskort kan öppnas.' : waitingForDate ? 'Bakrusbaronen öppnar den 31 oktober. När du når slottet på ruta 36 kan du börja samla poäng medan du väntar.' : 'Bossen syns på kartan, men kortet låses upp först när du har klarat föregående boss.'));
+      const button = element('button', 'primary-button', !open ? done ? 'Besegrad' : waitingForDate ? 'Öppnar 31 oktober' : 'Bosskortet är låst' : progress.pendingBoss?.id === boss.id ? 'Möt frestelsen ↗' : 'Se bosskortet ↗');
       button.disabled = !open; button.dataset.openBoss = boss.id;
       button.style.marginTop = '20px';
       button.addEventListener('click', () => { closeDialog('detail-dialog'); showBoss(boss); }); content.append(button);
@@ -649,6 +656,7 @@
     const apply = data => {
       state = G.restore(data.state); participantId = data.profile.pawn_id || 'guest';
       mountIndex = data.profile.mount_index; testDay = data.today;
+      if (currentBoss && $('boss-dialog').open && $('boss-dialog').dataset.mode === 'encounter' && !canOpenBossCard(currentBoss)) closeDialog('boss-dialog');
       if (geometry) { buildMap(); render(); }
     };
     apply(R.data); R.bind(apply);
