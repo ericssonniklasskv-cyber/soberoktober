@@ -1,6 +1,6 @@
 # Frestelsernas rike — releaseunderlag 25 oktober 2026
 
-Status: verifierat lokalt och godkänt för publicering 25 oktober. Den granskade migrationen är installerad som 20261025202041, ännu avstängd. Frontend-publicering och aktivering pågår. Senaste inhämtade main: ed288a7; införlivad i utvecklingsbranchen genom 5f1703d. Designversionen före releasearbetet är b6d15e6 och kan granskas utan att återställa några arbetsfiler.
+Status: **PUBLICERAT 25 oktober 2026** med användarens uttryckliga godkännande. Databasmigrationen är installerad och aktiverad; startsidan är live direkt. Träningsregistreringar öppnar först 26 oktober kl. 00.00 svensk tid. Releasekoden finns på main i `ba6898a53b1651bab59bd805dd1c9f1ae851be72`. Senaste inhämtade main: ed288a7; införlivad i utvecklingsbranchen genom 5f1703d. Designversionen före releasearbetet är b6d15e6 och kan granskas utan att återställa några arbetsfiler.
 
 ## Ändringen
 
@@ -61,3 +61,16 @@ SHA-256 för `20261025202041_prepare_final_adventure.sql`: `71fc5df7675604e70539
 ## Publiceringsgodkännande
 
 Användaren godkände 25 oktober uttryckligen databasrelease, publicering och byte av startsida direkt, med träningsstart först 26 oktober kl. 00.00 svensk tid. Pjäsintroduktionen ska fungera redan på söndagen.
+
+## Genomförd release och slutkontroll
+
+- Migration `20261025202041_prepare_final_adventure.sql` applicerad riktat; SHA-256 oförändrad. Den registrerade production-versionen ersatte utkastets tidsstämpel, utan SQL-ändringar. Historiska migrationer reparerades inte.
+- Aktiverad med `qa/adventure-activate.sql` efter verifiering av exakt fem personliga konto-/pjäspar och noll gamla framtida passresultat. Production använder `clock_timestamp()` och Europe/Stockholm; ingen testklocka eller lokal testprogress importerades.
+- `SOBER_ADVENTURE_ENABLED=1` endast i Vercels production-miljö. Inget lokalt previewläge i live-konfigurationen.
+- Först publicerad och kontrollerad som `dpl_9txWj1fdzfbXCbnPLwxUVHJiw2PF`. Main-bygget `dpl_5X41M6a1wDuzUP5Dqi4amVfJxC7E` följer releasecommitten `ba6898a53b1651bab59bd805dd1c9f1ae851be72`. Git-trädet `f234633318658ef5bb6160626ecdf2d143961253` är identiskt med den testade lokala releaseversionen.
+- Den riktiga domänen omdirigerar direkt till riket. Nillebaes riktiga konto visade sin personliga introduktion redan på söndagen. Production-RPC hämtade rätt pjäs, tio deltagare, topplista och tidigare aktivitet; träningsförsök före måndag nekades. Databaskontrollen rullades tillbaka utan testregistreringar.
+- Lokal regression: 137 enhetstester, mobil-/ljudtester och verklig lokal Auth/PostgREST/databas. Nytt test bekräftar söndagens startsida + pjäsintro, serveravslag före midnatt och upplåsning på samma öppna sida vid midnatt.
+- Skrivskyddat live-test: startsida/inloggning på 320/390/768/1440 px utan horisontell scroll eller sidfel. Alla elva WebP-porträtt och sju M4A-filer är byte-identiska med releasen. Samtliga sju ljud avkodas/spelas i Chrome. HTTP byte ranges fungerar. Interna QA-/migrations-/env-filer returnerar 404.
+- Automatisk utslagning för missade dagar är fortfarande avstängd. Inga bonusuppgifter för 26–31 oktober lades till av releasen; de kan läggas in via admin.
+- Fysisk iPhone/Safari och subjektiv ljudnivå/ljudkvalitet är inte verifierade. Fanfaren har manuell startknapp som reserv om webbläsaren blockerar ljudstart.
+- Återgång vid behov: tidigare fungerande build `dpl_GSfwxLdgCLHJQSFuJFjxw29G1no8`/main `ed288a75439072f5d07374aba68fc0402ef4e66f`, tillsammans med avstängd databasinställning och frontendflagga. Bevara nya speldata.
