@@ -16,3 +16,6 @@ test-results/
 # Local development state and recovery snapshots
 .vercel-linked-backup/
 .local-backups/
+
+# Local dependency directory (including the shared development symlink).
+node_modules

@@ -100,7 +100,7 @@
     completed.forEach((result) => {
       const multiplier = Number(result.multiplier);
       if (result.kind === 'bingo') { completedDates.add(result.result_date); return; }
-      if (result.kind === 'roulette'||result.kind==='vote') { completedDates.add(result.result_date); trainingPoints += Number(result.points) || 0; return; }
+      if (result.kind === 'roulette'||result.kind==='vote'||result.kind==='adventure') { completedDates.add(result.result_date); trainingPoints += Number(result.points) || 0; return; }
       if (![1, 2, 3].includes(multiplier)) return;
       completedDates.add(result.result_date);
       multiplierCounts[multiplier] += 1;
@@ -183,7 +183,7 @@
     const monthResults = results.filter((result) => (
       result.result_date >= OCTOBER_START
       && result.result_date <= cutoffDate
-      && (result.kind === 'bingo' || result.kind === 'roulette' || result.kind==='vote' || [1, 2, 3].includes(Number(result.multiplier)))
+      && (result.kind === 'bingo' || result.kind === 'roulette' || result.kind==='vote' || result.kind==='adventure' || [1, 2, 3].includes(Number(result.multiplier)))
     ));
     const completedDates = new Set(monthResults.map((result) => result.result_date));
     const multiplierCounts = { 1: 0, 2: 0, 3: 0 };

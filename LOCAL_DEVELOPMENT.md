@@ -87,3 +87,7 @@ Den tidigare lokala versionen finns säkert bevarad på branchen `safety/local-b
 Veckans fyra redan applicerade ändringar har registrerats i lokal migrationshistorik efter strukturell verifiering. Databasen återställdes inte. Historiska tidsstämplar kan skilja mellan lokala filer och production; den retroaktiva `20260920112000_add_is_admin_to_profiles.sql` är fortsatt en lokal grund för att kunna skapa databasen från noll. Det är inte en instruktion att köra den mot production.
 
 Arbeta och testa lokalt. Ingen `supabase db push`, remote-migrering eller merge till main utan uttryckligt godkännande. Återanslut inte `.vercel` till production och hämta inte production-miljövariabler till denna miljö. Startverktygen stoppar fjärradresser, behåller nycklar i minnet och skickar aldrig service-role-nyckeln till webbläsaren.
+
+## Finalveckans releaseförberedelse, 25 oktober
+
+Worktree `~/soberoktober-derby`, branch `feature/final-adventure-local`, är synkad med main `ed288a7`. 3002 är den isolerade designförhandsvisningen. Ett separat databaskopplat test kan startas med `npm run dev:adventure:connected -- --date=2026-10-26` på port 3003. Det använder samma lokala Supabase-stack och bevarar 3002. Läs `adventure/README.md` och `qa/final-adventure-release.md` för detaljer. De lokalt provade main-migrationerna och finalmigrationen är registrerade som applicerade med `migration repair --local`; production-historiken är inte ändrad.

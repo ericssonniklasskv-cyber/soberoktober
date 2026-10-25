@@ -17,7 +17,13 @@
     "dev:vote": "node scripts/dev-local.mjs --voting",
     "seed:vote": "node scripts/seed-vote.mjs",
     "test:vote": "node qa/voting-local-e2e.cjs",
-    "test:vote-completion": "node qa/voting-completion-local-e2e.cjs"
+    "test:vote-completion": "node qa/voting-completion-local-e2e.cjs",
+    "dev:derby": "node scripts/dev-derby.mjs",
+    "test:derby": "node --test derby/derby-logic.test.js",
+    "dev:adventure": "node scripts/dev-adventure.mjs",
+    "test:adventure": "node --test adventure/adventure-logic.test.js adventure/adventure-personal-pawns.test.js",
+    "dev:adventure:connected": "node scripts/dev-adventure-connected.mjs",
+    "test:adventure:connected": "node qa/adventure-connected-e2e.cjs"
   },
   "devDependencies": {
     "playwright": "1.62.1",

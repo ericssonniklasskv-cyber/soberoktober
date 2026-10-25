@@ -1,0 +1,2 @@
+# Derby prototype
+Local-only development for October 26, 2026. Do not deploy, push main, change production or Supabase. The working tree starts from the same file tree as production main 0f6f201. Synced project sources elsewhere are read-only. Coordinate file ownership; do not overwrite another agent's changes. Keep the existing app palette and Swedish copy. All race points and opponents in this prototype are explicitly demo data, stored locally and separate from real competition scores.

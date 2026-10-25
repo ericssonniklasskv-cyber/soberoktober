@@ -1,0 +1,52 @@
+/* October's finish deserves the entire screen, above the modal's top layer. */
+.boss-dialog[data-mode=finale]{inset:0;width:100%;max-width:none;height:100dvh;max-height:none;margin:0;border:0;border-radius:0;background:#143e32;color:#fff5d9;overflow-x:hidden;overflow-y:auto;box-shadow:none}
+.boss-dialog[data-mode=finale]::backdrop{background:#143e32;backdrop-filter:none}
+.boss-dialog[data-mode=finale] .dialog-close{position:fixed;z-index:30;right:max(16px,env(safe-area-inset-right));top:max(16px,env(safe-area-inset-top));width:48px;height:48px;background:#123a30;color:#fff5d9;border:1px solid #ffdc8e80}
+.finale-shell{position:relative;isolation:isolate;display:grid;place-items:center;min-height:100dvh;box-sizing:border-box;padding:90px 24px 46px;overflow:hidden;background:radial-gradient(ellipse at 50% 30%,#63804e61,transparent 52%),radial-gradient(ellipse at 50% 100%,#dd9a3033,transparent 60%),#143e32}
+.finale-shell::before{content:'';position:absolute;inset:16px;border:1px solid #dfbe6e50;border-radius:12px;pointer-events:none;z-index:0}
+.finale-content{position:relative;z-index:2;width:min(100%,940px);text-align:center}
+.finale-kicker{color:#eac778;font:800 11px/1.6 var(--body);letter-spacing:3px;margin:0 0 12px}
+.finale-crest{position:relative;width:300px;height:226px;margin:0 auto 8px}
+.finale-wreath{position:absolute;inset:0;width:100%;height:100%;filter:drop-shadow(0 0 18px #edc66625)}
+.finale-rider{position:absolute;inset:24px 38px 30px;display:grid;place-items:center;filter:drop-shadow(0 0 28px #ffe89a50) drop-shadow(0 8px 2px #092b2344)}
+.finale-rider svg{width:100%;height:100%}
+.finale-ribbon{position:absolute;bottom:0;left:50%;transform:translateX(-50%) rotate(-3deg);white-space:nowrap;padding:7px 16px;border:1px solid #f9da8a;border-radius:4px;background:#e7bb58;color:#183c2e;font:850 10px/1.3 var(--body);letter-spacing:2px;box-shadow:0 4px 0 #0b2b2350}
+.finale-achievement{font:750 10px/1.6 var(--body);letter-spacing:2px;color:#e4ca94;margin:22px 0 12px}
+.finale-shell h2{font:400 clamp(64px,8.2vw,112px)/.97 var(--editorial);letter-spacing:-3px;color:#fff5d9;margin:0 0 22px;text-wrap:balance}
+.finale-shell h2 em{display:block;font-weight:400;color:#ffd579;line-height:1.15;letter-spacing:-3px}
+.finale-copy{font:500 18px/1.6 var(--body);color:#e4e8cd;margin:0 0 26px}
+.finale-copy strong{font-weight:800;color:#fff5d9}
+.finale-actions{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:14px;max-width:600px;margin:0 auto}
+.finale-actions .primary-button{width:auto;flex:1 1 300px;min-height:56px;border-color:#e7ad50;background:#ffd071;color:#173e30;font:850 15px/1.4 var(--body);padding:14px 22px;box-shadow:0 4px 0 #b87a30}
+.finale-actions .primary-button:hover{background:#ffe29d}
+.finale-actions #finale-replay{min-height:56px;padding:12px 24px;border:1px solid #ddc58188;border-radius:10px;background:#24523e;color:#ffdda0;font:750 15px/1.4 var(--body);cursor:pointer}
+.finale-actions #finale-replay:hover{background:#346447}
+.finale-footnote{font:400 12px/1.7 var(--body);color:#ced9b9;margin:22px 0 0}
+.finale-sound-controls{position:absolute;left:max(25px,env(safe-area-inset-left));top:max(20px,env(safe-area-inset-top));z-index:25}
+.finale-sound-controls button{min-height:44px;padding:9px 15px;border:1px solid #dfc88b77;border-radius:24px;background:#143e32e8;color:#fff1cc;font:700 13px/1.4 var(--body);cursor:pointer}
+.finale-star{position:absolute;z-index:1;color:#efc461;opacity:.7;pointer-events:none;text-shadow:0 0 30px #f8d88366}
+.finale-star-one{left:8%;top:30%;font-size:54px;transform:rotate(10deg)}
+.finale-star-two{right:9%;top:58%;font-size:76px;transform:rotate(-13deg)}
+.finale-star-three{right:21%;top:14%;font-size:29px}
+#finale-confetti{position:fixed;inset:0;width:100vw;height:100dvh;z-index:20;pointer-events:none}
+@media(max-width:700px){
+  .finale-shell{padding:87px 23px 34px}
+  .finale-shell::before{inset:9px}
+  .finale-kicker{font-size:8px;letter-spacing:2px;margin-bottom:14px}
+  .finale-crest{width:230px;height:176px}
+  .finale-rider{inset:17px 30px 26px}
+  .finale-ribbon{font-size:8px;letter-spacing:1.4px;padding:6px 12px}
+  .finale-achievement{font-size:8px;letter-spacing:1.2px;max-width:290px;margin:23px auto 13px}
+  .finale-shell h2{font-size:clamp(51px,13vw,82px);letter-spacing:-2px;margin-bottom:18px}
+  .finale-shell h2 em{letter-spacing:-2px;line-height:1.14}
+  .finale-copy{font-size:15px;line-height:1.65;margin-bottom:23px}
+  .finale-actions{gap:12px;max-width:360px}
+  .finale-actions .primary-button{flex-basis:100%;font-size:14px}
+  .finale-actions #finale-replay{min-height:46px;font-size:13px;padding:10px 20px}
+  .finale-footnote{font-size:10px;max-width:290px;margin:17px auto 0}
+  .finale-star-one{left:4%;top:24%;font-size:30px}
+  .finale-star-two{right:4%;top:47%;font-size:35px}
+  .finale-sound-controls{left:18px;top:18px}
+  .finale-sound-controls button{font-size:11px;padding:9px 12px}
+}
+.finale-sound-controls .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap;border:0}

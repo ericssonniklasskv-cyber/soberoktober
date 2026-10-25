@@ -34,6 +34,9 @@
       const label = String(item.activity_label || '').trim();
       return label ? `${name} klarade Spinn The Wheel: ${label}` : '';
     }
+    if (item.activity_type === 'adventure_step') return `${name} gick fram en ruta: ${String(item.activity_label || '')}`;
+    if (item.activity_type === 'adventure_boss') return `${name} besegrade ${String(item.activity_label || '')}`;
+    if (item.activity_type === 'adventure_score') return `${name} samlade 1 poäng: ${String(item.activity_label || '')}`;
     if (item.activity_type === 'vote_steps') return `${name} gick 10 000 steg`;
     if (item.activity_type === 'vote_pass') {
       const label = String(item.activity_label || '').trim();

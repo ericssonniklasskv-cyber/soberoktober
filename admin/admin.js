@@ -162,7 +162,7 @@
     ui.secondPartFields.hidden = onlyBonus || ui.completionMode.value === 'single';
     ui.form.querySelector('[type="submit"]').textContent = onlyBonus ? 'Spara bonus' : 'Spara dagen';
     document.querySelector('#bonus-editor-note').textContent = onlyBonus
-      ? 'Välj dag och skriv bonusuppgiften. Förvalt värde är 1 poäng. Bonusen visas på startsidan och räknas separat från ' + (selectedDate <= '2026-10-11' ? 'bingot.' : selectedDate <= '2026-10-18' ? 'Spinn The Wheel och 10 000 steg.' : 'det framröstade passet och 10 000 steg.')
+      ? 'Välj dag och skriv bonusuppgiften. Förvalt värde är 1 poäng. Bonusen visas på startsidan och räknas separat från ' + (selectedDate <= '2026-10-11' ? 'bingot.' : selectedDate <= '2026-10-18' ? 'Spinn The Wheel och 10 000 steg.' : selectedDate <= '2026-10-25' ? 'det framröstade passet och 10 000 steg.' : 'Frestelsernas rike och poängjakten.')
       : 'Bonusen är valfri och räknas separat från dagens pass.';
     if (onlyBonus) ui.editorTitle.textContent = `Dagens bonus · ${formatDate(selectedDate)}`;
   }
@@ -280,7 +280,7 @@
 
     if (L.bonusOnly(selectedDate)) {
       if (!challenge) ui.title.value = L.themeTitle(selectedDate);
-      ui.existingStatus.textContent = selectedDate <= '2026-10-11' ? 'Bingovecka. Här styr du enbart dagens bonus.' : selectedDate <= '2026-10-18' ? 'Spinn The Wheel-vecka. Här styr du enbart dagens bonus; roulettepassen väljs på startsidan.' : 'Röstvecka. Här styr du enbart dagens bonus; passen röstas fram på startsidan.';
+      ui.existingStatus.textContent = selectedDate <= '2026-10-11' ? 'Bingovecka. Här styr du enbart dagens bonus.' : selectedDate <= '2026-10-18' ? 'Spinn The Wheel-vecka. Här styr du enbart dagens bonus; roulettepassen väljs på startsidan.' : selectedDate <= '2026-10-25' ? 'Röstvecka. Här styr du enbart dagens bonus; passen röstas fram på startsidan.' : 'Finalvecka. Här styr du enbart dagens bonus; deltagarna spelar Frestelsernas rike.';
     }
     updateEditorMode();
     const index = OCTOBER_DATES.indexOf(selectedDate);

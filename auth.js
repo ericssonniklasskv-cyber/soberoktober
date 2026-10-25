@@ -696,6 +696,8 @@
       if (!response.ok) throw new Error('Konfigurationen saknas');
 
       const config = await response.json();
+      // The final-week router owns this callback; do not let two auth clients consume it.
+      if (config.adventureEnabled === true) return;
       votingEnabled=config.votingEnabled===true||config.votingPreview===true;
       voteRpc=config.votingPreview===true?'local_workout_vote':'my_workout_vote';
       if (!config.supabaseUrl || !config.supabasePublishableKey || !window.supabase) {

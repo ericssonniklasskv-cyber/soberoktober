@@ -1,0 +1,301 @@
+{
+  "project_id": "usbcwnirgkkfmluukria",
+  "read_only": true,
+  "checked_at": "2026-10-25T19:07:49.775551+00:00",
+  "missed_day_source": " select null::date; ",
+  "personal_accounts": [
+    {
+      "id": "56eb1611-deae-4b0a-99c1-5a73c66fcfd0",
+      "name": "Elliott da bomb 💣"
+    },
+    {
+      "id": "8b58969b-fc96-4934-882e-aba9d13b3d39",
+      "name": "Jerka"
+    },
+    {
+      "id": "03c84aa4-cf6f-4ff4-a947-17773ed30abb",
+      "name": "MikeB"
+    },
+    {
+      "id": "3762adf9-f59e-473f-bb4b-47c45a858585",
+      "name": "Nillebae"
+    },
+    {
+      "id": "25b7ec21-e28b-41aa-b33c-fba048992fe7",
+      "name": "Zellmani"
+    }
+  ],
+  "leaderboard_source": "CREATE OR REPLACE FUNCTION public.get_leaderboard()\n RETURNS TABLE(rank_position bigint, display_name text, total_points numeric, completed_days bigint, is_current_user boolean, is_eliminated boolean)\n LANGUAGE sql\n STABLE SECURITY DEFINER\n SET search_path TO ''\nAS $function$\n with scores as(\n select r.user_id,sum(r.points)::numeric points from public.daily_results r where not(private.bingo_enabled() and r.result_date between date '2026-10-05' and date '2026-10-11') and r.result_date not between date '2026-10-12' and date '2026-10-25' group by r.user_id\n union all select c.user_id,sum(c.points)::numeric from public.daily_bonus_claims c group by c.user_id\n union all select b.user_id,(private.bingo_score(b.completed_cells)->>'total_points')::numeric from public.bingo_results b where private.bingo_enabled()\n union all select r.user_id,sum(r.points)::numeric from public.roulette_daily_scores r group by r.user_id\n union all select c.user_id,sum(c.points)::numeric from private.workout_vote_completions c group by c.user_id\n ), participants as(\n select p.id,p.display_name,coalesce((select sum(s.points) from scores s where s.user_id=p.id),0)::numeric total_points,\n (select count(*) from generate_series(date '2026-10-01',date '2026-10-31',interval '1 day') d where private.competition_day_complete(p.id,d::date))::bigint completed_days,\n p.competition_status='eliminated' is_eliminated from public.profiles p where p.display_name is not null\n ), ranked as(select *,rank() over(order by total_points desc,completed_days desc)::bigint rank_position from participants)\n select rank_position,display_name,total_points,completed_days,id=(select auth.uid()),is_eliminated from ranked\n order by rank_position,total_points desc,completed_days desc,lower(display_name),id;\n$function$\n",
+  "day_complete_source": "CREATE OR REPLACE FUNCTION private.competition_day_complete(p_user uuid, p_date date)\n RETURNS boolean\n LANGUAGE sql\n STABLE SECURITY DEFINER\n SET search_path TO ''\nAS $function$\n select case when p_date between date '2026-10-19' and date '2026-10-25' then exists(select 1 from private.workout_vote_completions c where c.user_id=p_user and c.workout_date=p_date) when p_date between date '2026-10-12' and date '2026-10-18' then exists(select 1 from public.roulette_daily_scores r where r.user_id=p_user and r.result_date=p_date) when private.bingo_enabled() and p_date between date '2026-10-05' and date '2026-10-11' then\n   exists(select 1 from public.bingo_results b where b.user_id=p_user and (p_date=any(b.repeat_dates) or exists(select 1 from jsonb_each_text(b.completed_cells) c where c.value=p_date::text)))\n else exists(select 1 from public.daily_results r where r.user_id=p_user and r.result_date=p_date) end;\n$function$\n",
+  "future_bonus_claims": 0,
+  "activity_feed_source": "CREATE OR REPLACE FUNCTION private.kudos_feed_events()\n RETURNS TABLE(user_id uuid, multiplier smallint, activity_type text, event_at timestamp with time zone, result_date date, activity_label text, event_id bigint, source_order integer, activity_key text, kudos_label text)\n LANGUAGE sql\n STABLE\n SET search_path TO ''\nAS $function$\n  select e.user_id,e.multiplier,e.activity_type,e.event_at,e.result_date,\n    null::text,e.event_id,0,'daily:'||e.event_id,\n    'dagens pass ×'||e.multiplier\n  from public.daily_result_activity_events e\n  where e.result_date between date '2026-10-01' and date '2026-10-31'\n  union all\n  select e.user_id,null::smallint,e.activity_type,e.event_at,e.result_date,\n    case when e.activity_type='bingo_cell' then private.competition_bingo_board()->e.cell_index->>'description' else null end,\n    e.event_id,1,'bingo:'||e.event_id,\n    case e.activity_type\n      when 'bingo_cell' then private.competition_bingo_board()->e.cell_index->>'description'\n      when 'bingo_row' then 'en hel bingorad'\n      else 'hela bingobrickan' end\n  from private.bingo_activity_events e where e.is_active and private.bingo_enabled()\n  union all\n  select e.user_id,null::smallint,case when e.round_index=-1 then 'roulette_steps' else 'roulette_pass' end,\n    e.event_at,e.result_date,e.activity_label,e.event_id,2,'roulette:'||e.event_id,e.activity_label\n  from private.roulette_activity_events e where e.is_active\n  union all\n  select c.user_id,null::smallint,case when c.kind='steps' then 'vote_steps' else 'vote_pass' end,\n    c.completed_at,c.workout_date,\n    case when c.kind='steps' then '10 000 steg' else coalesce(nullif(btrim(o.task->>'label'),''),nullif(btrim(o.task->>'title'),''),o.task->>'description') end,\n    c.activity_id,3,'vote:'||c.activity_id,\n    case when c.kind='steps' then '10 000 steg' else coalesce(nullif(btrim(o.task->>'label'),''),nullif(btrim(o.task->>'title'),''),o.task->>'description') end\n  from private.workout_vote_completions c\n  join private.workout_vote_results r on r.workout_date=c.workout_date\n  join private.workout_vote_options o on o.workout_date=r.workout_date and o.option_id=r.option_id;\n$function$\n",
+  "future_normal_results": 0,
+  "leaderboard_fingerprint": "38d2ce391550011bce7393ef619ccc66",
+  "adventure_already_installed": false,
+  "elimination_evaluator_source": " select null::uuid; ",
+  "configured_final_week_bonuses": 0,
+  "migrations": [
+    {
+      "version": "20260920101034",
+      "name": "create_profiles_with_owner_rls"
+    },
+    {
+      "version": "20260920102120",
+      "name": "optimize_profiles_insert_policy"
+    },
+    {
+      "version": "20260920102826",
+      "name": "create_daily_results"
+    },
+    {
+      "version": "20260920103734",
+      "name": "create_public_leaderboard_rpc"
+    },
+    {
+      "version": "20260920105846",
+      "name": "create_daily_challenges"
+    },
+    {
+      "version": "20260920200353",
+      "name": "add_public_registered_participants"
+    },
+    {
+      "version": "20260924095500",
+      "name": "create_step_period_results"
+    },
+    {
+      "version": "20260924095702",
+      "name": "scope_step_leaderboard_privileges"
+    },
+    {
+      "version": "20260924100314",
+      "name": "rank_step_leaderboard_by_exact_average"
+    },
+    {
+      "version": "20260924122748",
+      "name": "grant_step_period_results_user_id_select"
+    },
+    {
+      "version": "20260924191958",
+      "name": "add_competition_elimination"
+    },
+    {
+      "version": "20260924192055",
+      "name": "index_competition_elimination_foreign_keys"
+    },
+    {
+      "version": "20260924201659",
+      "name": "tie_leaderboard_ranks"
+    },
+    {
+      "version": "20260924204527",
+      "name": "create_public_activity_feed"
+    },
+    {
+      "version": "20260924204651",
+      "name": "index_daily_result_activity_events"
+    },
+    {
+      "version": "20260925102653",
+      "name": "fix_competition_qa_issues"
+    },
+    {
+      "version": "20260928072938",
+      "name": "add_compound_daily_challenges_and_bonus_points"
+    },
+    {
+      "version": "20261001090134",
+      "name": "fix_daily_result_upsert_key_permissions"
+    },
+    {
+      "version": "20261001122644",
+      "name": "create_admin_bingo_sandbox"
+    },
+    {
+      "version": "20261001173640",
+      "name": "allow_admin_bingo_uncheck"
+    },
+    {
+      "version": "20261001183857",
+      "name": "add_admin_daily_result_corrections"
+    },
+    {
+      "version": "20261001184333",
+      "name": "document_private_correction_audit_access"
+    },
+    {
+      "version": "20261003073523",
+      "name": "bingo_sandbox_first_daily_cell_bonus"
+    },
+    {
+      "version": "20261004164532",
+      "name": "self_service_october_result_corrections"
+    },
+    {
+      "version": "20261004164627",
+      "name": "deny_direct_self_result_context_access"
+    },
+    {
+      "version": "20261004170350",
+      "name": "allow_self_bonus_unclaim"
+    },
+    {
+      "version": "20261004172848",
+      "name": "update_four_bingo_sandbox_tasks"
+    },
+    {
+      "version": "20261004181758",
+      "name": "prepare_competition_bingo_and_participant_boards"
+    },
+    {
+      "version": "20261004183846",
+      "name": "activate_competition_bingo_2026"
+    },
+    {
+      "version": "20261004185341",
+      "name": "add_bingo_activity_feed"
+    },
+    {
+      "version": "20261004185522",
+      "name": "deny_client_access_to_bingo_activity_log"
+    },
+    {
+      "version": "20261004191404",
+      "name": "update_bingo_row_and_full_board_bonus"
+    },
+    {
+      "version": "20261004192301",
+      "name": "change_bingo_square13_to_golf"
+    },
+    {
+      "version": "20261005093117",
+      "name": "allow_daily_bonus_during_bingo"
+    },
+    {
+      "version": "20261005180436",
+      "name": "pause_bingo_week_missed_day_elimination"
+    },
+    {
+      "version": "20261006195224",
+      "name": "add_private_activity_kudos"
+    },
+    {
+      "version": "20261011165533",
+      "name": "prepare_spin_wheel_release"
+    },
+    {
+      "version": "20261011173740",
+      "name": "add_spin_wheel_steps_alternative"
+    },
+    {
+      "version": "20261014181132",
+      "name": "disable_missed_day_elimination"
+    },
+    {
+      "version": "20261018134749",
+      "name": "launch_daily_workout_voting"
+    },
+    {
+      "version": "20261019192912",
+      "name": "add_voting_completion_activity_feed"
+    },
+    {
+      "version": "20261019193324",
+      "name": "shorten_voting_activity_labels"
+    },
+    {
+      "version": "20261021090117",
+      "name": "allow_voted_workout_history_corrections"
+    }
+  ],
+  "history_comparison": {
+    "different_versions_for_same_name": [
+      {
+        "name": "optimize_profiles_insert_policy",
+        "local": "20260920102200",
+        "production": "20260920102120"
+      },
+      {
+        "name": "create_daily_results",
+        "local": "20260920103000",
+        "production": "20260920102826"
+      },
+      {
+        "name": "create_public_leaderboard_rpc",
+        "local": "20260920110000",
+        "production": "20260920103734"
+      },
+      {
+        "name": "create_daily_challenges",
+        "local": "20260920113000",
+        "production": "20260920105846"
+      },
+      {
+        "name": "add_public_registered_participants",
+        "local": "20260920220000",
+        "production": "20260920200353"
+      },
+      {
+        "name": "add_competition_elimination",
+        "local": "20260924151500",
+        "production": "20260924191958"
+      },
+      {
+        "name": "index_competition_elimination_foreign_keys",
+        "local": "20260924192500",
+        "production": "20260924192055"
+      },
+      {
+        "name": "tie_leaderboard_ranks",
+        "local": "20260924210000",
+        "production": "20260924201659"
+      },
+      {
+        "name": "create_public_activity_feed",
+        "local": "20260924230000",
+        "production": "20260924204527"
+      },
+      {
+        "name": "index_daily_result_activity_events",
+        "local": "20260924231000",
+        "production": "20260924204651"
+      },
+      {
+        "name": "pause_bingo_week_missed_day_elimination",
+        "local": "20261005115143",
+        "production": "20261005180436"
+      },
+      {
+        "name": "add_private_activity_kudos",
+        "local": "20261006193050",
+        "production": "20261006195224"
+      }
+    ],
+    "local_only": [
+      {
+        "version": "20260920112000",
+        "name": "add_is_admin_to_profiles"
+      },
+      {
+        "version": "20261025182220",
+        "name": "prepare_final_adventure"
+      }
+    ],
+    "production_only": [
+      {
+        "version": "20261004183846",
+        "name": "activate_competition_bingo_2026"
+      }
+    ]
+  },
+  "baseline_comparison": {
+    "day_completion_baseline_matches": true,
+    "activity_baseline_matches": true,
+    "leaderboard_baseline_matches": true
+  },
+  "prepared_migration": {
+    "file": "supabase/migrations/20261025202041_prepare_final_adventure.sql",
+    "sha256": "71fc5df7675604e7053919c2cf40c6a01e706308a80c759a48dcda2245e43b7e",
+    "production_applied": false
+  }
+}

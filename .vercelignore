@@ -18,3 +18,11 @@ playwright-report/
 
 /bingo-*.png
 /board-*.png
+
+# Local-only prototypes and original source media stay in Git, outside the release.
+/derby/
+**/AGENTS.md
+/adventure/assets/*.png
+/adventure/assets/*.md
+/adventure/assets/players/*.png
+/adventure/assets/players/generation-prompts.json

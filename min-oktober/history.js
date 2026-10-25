@@ -69,7 +69,7 @@
     status: document.querySelector('#day-edit-status'),
   };
   let client;
-  let votingPreview=false,voteRpc='my_workout_vote';
+  let votingPreview=false,voteRpc='my_workout_vote',adventureEnabled=false;
   let sessionWork = Promise.resolve();
   let challengesByDate = new Map();
   let bonusClaimsByDate = new Map();
@@ -96,6 +96,7 @@
   }
 
   function completedChallengeDescription(challenge, result) {
+    if (result?.kind === 'adventure') return 'Frestelsernas rike · Resan ger 0 poäng. Nya övningar vid slottet ger 1 poäng vardera.';
     if (result?.kind === 'vote') return result.description;
     if (result?.kind === 'roulette') return result.completed_workouts === 0 ? '10 000 steg istället för Spinn The Wheel' : 'Dagens Spinn The Wheel';
     if (result?.kind === 'bingo') return 'Träningsbingo';
@@ -266,6 +267,8 @@
   bingoDialog.addEventListener('cancel', event => { if (bingoBonusBusy) event.preventDefault(); });
   bingoDialog.addEventListener('close', () => { bingoBonusRequest += 1; });
   async function openDetail(day) {
+    if(adventureEnabled && day.date>='2026-10-26'){if(savingDay||bingoBonusBusy)return;editRequest++;editData=null;ui.detailDate.textContent=formatDate(day.date);edit.form.hidden=true;ui.detailTitle.textContent='Frestelsernas rike';ui.detailDescription.textContent='Din sammanhängande resa fortsätter mellan dagarna. Registrera och ångra i riket.';ui.detailLevel.textContent=day.result?'Registrerad aktivitet':'Ingen registrerad aktivitet';ui.detailPoints.textContent=(day.result?.points||0)+' poäng';const bonus=bonusClaimsByDate.get(day.date);ui.detailBonus.hidden=!bonus;ui.detailBonus.textContent=bonus?'Bonuspoäng: '+bonus.points:'';ui.detail.showModal();return;}
+
     if (bingoBonusBusy || savingDay) return;
     if (window.SoberRouletteLive.isDate(day.date)) {
       // Saved rounds are shown in the roulette itself, never as the old 1×/2×/3× editor.
@@ -295,7 +298,7 @@
     ui.detailDate.textContent = formatDate(day.date);
     ui.detailTitle.textContent = challengesByDate.get(day.date)?.title || 'Dagens pass';
     ui.detailDescription.textContent = '';
-    ui.detailLevel.textContent = day.result ? (day.result.kind === 'vote' ? (day.result.completion_kind==='steps'?'10 000 steg':'Dagens val') : day.result.kind === 'roulette' ? (day.result.completed_workouts === 0 ? '10 000 steg' : 'Spinn The Wheel') : day.result.kind === 'bingo' ? 'Bingo' : `${day.result.multiplier}×`) : 'Inte registrerat';
+    ui.detailLevel.textContent = day.result ? (day.result.kind === 'adventure' ? 'Riket' : day.result.kind === 'vote' ? (day.result.completion_kind==='steps'?'10 000 steg':'Dagens val') : day.result.kind === 'roulette' ? (day.result.completed_workouts === 0 ? '10 000 steg' : 'Spinn The Wheel') : day.result.kind === 'bingo' ? 'Bingo' : `${day.result.multiplier}×`) : 'Inte registrerat';
     ui.detailPoints.textContent = day.result ? `${pointsFormatter.format(Number(day.result.points))} poäng` : '–';
     ui.detailBonus.hidden = true;
     ui.detail.showModal();
@@ -412,7 +415,7 @@
       const result = document.createElement('span');
       result.className = 'day-result';
       result.textContent = day.state === 'completed'
-        ? (day.result.kind === 'vote' ? (day.result.completion_kind==='steps'?'10 000 steg':'Dagens val') : day.result.kind === 'roulette' ? (day.result.completed_workouts === 0 ? '10 000 steg' : 'Spinn The Wheel') : day.result.kind === 'bingo' ? 'Bingo' : `${day.result.multiplier}×`)
+        ? (day.result.kind === 'adventure' ? 'Riket' : day.result.kind === 'vote' ? (day.result.completion_kind==='steps'?'10 000 steg':'Dagens val') : day.result.kind === 'roulette' ? (day.result.completed_workouts === 0 ? '10 000 steg' : 'Spinn The Wheel') : day.result.kind === 'bingo' ? 'Bingo' : `${day.result.multiplier}×`)
         : (day.state === 'missed' ? 'Missad' : (day.date === today ? 'Idag' : 'Senare'));
       cell.append(result);
 
@@ -423,7 +426,7 @@
         cell.append(points);
         const challenge = challengesByDate.get(day.date);
         const bonus = bonusClaimsByDate.get(day.date);
-        cell.setAttribute('aria-label', `${formatDate(day.date)}, genomförd ${day.result.kind === 'vote' ? (day.result.completion_kind==='steps'?'10 000 steg':'Dagens val') : day.result.kind === 'roulette' ? (day.result.completed_workouts === 0 ? '10 000 steg' : 'Spinn The Wheel') : day.result.kind === 'bingo' ? 'bingo' : `${day.result.multiplier} gånger`}, ${pointsFormatter.format(Number(day.result.points))} poäng${bonus ? `, ${pointsFormatter.format(Number(bonus.points))} bonuspoäng` : ''}, ${completedChallengeDescription(challenge, day.result)}`);
+        cell.setAttribute('aria-label', `${formatDate(day.date)}, genomförd ${day.result.kind === 'adventure' ? 'Riket' : day.result.kind === 'vote' ? (day.result.completion_kind==='steps'?'10 000 steg':'Dagens val') : day.result.kind === 'roulette' ? (day.result.completed_workouts === 0 ? '10 000 steg' : 'Spinn The Wheel') : day.result.kind === 'bingo' ? 'bingo' : `${day.result.multiplier} gånger`}, ${pointsFormatter.format(Number(day.result.points))} poäng${bonus ? `, ${pointsFormatter.format(Number(bonus.points))} bonuspoäng` : ''}, ${completedChallengeDescription(challenge, day.result)}`);
       } else {
         cell.setAttribute('aria-label', `${formatDate(day.date)}, ${day.state === 'missed' ? 'missad' : 'framtida'}`);
       }
@@ -501,7 +504,8 @@
     if (rouletteResponse.error) throw rouletteResponse.error;
     if(voteResponse.error)throw voteResponse.error;
     const mergedResults = window.SoberRouletteLive.mergeResults(window.SoberOctoberCompetition.mergeResults(resultsResponse.data || [], bingoState), rouletteResponse.data || []);
-    const results=votingPreview?window.SoberVoteLogic.mergeResults(mergedResults,voteResponse.data):mergedResults;
+    let results=votingPreview?window.SoberVoteLogic.mergeResults(mergedResults,voteResponse.data):mergedResults;
+    if(adventureEnabled){const response=await client.rpc('my_adventure');if(response.error)throw response.error;const days=new Map();for(const e of response.data.state.events){if(!days.has(e.date))days.set(e.date,{result_date:e.date,points:0,kind:'adventure',multiplier:null});if(e.type==='score')days.get(e.date).points++;}results=[...results.filter(r=>r.result_date<'2026-10-26'),...days.values()];}
     const challengeMap=new Map((challengesResponse.data||[]).map(challenge=>[challenge.challenge_date,challenge]));
     for(const day of voteResponse.data?.days||[]){if(!day.result)continue;const winner=day.options.find(option=>option.id===day.result.option_id);challengeMap.set(day.date,{...challengeMap.get(day.date),challenge_date:day.date,title:winner.title,description:winner.description,base_amount:1,unit:'pass',completion_mode:'single'});}
     const challenges=[...challengeMap.values()];
@@ -592,7 +596,7 @@
     try {
       const response = await fetch('/api/config', { cache: 'no-store' });
       if (!response.ok) throw new Error('Konfigurationen saknas');
-      const config = await response.json();
+      const config = await response.json(); adventureEnabled=config.adventureEnabled===true;
       votingPreview=config.votingEnabled===true||config.votingPreview===true;
       voteRpc=config.votingPreview===true?'local_workout_vote':'my_workout_vote';
       client = window.supabase.createClient(config.supabaseUrl, config.supabasePublishableKey, {

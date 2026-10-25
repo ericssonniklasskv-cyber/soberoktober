@@ -269,3 +269,11 @@ test('Dagens val step alternative counts one point and one completed day',()=>{
  const report=history.buildPeriodReport({results,challenges:[],stepResults:[],periodKey:'oct_15_21',today:'2026-10-22'});
  assert.equal(report.trainingPoints,1);assert.equal(report.completedDays,1);assert.deepEqual(report.multiplierCounts,{1:0,2:0,3:0});
 });
+
+
+test('final-week journey counts as activity at zero points; only scoring adds points in summaries and reports',()=>{
+ const results=[{result_date:'2026-10-26',kind:'adventure',points:0,multiplier:null},{result_date:'2026-10-31',kind:'adventure',points:7,multiplier:null}];
+ const summary=history.calculate(results,'2026-10-31');assert.equal(summary.totalPoints,7);assert.equal(summary.completedDays,2);
+ const report=history.buildPeriodReport({results,challenges:[],stepResults:[],periodKey:'oct_22_31',today:'2026-11-01'});assert.equal(report.trainingPoints,7);assert.equal(report.completedDays,2);assert.deepEqual(report.multiplierCounts,{1:0,2:0,3:0});
+ const final=history.buildFinalReport({results,challenges:[],stepResults:[],today:'2026-11-01',stepsLogic:steps});assert.equal(final.totalPoints,7);assert.equal(final.completedDays,2);
+});
