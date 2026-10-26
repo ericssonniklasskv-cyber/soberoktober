@@ -26,3 +26,9 @@ playwright-report/
 /adventure/assets/*.md
 /adventure/assets/players/*.png
 /adventure/assets/players/generation-prompts.json
+
+# Standalone design playground stays in the protected preview deployment.
+/adventure/shortcut-preview.html
+/adventure/shortcut-preview.css
+/adventure/shortcut-preview.js
+/adventure/shortcut-preview.md

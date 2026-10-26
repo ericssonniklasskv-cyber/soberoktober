@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="sv">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'none'; media-src 'none'; base-uri 'none'; form-action 'none'">
+  <meta name="theme-color" content="#f6efdf">
+  <title>Den hemliga genvägen · Preview på ruta 21</title>
+  <link rel="preload" href="/adventure/assets/secret-shortcut.webp" as="image">
+  <link rel="stylesheet" href="/adventure/shortcut-preview.css">
+  <script src="/adventure/adventure-sprites.js" defer></script>
+  <script src="/adventure/adventure-personal-pawns.js" defer></script>
+  <script src="/adventure/shortcut-preview.js" defer></script>
+</head>
+<body>
+  <header class="preview-toolbar">
+    <a class="preview-brand" href="/adventure/shortcut-preview.html">SO<span>FRESTELSERNAS<br>RIKE</span></a>
+    <div class="preview-controls">
+      <span class="preview-label">DESIGNPREVIEW · RUTA 21</span>
+      <label for="preview-pawn">Visa med pjäs</label>
+      <select id="preview-pawn"></select>
+    </div>
+  </header>
+  <main class="preview-map">
+    <p class="eyebrow">ALLA FYND ÄR INTE GLASS.</p>
+    <h1>En liten stig.<br><em>En stor upptäckt.</em></h1>
+    <p>I Ravine of shots gömmer sig något mellan träden.</p>
+    <div class="preview-track" aria-label="Förhandsvisning av kartan kring ruta 21">
+      <span class="track-tile" data-tile="19">19</span>
+      <span class="track-tile" data-tile="20">20</span>
+      <button class="track-tile" type="button" data-tile="21" id="preview-open" aria-label="Visa vägskälet på ruta 21"><strong>21</strong><i aria-hidden="true">✦</i></button>
+      <span class="track-tile" data-tile="22">22</span>
+      <span class="track-tile" data-tile="23">23</span>
+    </div>
+    <p class="preview-status" id="preview-status" role="status">Din pjäs står på ruta 21.</p>
+    <button type="button" class="preview-replay" id="preview-replay">Prova vägskälet igen ↗</button>
+    <p class="preview-note">Separat förhandsvisning. Riktiga poäng och din spelresa påverkas inte.</p>
+  </main>
+
+  <dialog id="shortcut-dialog" class="shortcut-dialog" aria-labelledby="shortcut-title" aria-describedby="shortcut-description">
+    <button type="button" class="shortcut-close" id="shortcut-close" aria-label="Stäng vägskälet">×</button>
+    <div class="shortcut-scene" role="img" aria-label="Din pjäs upptäcker en hemlig stig genom en solbelyst skog">
+      <img class="shortcut-landscape" src="/adventure/assets/secret-shortcut.webp" alt="" width="1200" height="800">
+      <span class="discovery-badge"><span aria-hidden="true">✦</span> ETT HEMLIGT FYND <span class="badge-divider">/</span> RUTA 21</span>
+      <div class="shortcut-pawn" id="shortcut-pawn" aria-hidden="true"></div>
+      <span class="scene-whisper" id="scene-whisper" aria-hidden="true">Psst… den här vägen?</span>
+      <span class="bonus-stamp" id="bonus-stamp" hidden><b>+1</b> EXTRA RUTA</span>
+    </div>
+    <div class="shortcut-copy">
+      <p class="eyebrow" id="shortcut-kicker">DIN INRE LATMASK VÄDRAR MORGONLUFT</p>
+      <h2 id="shortcut-title">Vänta lite…<br><em>är det där en genväg?</em></h2>
+      <p class="shortcut-description" id="shortcut-description">Bakom buskarna skymtar en liten stig. Den ser misstänkt lovande ut. Ingen ork i sikte, inga köer… bara din chans att smita lite snabbare fram.</p>
+      <div class="shortcut-choices" id="shortcut-choices">
+        <button type="button" class="primary-choice" id="take-shortcut"><span>Ta genvägen</span><span aria-hidden="true">↗</span></button>
+        <button type="button" class="secondary-choice" id="keep-path">Fortsätt på samma väg <span aria-hidden="true">→</span></button>
+      </div>
+      <div class="shortcut-result" id="shortcut-result" hidden>
+        <div class="route-reward" id="shortcut-reward" aria-label="Du flyttas från ruta 21 till ruta 22, en extra ruta">
+          <span class="from-tile">21</span><span class="route-arrow" aria-hidden="true">⟶</span><span class="to-tile">22</span>
+          <strong>En extra ruta.<br>Helt utan squats.</strong>
+        </div>
+        <div class="route-reward kept-reward" id="kept-reward" hidden>
+          <span class="from-tile">21</span><strong>15 squats<br>för att flytta en ruta till.</strong>
+        </div>
+        <button type="button" class="primary-choice" id="shortcut-done"><span>Tillbaka till äventyret</span><span aria-hidden="true">→</span></button>
+      </div>
+    </div>
+  </dialog>
+</body>
+</html>

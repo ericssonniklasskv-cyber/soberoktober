@@ -33,8 +33,10 @@
   let audioGeneration = 0;
   let state = G.createState(), mountIndex = 0, participantId = 'guest', testDay = G.START_DATE, crowd = false;
   let geometry = null, selectedChoice = null, currentBoss = null;
-  let bossPopupTimeout = 0, animationFrame = 0, treatCheckTimer = 0;
+  let bossPopupTimeout = 0, animationFrame = 0, treatCheckTimer = 0, shortcutCheckTimer = 0;
   const treatsShownThisVisit = new Set();
+  const shortcutsShownThisVisit = new Set();
+  const awaitingShortcut = () => G.progress(state).position === 21 && !state.shortcutChoice;
   const reducedMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
   const esc = text => String(text).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const element = (tag, className, text) => {
@@ -279,6 +281,12 @@
       gate.innerHTML = `<h3>${esc(progress.pendingBoss.name)} står i vägen.</h3><p>Klara bossens utmaning innan du kan registrera fler steg.</p><button type="button" id="meet-boss">Möt frestelsen ↗</button>`;
       $('meet-boss').addEventListener('click', () => showBoss(progress.pendingBoss));
     }
+    if (awaitingShortcut()) {
+      gate.hidden = false;
+      gate.innerHTML = '<h3>En hemlig stig väntar.</h3><p>Du har hittat ett vägskäl på ruta 21. Välj din väg för att fortsätta.</p><button type="button" id="open-shortcut">Välj din väg ↗</button>';
+      $('open-shortcut').disabled = !!R && (R.busy || !R.data.active || R.data.profile.status !== 'active');
+      $('open-shortcut').onclick = showShortcut;
+    }
     $('exercise-title').innerHTML = progress.pointsUnlocked ? progress.finished ? 'Du stod emot.<br>Fortsätt samla poäng.' : 'Samla poäng<br>inför finalen.' : progress.pendingBoss ? 'Nu prövas <br>ditt pannben.' : 'Vad blir ditt <br>nästa steg?';
     $('exercise-intro').textContent = progress.pointsUnlocked
       ? scoringAllowed ? progress.finished ? 'Alla bossar är besegrade. Nya övningar ger 1 poäng per registrering fram till temats slut den 31 oktober.' : finalOpen ? 'Det är finaldag! Gör ditt sista bossuppdrag och fortsätt samla poäng fram till temats slut.' : 'Du har nått Hangover castle och poängjakten är upplåst. Nya övningar ger 1 poäng per registrering – resans övningar räknas inte in.'
@@ -289,17 +297,18 @@
       const compact = !!button.dataset.quickExercise;
       const exercise = exercises.find(item => item.id === (button.dataset.exercise || button.dataset.quickExercise));
       const label = exerciseLabel(exercise, compact);
-      button.disabled = blockingBoss || (progress.pointsUnlocked && !scoringAllowed) || !!R && (R.busy || !R.data.active || R.data.profile.status !== 'active');
+      button.disabled = blockingBoss || awaitingShortcut() || (progress.pointsUnlocked && !scoringAllowed) || !!R && (R.busy || !R.data.active || R.data.profile.status !== 'active');
       button.querySelector('strong').textContent = label;
       button.setAttribute('aria-label', exerciseLabel(exercise) + (progress.pointsUnlocked ? ', registrera 1 poäng' : ', registrera en ruta'));
       button.querySelector('small').textContent = blockingBoss ? compact ? 'Bossen väntar' : 'Bossen måste besegras först'
         : progress.pointsUnlocked && !scoringAllowed ? 'Välj en senare testdag'
           : (progress.pointsUnlocked ? '+1 poäng' : '+1 ruta') + (compact ? '' : ' · I dag: ' + today[exercise.id].toLocaleString('sv-SE') + (exercise.distanceKm ? ' km' : ' st'));
     }
-    $('quick-actions').hidden = blockingBoss;
-    $('quick-gate').hidden = !progress.pendingBoss;
+    $('quick-actions').hidden = blockingBoss || awaitingShortcut();
+    $('quick-gate').hidden = !progress.pendingBoss && !awaitingShortcut();
     $('quick-gate').disabled = awaitingFinal && !finalOpen;
     $('quick-gate').textContent = awaitingFinal ? finalOpen ? 'Möt Bakrusbaronen ✦' : 'Finalen öppnar 31 oktober' : 'Möt frestelsen ↗';
+    if (awaitingShortcut()) { $('quick-gate').textContent = 'Välj din väg på ruta 21 ↗'; $('exercise-title').innerHTML = 'Du har hittat<br>en hemlig stig.'; $('exercise-intro').textContent = 'Ett vägskäl väntar. Välj din väg innan du tar nästa steg.'; }
     const nextBoss = G.BOSSES.find(boss => boss.position > progress.position);
     $('quick-status').textContent = progress.pointsUnlocked ? (progress.finished ? 'Finalen är klar · ' : 'Vid slottet · ') + today.points + ' poäng i dag' : progress.pendingBoss ? progress.pendingBoss.name + ' blockerar vägen.' : (progress.position ? 'Ruta ' + progress.position + ' · ' : '') + (nextBoss.position - progress.position) + ' steg till nästa boss.';
     $('undo-last').disabled = !state.events.length || !!R && (R.busy || !R.data.active || R.data.profile.status !== 'active');
@@ -315,14 +324,20 @@
       if(!R.data.active) { $('exercise-intro').textContent = !R.data.enabled ? 'Frestelsernas rike är ännu inte aktiverat. Din sparade resa finns kvar.' : R.data.today < G.START_DATE ? 'Se dig omkring och lär känna din pjäs. Du kan börja registrera träning måndag 26 oktober kl. 00.00 svensk tid.' : 'Finalveckan är avslutad. Din resa och dina poäng finns kvar.'; }
       if (R.data.today < G.START_DATE) {
         $('exercise-kicker').textContent = 'START MÅNDAG 26 OKTOBER · KL. 00.00';
-        $('exercise-title').innerHTML = 'Din pjäs är redo.<br>Äventyret öppnar snart.';
+        if (awaitingShortcut()) {
+      gate.hidden = false;
+      gate.innerHTML = '<h3>En hemlig stig väntar.</h3><p>Du har hittat ett vägskäl på ruta 21. Välj din väg för att fortsätta.</p><button type="button" id="open-shortcut">Välj din väg ↗</button>';
+      $('open-shortcut').disabled = !!R && (R.busy || !R.data.active || R.data.profile.status !== 'active');
+      $('open-shortcut').onclick = showShortcut;
+    }
+    $('exercise-title').innerHTML = 'Din pjäs är redo.<br>Äventyret öppnar snart.';
         $('quick-status').textContent = 'Träningsstart måndag 26 oktober kl. 00.00 svensk tid.';
         document.querySelectorAll('[data-exercise] small,[data-quick-exercise] small').forEach(label => { label.textContent = 'Öppnar 26 okt · 00.00'; });
       }
       $('quick-gate').disabled ||= R.busy || !R.data.active;
       const defeat = $('defeat-boss'); if(defeat) defeat.disabled = R.busy || !R.data.active || R.data.profile.status !== 'active';
     }
-    renderMap(); scheduleTreatCheck();
+    renderMap(); scheduleTreatCheck(); scheduleShortcutCheck();
   }
   function showCastleArrival() {
     const content = detail('Du är framme vid slottet!', 'POÄNGJAKTEN ÄR UPPLÅST');
@@ -546,7 +561,8 @@
         const scoring = event.type === 'score';
         const exercise = (scoring ? G.SCORING_EXERCISES : G.EXERCISES).find(item => item.id === event.exerciseId);
         title = formatAmount(event.distanceKm ? { ...exercise, distanceKm: event.distanceKm } : exercise) + (scoring ? ' · +1 poäng' : ' · 0 poäng');
-        badge = scoring ? '+1' : step--;
+        badge = scoring ? '+1' : step;
+        if (!scoring) { step -= 1 + (state.stepCredits[event.id] || 0); if (state.stepCredits[event.id] === 1) title += ' · genväg +1 ruta'; }
       }
       row.append(element('i', '', badge), element('span', '', title), element('small', '', Number(event.date.slice(8)) + ' okt')); list.append(row);
     }
@@ -592,7 +608,7 @@
   $('find-me').innerHTML = S.iconSVG('compass');
   $('show-chapters').innerHTML = S.iconSVG('flag');
   $('find-me').addEventListener('click', () => centerMap());
-  $('quick-gate').addEventListener('click', () => { const pending = G.progress(state).pendingBoss; if (pending) showBoss(pending); });
+  $('quick-gate').addEventListener('click', () => { if (awaitingShortcut()) { showShortcut(); return; } const pending = G.progress(state).pendingBoss; if (pending) showBoss(pending); });
   $('show-chapters').addEventListener('click', showChapters);
   $('choose-avatar').addEventListener('click', showAvatars);
   for (const profile of A.PROFILES) {
@@ -643,6 +659,34 @@
     state = restored; render(); feedback('Din resa och dina testpoäng uppdaterades från en annan flik.');
   });
   function homeSnapshot() { return { state, participantId, date: testDay, players: players() }; }
+  function showShortcut() {
+    if (!awaitingShortcut() || !window.AdventureShortcut || (R && (R.busy || !R.data.active || R.data.profile.status !== 'active'))) return false;
+    return window.AdventureShortcut.show({
+      label: R ? R.data.profile.name : (ownProfile()?.username || 'Din pjäs'),
+      renderPawn: node => { node.innerHTML = pawnMarkup(ownMount(), '', 300); },
+      lockedChoice: R?.pendingShortcut,
+      async onChoose(choice) {
+        if (R) {
+          const saved = await R.commit('shortcut', { choice });
+          const actual = R.data.state.shortcutChoice;
+          if (!saved && !actual) return null;
+          centerMap(); feedback(actual === 'take' ? 'Genvägen är sparad. En extra ruta, 0 poäng.' : 'Ditt vägval är sparat. Fortsätt träna dig framåt.');
+          return { choice: actual };
+        }
+        save(G.chooseShortcut(state, choice, testDay), choice === 'take' ? 'Genvägen tog dig en extra ruta framåt. 0 poäng.' : 'Din väg är vald. Nästa övning flyttar dig framåt.');
+        centerMap(); return { choice };
+      },
+      onClose: resumePendingBoss,
+    });
+  }
+  function scheduleShortcutCheck() {
+    clearTimeout(shortcutCheckTimer);
+    shortcutCheckTimer = setTimeout(() => {
+      const identity = R ? R.data.profile.id : participantId;
+      if (!awaitingShortcut() || shortcutsShownThisVisit.has(identity) || document.querySelector('dialog[open]')) return;
+      if (showShortcut()) shortcutsShownThisVisit.add(identity);
+    }, 130);
+  }
   function scheduleTreatCheck(){
     clearTimeout(treatCheckTimer);
     treatCheckTimer=setTimeout(()=>{
@@ -659,7 +703,7 @@
       if(R)R.markTreatSeen?.();else{try{localStorage.setItem(key,'seen');}catch{}}
     },100);
   }
-  document.addEventListener('close',event=>{if(event.target instanceof HTMLDialogElement)scheduleTreatCheck();},true);
+  document.addEventListener('close',event=>{if(event.target instanceof HTMLDialogElement){scheduleTreatCheck();scheduleShortcutCheck();}},true);
   function resumePendingBoss() {
     clearTimeout(bossPopupTimeout);
     if (G.progress(state).pendingBoss?.id === 'final') return;

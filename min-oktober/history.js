@@ -505,7 +505,7 @@
     if(voteResponse.error)throw voteResponse.error;
     const mergedResults = window.SoberRouletteLive.mergeResults(window.SoberOctoberCompetition.mergeResults(resultsResponse.data || [], bingoState), rouletteResponse.data || []);
     let results=votingPreview?window.SoberVoteLogic.mergeResults(mergedResults,voteResponse.data):mergedResults;
-    if(adventureEnabled){const response=await client.rpc('my_adventure',{p_payload:{board_size:60}});if(response.error)throw response.error;const days=new Map();for(const e of response.data.state.events){if(!days.has(e.date))days.set(e.date,{result_date:e.date,points:0,kind:'adventure',multiplier:null});if(e.type==='score')days.get(e.date).points++;}results=[...results.filter(r=>r.result_date<'2026-10-26'),...days.values()];}
+    if(adventureEnabled){const response=await client.rpc('my_adventure',{p_payload:{board_size:60,shortcut_version:1}});if(response.error)throw response.error;const days=new Map();for(const e of response.data.state.events){if(!days.has(e.date))days.set(e.date,{result_date:e.date,points:0,kind:'adventure',multiplier:null});if(e.type==='score')days.get(e.date).points++;}results=[...results.filter(r=>r.result_date<'2026-10-26'),...days.values()];}
     const challengeMap=new Map((challengesResponse.data||[]).map(challenge=>[challenge.challenge_date,challenge]));
     for(const day of voteResponse.data?.days||[]){if(!day.result)continue;const winner=day.options.find(option=>option.id===day.result.option_id);challengeMap.set(day.date,{...challengeMap.get(day.date),challenge_date:day.date,title:winner.title,description:winner.description,base_amount:1,unit:'pass',completion_mode:'single'});}
     const challenges=[...challengeMap.values()];

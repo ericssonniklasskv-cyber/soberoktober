@@ -15,7 +15,7 @@
   document.body.append(gate);
   let client, data, apply, busy=false, pending=null, scope='month', expanded=false, api, lastRefresh=0;
   const request=async(action='get',payload={})=>{
-   const result=await client.rpc('my_adventure',{p_action:action,p_payload:{...payload,board_size:window.SoberAdventure.BOARD_SIZE}}).abortSignal(AbortSignal.timeout(15000));
+   const result=await client.rpc('my_adventure',{p_action:action,p_payload:{...payload,board_size:window.SoberAdventure.BOARD_SIZE,shortcut_version:1}}).abortSignal(AbortSignal.timeout(15000));
    if(result.error)throw Object.assign(new Error(result.error.message),{code:result.error.code});
    if(!result.data?.profile?.id || !window.SoberAdventure.restore(result.data.state))throw new Error('Den sparade resan kunde inte läsas. Inget har nollställts.');
    return result.data;
@@ -44,7 +44,7 @@
    const actor=data.profile.id;
    try{const result=await request('treat_seen',{request_id:crypto.randomUUID()});if(data.profile.id===actor&&result.profile.id===actor)data.profile.icecream_seen=true;return true;}catch{return false;}
   }
-  const R={get data(){return data;},get busy(){return busy;},commit,refresh,markTreatSeen,
+  const R={get data(){return data;},get busy(){return busy;},get pendingShortcut(){return pending?.action==='shortcut'?pending.payload.choice:null;},commit,refresh,markTreatSeen,
    bind(callback){apply=callback;},
    welcome(profile,force,onClose){
     if(!profile||(!force&&data.profile.welcome_seen))return false;
