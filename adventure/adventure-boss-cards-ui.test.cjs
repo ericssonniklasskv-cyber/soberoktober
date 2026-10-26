@@ -6,14 +6,14 @@ const fixture=`
 const G=window.SoberAdventure;
 let apply;
 const data={state:G.createState(),today:'2026-10-25',active:false,profile:{id:'boss-card-fixture',name:'Testare',pawn_id:null,mount_index:0,status:'active',welcome_seen:true},players:[]};
-const syncPlayers=()=>{data.players=[{id:data.profile.id,name:'Testare',position:G.progress(data.state).position,pawn_id:null,mount_index:0},{id:'other-fixture',name:'Annan deltagare',position:24,pawn_id:null,mount_index:1}];};
+const syncPlayers=()=>{data.players=[{id:data.profile.id,name:'Testare',position:G.progress(data.state).position,pawn_id:null,mount_index:0},{id:'other-fixture',name:'Annan deltagare',position:G.BOSSES[3].position,pawn_id:null,mount_index:1}];};
 const redraw=()=>{syncPlayers();apply?.(data);};
 const R={data,busy:false,bind:fn=>apply=fn,welcome:()=>false,home:{init(){},render(){},resetParticipant(){}},
 async commit(action,p={}){if(action==='boss')data.state=G.resolveBoss(data.state,p.boss_id,p.choice_id,data.today);else if(action==='exercise')data.state=G.progress(data.state).pointsUnlocked?G.recordScore(data.state,p.exercise_id,data.today):G.record(data.state,p.exercise_id,data.today);else if(action==='undo')data.state=G.undo(data.state);redraw();return true;}};
 syncPlayers();window.AdventureConnection=Promise.resolve(R);
 window.bossQA={data,set(completed,atGate=false,day='2026-10-26'){
- let s=G.createState();for(let b=0;b<completed;b++){for(let n=0;n<6;n++)s=G.record(s,'squats','2026-10-26');s=G.resolveBoss(s,G.BOSSES[b].id,G.BOSSES[b].choices[0].id,b===5?'2026-10-31':'2026-10-26');}
- if(atGate&&completed<6)for(let n=0;n<6;n++)s=G.record(s,'squats','2026-10-26');
+ let s=G.createState();for(let b=0;b<completed;b++){for(let n=0;n<(b<2?6:12);n++)s=G.record(s,'squats','2026-10-26');s=G.resolveBoss(s,G.BOSSES[b].id,G.BOSSES[b].choices[0].id,b===5?'2026-10-31':'2026-10-26');}
+ if(atGate&&completed<6)for(let n=0;n<(completed<2?6:12);n++)s=G.record(s,'squats','2026-10-26');
  data.state=s;data.today=day;data.active=day>='2026-10-26'&&day<='2026-10-31';redraw();
 }};`;
 (async()=>{

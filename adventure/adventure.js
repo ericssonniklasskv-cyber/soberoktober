@@ -126,10 +126,12 @@
   }
   function scenery() {
     const { width, mobile, rowStep } = geometry;
-    const chapterStep = mobile ? rowStep * 2 : rowStep;
+    const rowsPerTile = rowStep / geometry.cols;
     let scenerySVG = '';
     for (let chapter = 0; chapter < 6; chapter++) {
-      const top = 107 + chapter * chapterStep;
+      const chapterStart = chapter ? G.BOSSES[chapter - 1].position : 0;
+      const chapterStep = (G.BOSSES[chapter].position - chapterStart) * rowsPerTile;
+      const top = 107 + chapterStart * rowsPerTile;
       const shade = ['#a7b58b', '#b6a082', '#c69a74', '#c9bc87', '#a49baf', '#bb9d72'][chapter];
       scenerySVG += `<path d="M0 ${top - 20} Q${width / 3} ${top - 45} ${width} ${top - 15} V${top + chapterStep - 20} Q${width / 2} ${top + chapterStep + 10} 0 ${top + chapterStep - 12}Z" fill="${shade}" opacity=".14"/>`;
       scenerySVG += `<text x="${mobile ? 125 : 155}" y="${top + 9}" class="map-zone-kicker">KAPITEL ${ROMAN[chapter]}</text><text x="${mobile ? 125 : 155}" y="${top + 32}" class="map-zone-text">${CHAPTERS[chapter]}</text>`;
@@ -280,8 +282,8 @@
     $('exercise-intro').textContent = progress.pointsUnlocked
       ? scoringAllowed ? progress.finished ? 'Alla bossar är besegrade. Nya övningar ger 1 poäng per registrering fram till temats slut den 31 oktober.' : finalOpen ? 'Det är finaldag! Gör ditt sista bossuppdrag och fortsätt samla poäng fram till temats slut.' : 'Du har nått Hangover castle och poängjakten är upplåst. Nya övningar ger 1 poäng per registrering – resans övningar räknas inte in.'
         : 'Poängjakten öppnades den ' + Number(progress.pointsUnlockedOn.slice(8)) + ' oktober. Välj den dagen eller en senare testdag för att samla poäng.'
-      : progress.pendingBoss ? 'Klara bossens uppdrag för att fortsätta resan. Poängjakten öppnas när du når Hangover castle på ruta 36.'
-        : 'Varje registrering flyttar dig en ruta. Riket ger inga poäng – nå Hangover castle på ruta 36 för att öppna poängjakten.';
+      : progress.pendingBoss ? 'Klara bossens uppdrag för att fortsätta resan. Poängjakten öppnas när du når Hangover castle på ruta 60.'
+        : 'Varje registrering flyttar dig en ruta. Riket ger inga poäng – nå Hangover castle på ruta 60 för att öppna poängjakten.';
     for (const button of document.querySelectorAll('[data-exercise],[data-quick-exercise]')) {
       const compact = !!button.dataset.quickExercise;
       const exercise = exercises.find(item => item.id === (button.dataset.exercise || button.dataset.quickExercise));
@@ -300,11 +302,11 @@
     const nextBoss = G.BOSSES.find(boss => boss.position > progress.position);
     $('quick-status').textContent = progress.pointsUnlocked ? (progress.finished ? 'Finalen är klar · ' : 'Vid slottet · ') + today.points + ' poäng i dag' : progress.pendingBoss ? progress.pendingBoss.name + ' blockerar vägen.' : (progress.position ? 'Ruta ' + progress.position + ' · ' : '') + (nextBoss.position - progress.position) + ' steg till nästa boss.';
     $('undo-last').disabled = !state.events.length || !!R && (R.busy || !R.data.active || R.data.profile.status !== 'active');
-    const chapter = Math.min(5, Math.floor(Math.max(0, progress.position - (progress.pendingBoss ? 1 : 0)) / 6));
+    const chapter = Math.max(0, G.BOSSES.findIndex(boss => boss.position >= progress.position));
     $('chapter-nav').replaceChildren(...G.BOSSES.map((boss, index) => {
       const button = element('button', '', ROMAN[index] + ' · ' + CHAPTERS[index]);
       button.type = 'button'; button.dataset.active = index === chapter; button.dataset.done = progress.completedBossIds.includes(boss.id);
-      button.addEventListener('click', () => centerMap(Math.max(1, boss.position - 5)));
+      button.addEventListener('click', () => centerMap(index ? G.BOSSES[index - 1].position + 1 : 1));
       return button;
     }));
     H.render(homeSnapshot());
@@ -492,7 +494,7 @@
     if (boss) {
       const open = canOpenBossCard(boss), progress = G.progress(state);
       const done = progress.completedBossIds.includes(boss.id), waitingForDate = !G.isBossOpen(boss.id, testDay);
-      if (!open) content.append(element('p', 'preview-note', done ? 'Den här bossen är besegrad. Bara nästa obesegrade bosskort kan öppnas.' : waitingForDate ? 'Bakrusbaronen öppnar den 31 oktober. När du når slottet på ruta 36 kan du börja samla poäng medan du väntar.' : 'Bossen syns på kartan, men kortet låses upp först när du har klarat föregående boss.'));
+      if (!open) content.append(element('p', 'preview-note', done ? 'Den här bossen är besegrad. Bara nästa obesegrade bosskort kan öppnas.' : waitingForDate ? 'Bakrusbaronen öppnar den 31 oktober. När du når slottet på ruta 60 kan du börja samla poäng medan du väntar.' : 'Bossen syns på kartan, men kortet låses upp först när du har klarat föregående boss.'));
       const button = element('button', 'primary-button', !open ? done ? 'Besegrad' : waitingForDate ? 'Öppnar 31 oktober' : 'Bosskortet är låst' : progress.pendingBoss?.id === boss.id ? 'Möt frestelsen ↗' : 'Se bosskortet ↗');
       button.disabled = !open; button.dataset.openBoss = boss.id;
       button.style.marginTop = '20px';
@@ -526,7 +528,7 @@
     G.BOSSES.forEach((boss, index) => {
       const button = element('button', 'chapter-entry'); button.type = 'button'; button.dataset.boss = boss.id;
       button.innerHTML = `<span class="boss-art"></span><span><strong>${ROMAN[index]} · ${esc(CHAPTERS[index])}</strong><small>${esc(boss.name)} · ruta ${boss.position}</small></span><i>${progress.completedBossIds.includes(boss.id) ? '✓' : '↗'}</i>`;
-      button.addEventListener('click', () => { closeDialog('detail-dialog'); centerMap(Math.max(1, boss.position - 5)); }); content.append(button);
+      button.addEventListener('click', () => { closeDialog('detail-dialog'); centerMap(index ? G.BOSSES[index - 1].position + 1 : 1); }); content.append(button);
     });
   }
   function showJournal() {

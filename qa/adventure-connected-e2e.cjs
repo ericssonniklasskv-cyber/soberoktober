@@ -10,7 +10,7 @@ const G=require('../adventure/adventure-logic.js');
  const clock=date=>sql(`create or replace function private.adventure_clock()returns timestamptz language sql stable security invoker set search_path=''as $$select timestamptz '${date}';$$;`);
  const quote=s=>"'"+String(s).replaceAll("'","''")+"'";
  const create=async(name,admin=false)=>{const email='adventure-'+randomUUID()+'@example.invalid',password='LocalAdventure-2026!';const u=await localRequest(stack.api+'/auth/v1/admin/users',{method:'POST',headers,body:JSON.stringify({email,password,email_confirm:true})});const user=u.user||u;users.push(user.id);sql(`insert into public.profiles(id,email,display_name,is_admin)values('${user.id}',${quote(email)},${quote(name)},${admin});`);return localRequest(stack.api+'/auth/v1/token?grant_type=password',{method:'POST',headers:{apikey:stack.publishable,'Content-Type':'application/json'},body:JSON.stringify({email,password})});};
- const rpc=async(session,action='get',payload={})=>localRequest(stack.api+'/rest/v1/rpc/my_adventure',{method:'POST',headers:{apikey:stack.publishable,Authorization:'Bearer '+session.access_token,'Content-Type':'application/json'},body:JSON.stringify({p_action:action,p_payload:payload})});
+ const rpc=async(session,action='get',payload={})=>localRequest(stack.api+'/rest/v1/rpc/my_adventure',{method:'POST',headers:{apikey:stack.publishable,Authorization:'Bearer '+session.access_token,'Content-Type':'application/json'},body:JSON.stringify({p_action:action,p_payload:{...payload,board_size:60}})});
  const action=async(session,kind,fields={})=>{const state=await rpc(session);return rpc(session,kind,{...fields,request_id:randomUUID(),expected_revision:state.revision});};
  async function queuedMidnight(session){
   const state=await rpc(session),migration=require('node:fs').readFileSync('supabase/migrations/20261025202041_prepare_final_adventure.sql','utf8');
@@ -55,14 +55,14 @@ const G=require('../adventure/adventure-logic.js');
   s=await action(anna,'undo',{event_id:s.state.events.at(-1).id});assert.equal(G.progress(s.state).pendingBoss.id,'troll');
   s=await action(anna,'boss',{boss_id:'troll',choice_id:'somersault'});
   for(let boss=1;boss<6;boss++){
-   for(let i=0;i<6;i++)s=await action(anna,'exercise',{exercise_id:['squats','pushups','pullups','running'][i%4]});
+   for(let i=0;i<G.BOSSES[boss].position-G.BOSSES[boss-1].position;i++)s=await action(anna,'exercise',{exercise_id:['squats','pushups','pullups','running'][i%4]});
    if(boss<5)s=await action(anna,'boss',{boss_id:G.BOSSES[boss].id,choice_id:G.BOSSES[boss].choices[0].id});
   }
-  assert.equal(G.progress(s.state).position,36);assert.equal(G.progress(s.state).bossesDefeated,5);assert.equal(Number(s.standings.find(r=>r.id===anna.user.id).points),0);
+  assert.equal(G.progress(s.state).position,60);assert.equal(G.progress(s.state).bossesDefeated,5);assert.equal(Number(s.standings.find(r=>r.id===anna.user.id).points),0);
   await assert.rejects(()=>action(anna,'boss',{boss_id:'final',choice_id:'victory-jump'}),/31 oktober/);
   s=await action(anna,'exercise',{exercise_id:'pullups'});assert.equal(G.scoreTotals(s.state).points,1);assert.equal(Number(s.standings.find(r=>r.id===anna.user.id).points),1);
   s=await action(anna,'undo',{event_id:s.state.events.at(-1).id});assert.equal(G.scoreTotals(s.state).points,0);
-  s=await action(anna,'undo',{event_id:s.state.events.at(-1).id});assert.equal(G.progress(s.state).position,35);assert.equal(G.canScore(s.state,'2026-10-26'),false);
+  s=await action(anna,'undo',{event_id:s.state.events.at(-1).id});assert.equal(G.progress(s.state).position,59);assert.equal(G.canScore(s.state,'2026-10-26'),false);
   s=await action(anna,'exercise',{exercise_id:'running'});
   clock('2026-10-31 23:59:59+01');s=await action(anna,'boss',{boss_id:'final',choice_id:'victory-jump'});assert.equal(G.progress(s.state).finished,true);
   s=await action(anna,'exercise',{exercise_id:'running'});assert.equal(G.scoreTotals(s.state).points,1);assert.equal(Number(s.standings.find(r=>r.id===anna.user.id).points),1);
@@ -80,7 +80,7 @@ const G=require('../adventure/adventure-logic.js');
   assert.match(sql("select private.find_missed_day_elimination(gen_random_uuid(),date '2026-10-30')is null;"),/t/);
   sql(`do $$begin begin insert into public.daily_results(user_id,result_date,multiplier)values('${erik.user.id}','2026-10-26',1);raise exception 'Legacy workout accepted';exception when insufficient_privilege then null;end;end $$;`);
   const before=sql(`select count(*)from private.adventure_events where user_id='${anna.user.id}';`);
-  sql(`begin;set local role authenticated;select set_config('request.jwt.claim.sub','${erik.user.id}',true);select public.my_adventure();rollback;`);assert.equal(sql(`select count(*)from private.adventure_events where user_id='${anna.user.id}';`),before);
+  sql(`begin;set local role authenticated;select set_config('request.jwt.claim.sub','${erik.user.id}',true);select public.my_adventure('get','{"board_size":60}'::jsonb);rollback;`);assert.equal(sql(`select count(*)from private.adventure_events where user_id='${anna.user.id}';`),before);
   await queuedMidnight(erik);
   // Start the real local frontend, without a preview fixture for data requests.
   const port=3198,origin='http://127.0.0.1:'+port;
@@ -129,7 +129,7 @@ const G=require('../adventure/adventure-logic.js');
   const day=history.locator('.calendar-day').filter({has:history.locator('.day-number',{hasText:/^31$/})});await day.click();await history.locator('#day-detail').waitFor({state:'visible'});assert.equal(await history.locator('#detail-title').textContent(),'Frestelsernas rike');assert.equal(await history.locator('#day-edit-form').isVisible(),false);
   // First-time OAuth-style account: the Auth user exists, but there is no profile yet.
   const newcomer=await create('Adventure QA Onboarding');sql(`delete from public.profiles where id='${newcomer.user.id}';`);const newbie=await browser.newContext({viewport:{width:320,height:950}});await newbie.addInitScript(({key,session})=>localStorage.setItem(key,JSON.stringify(session)),{key:authKey,session:newcomer});const fresh=await newbie.newPage();fresh.on('pageerror',e=>errors.push(e.message));await fresh.goto(origin+'/adventure/?live=1');await fresh.locator('#adventure-display-name').fill('Adventure QA New');await fresh.locator('.adventure-name-form button').click();await fresh.waitForFunction(()=>document.querySelector('#home-username').textContent==='Adventure QA New');assert(await fresh.locator('#choose-avatar').isVisible());assert(!await fresh.locator('#home-admin').isVisible());
-  assert.deepEqual(errors,[]);console.log('PASS: local real Auth + RPC + browser; Sunday homepage/personal welcome and midnight training unlock; server dates/DST/start/end; 36 steps/6 bosses/castle scoring; zero journey points; idempotency; concurrent revisions; undo; private access; stable personal pawn; cross-browser welcome; bonus; elimination; legacy-workout block; reload/multidevice; 4 mobile/desktop widths.');
+  assert.deepEqual(errors,[]);console.log('PASS: local real Auth + RPC + browser; Sunday homepage/personal welcome and midnight training unlock; server dates/DST/start/end; 60 steps/6 bosses/castle scoring; zero journey points; idempotency; concurrent revisions; undo; private access; stable personal pawn; cross-browser welcome; bonus; elimination; legacy-workout block; reload/multidevice; 4 mobile/desktop widths.');
  }catch(error){console.error('Original test failure:',error.stack);throw error;}finally{
   await browser?.close();if(server){server.kill('SIGTERM');await new Promise(resolve=>{server.on('exit',resolve);setTimeout(resolve,3000);});}
   for(const id of users)await localRequest(stack.api+'/auth/v1/admin/users/'+id,{method:'DELETE',headers});

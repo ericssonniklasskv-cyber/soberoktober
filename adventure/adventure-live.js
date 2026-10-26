@@ -15,7 +15,7 @@
   document.body.append(gate);
   let client, data, apply, busy=false, pending=null, scope='month', expanded=false, api, lastRefresh=0;
   const request=async(action='get',payload={})=>{
-   const result=await client.rpc('my_adventure',{p_action:action,p_payload:payload}).abortSignal(AbortSignal.timeout(15000));
+   const result=await client.rpc('my_adventure',{p_action:action,p_payload:{...payload,board_size:window.SoberAdventure.BOARD_SIZE}}).abortSignal(AbortSignal.timeout(15000));
    if(result.error)throw Object.assign(new Error(result.error.message),{code:result.error.code});
    if(!result.data?.profile?.id || !window.SoberAdventure.restore(result.data.state))throw new Error('Den sparade resan kunde inte läsas. Inget har nollställts.');
    return result.data;
@@ -49,7 +49,7 @@
    }
   };
   function mountFor(player){const profile=window.AdventurePersonalPawns.forId(player.pawn_id);return profile?.mount||api.snapshot().players.find(p=>p.id===player.id||p.own&&player.id===data.profile.id)?.mount;}
-  function showRules(){const content=api.detail('Så tar du dig genom riket.','REGLER OCH POÄNG · FINALVECKAN');content.innerHTML+='<ol class="home-rules"><li><strong>Träna dig fram till slottet.</strong>15 squats, 10 armhävningar, 5 pull-ups eller 1 km löpning flyttar dig en ruta. Resan och bossarna ger inga poäng.</li><li><strong>Stå emot frestelserna.</strong>Gör bossens uppdrag, dela i gruppen och klarmarkera för att fortsätta.</li><li><strong>Nå ruta 36. Lås upp poängjakten.</strong>Därefter ger nya 15 squats, 10 armhävningar, 5 pull-ups eller 1 km löpning 1 poäng per registrering.</li><li><strong>Final den 31 oktober.</strong>Bakrusbaronen öppnar då. Poängjakten fortsätter till kl. 23.59.59 svensk tid, även efter segern.</li></ol><p>Dagens bonus räknas separat och styrs av admin. Din resa fortsätter mellan dagar och enheter.</p>';}
+  function showRules(){const content=api.detail('Så tar du dig genom riket.','REGLER OCH POÄNG · FINALVECKAN');content.innerHTML+='<ol class="home-rules"><li><strong>Träna dig fram till slottet.</strong>15 squats, 10 armhävningar, 5 pull-ups eller 1 km löpning flyttar dig en ruta. Resan och bossarna ger inga poäng.</li><li><strong>Stå emot frestelserna.</strong>Gör bossens uppdrag, dela i gruppen och klarmarkera för att fortsätta.</li><li><strong>Nå ruta 60. Lås upp poängjakten.</strong>Därefter ger nya 15 squats, 10 armhävningar, 5 pull-ups eller 1 km löpning 1 poäng per registrering.</li><li><strong>Final den 31 oktober.</strong>Bakrusbaronen öppnar då. Poängjakten fortsätter till kl. 23.59.59 svensk tid, även efter segern.</li></ol><p>Dagens bonus räknas separat och styrs av admin. Din resa fortsätter mellan dagar och enheter.</p>';}
   function showAccount(){
    const content=api.detail(data.profile.name,'DITT KONTO');const own=api.snapshot().players.find(p=>p.own);
    content.innerHTML+=`<div class="home-account-pawn">${api.pawnMarkup(own.mount,'',160)}</div><div class="home-dialog-actions"><button type="button" id="home-account-pawn" class="primary-button">${data.profile.pawn_id?'Visa min pjäs igen ✦':'Byt min pjäs'}</button><button type="button" id="home-account-journey" class="text-button">Visa min resedagbok ↗</button><a href="/min-oktober/">Min oktober ↗</a><a href="/regler/">Alla tävlingsregler ↗</a><button type="button" id="home-sign-out" class="text-button">Logga ut</button></div>`;

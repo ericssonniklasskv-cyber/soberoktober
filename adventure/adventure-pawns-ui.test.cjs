@@ -84,10 +84,10 @@ const { browserOptions } = require('../qa/browser.cjs');
     await tools(); await page.locator('#test-day').selectOption('2026-10-31');
     await page.evaluate(() => {
       const G = SoberAdventure; let state = G.createState();
-      for (let n = 1; n <= 36; n++) {
+      for (let n = 1; n <= G.BOARD_SIZE; n++) {
         state = G.record(state, 'squats', '2026-10-31');
         const boss = G.progress(state).pendingBoss;
-        if (boss && n < 36) state = G.resolveBoss(state, boss.id, boss.choices[0].id, '2026-10-31');
+        if (boss && n < G.BOARD_SIZE) state = G.resolveBoss(state, boss.id, boss.choices[0].id, '2026-10-31');
       }
       localStorage.setItem('soberoktober:final-adventure:v1', JSON.stringify(state));
     });

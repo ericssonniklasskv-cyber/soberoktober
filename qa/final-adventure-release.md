@@ -74,3 +74,11 @@ Användaren godkände 25 oktober uttryckligen databasrelease, publicering och by
 - Automatisk utslagning för missade dagar är fortfarande avstängd. Inga bonusuppgifter för 26–31 oktober lades till av releasen; de kan läggas in via admin.
 - Fysisk iPhone/Safari och subjektiv ljudnivå/ljudkvalitet är inte verifierade. Fanfaren har manuell startknapp som reserv om webbläsaren blockerar ljudstart.
 - Återgång vid behov: tidigare fungerande build `dpl_GSfwxLdgCLHJQSFuJFjxw29G1no8`/main `ed288a75439072f5d07374aba68fc0402ef4e66f`, tillsammans med avstängd databasinställning och frontendflagga. Bevara nya speldata.
+
+## Banförlängning 26 oktober
+
+Godkänt av användaren för direkt livepublicering: sex extra rutor i vart och ett av mellanrummen efter boss 2. Ny bana: 60 rutor, bossar på 6, 12, 24, 36, 48 och 60. Befintliga övningar, bossar och poäng behålls. Redan uppnådda gamla kontrollpunkter får interna kartkrediter; dessa är inte övningar och ger inte poäng. Gamla öppna klienter ombeds ladda om innan fler registreringar. Nya klienter anger board_size=60. Dagens bonus, personliga pjäser, nästa-boss-spärren och finaldatumet 31 oktober behålls.
+
+Ändringen genomförs mot production enligt användarens förtydligande. Docker och lokal databas används inte för denna release. Enhets-/webbläsartester körs mot koden; databasändringen kontrolleras i production med tillfälliga, återställda transaktioner. Efter att nya steg har registrerats ska en eventuell återgång göras med datakompatibel kod, inte genom att återställa den gamla 36-rutorslogiken.
+
+Banförlängningens riktade production-migration registrerades som `20261026101514_extend_final_adventure_after_second_boss.sql`. Befintlig produktionshistorik var oförändrad efter körningen: 20 övningar, två bossar och noll poängregistreringar.

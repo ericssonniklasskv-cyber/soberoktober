@@ -94,7 +94,7 @@
   }
   function showRules() {
     const content = api.detail('Så tar du dig genom riket.', 'REGLER OCH POÄNG · FINALVECKAN');
-    content.innerHTML += `<ol class="home-rules"><li><strong>Träna dig fram till slottet.</strong>15 squats, 10 armhävningar, 5 pull-ups eller 1 km löpning flyttar dig en ruta. Resan och bossarna ger inga poäng.</li><li><strong>Stå emot frestelserna.</strong>Gör bossens uppdrag, dela i gruppen och klarmarkera för att fortsätta.</li><li><strong>Nå ruta 36. Lås upp poängjakten.</strong>Därefter ger nya 15 squats, 10 armhävningar, 5 pull-ups eller 1 km löpning 1 poäng per registrering.</li><li><strong>Final den 31 oktober.</strong>Bakrusbaronen öppnar först då. Samla poäng medan du väntar – och även efter segern, fram till kl. 23.59.59 svensk tid.</li></ol><p>Dagens bonus finns i spelpanelen. Topplistan visar hela oktober eller bara finalveckan.</p>`;
+    content.innerHTML += `<ol class="home-rules"><li><strong>Träna dig fram till slottet.</strong>15 squats, 10 armhävningar, 5 pull-ups eller 1 km löpning flyttar dig en ruta. Resan och bossarna ger inga poäng.</li><li><strong>Stå emot frestelserna.</strong>Gör bossens uppdrag, dela i gruppen och klarmarkera för att fortsätta.</li><li><strong>Nå ruta 60. Lås upp poängjakten.</strong>Därefter ger nya 15 squats, 10 armhävningar, 5 pull-ups eller 1 km löpning 1 poäng per registrering.</li><li><strong>Final den 31 oktober.</strong>Bakrusbaronen öppnar först då. Samla poäng medan du väntar – och även efter segern, fram till kl. 23.59.59 svensk tid.</li></ol><p>Dagens bonus finns i spelpanelen. Topplistan visar hela oktober eller bara finalveckan.</p>`;
   }
   function showAccount() {
     const content = api.detail(ownName(), 'DITT KONTO · LOKAL FÖRHANDSVISNING');

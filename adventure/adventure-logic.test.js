@@ -9,11 +9,11 @@ function reachCheckpoint(state, count, date = '2026-10-26') {
   return state;
 }
 
-test('board has 36 steps and six checkpoints over the six-day prototype window', () => {
-  assert.equal(adventure.BOARD_SIZE, 36);
+test('board has 60 steps and six checkpoints over the six-day prototype window', () => {
+  assert.equal(adventure.BOARD_SIZE, 60);
   assert.equal(adventure.START_DATE, '2026-10-26');
   assert.equal(adventure.END_DATE, '2026-10-31');
-  assert.deepEqual(adventure.BOSSES.map((boss) => boss.position), [6, 12, 18, 24, 30, 36]);
+  assert.deepEqual(adventure.BOSSES.map((boss) => boss.position), [6, 12, 24, 36, 48, 60]);
   assert.equal(adventure.BOSSES.length, 6);
   assert.ok(adventure.EXERCISES.every((exercise) => exercise.provisional));
   assert.ok(Object.isFrozen(adventure.BOSSES) && Object.isFrozen(adventure.BOSSES[0].choices[0]));
@@ -53,7 +53,7 @@ test('restore rejects malformed, duplicated, bypassed, and overlong histories', 
   const exercise = (id, exerciseId = 'squats') => ({ id, type: 'exercise', exerciseId, date: '2026-10-26' });
   const boss = (id, bossId = 'troll', choiceId = 'somersault') => ({ id, type: 'boss', bossId, choiceId, date: '2026-10-26' });
   assert.equal(adventure.restore('{bad json'), null);
-  assert.equal(adventure.restore({ version: 3, events: [] }), null);
+  assert.equal(adventure.restore({ version: 99, events: [] }), null);
   assert.equal(adventure.restore({ version: 1, events: [exercise('1'), exercise('1')] }), null);
   assert.equal(adventure.restore({ version: 1, events: [boss('boss-early')] }), null);
   assert.equal(adventure.restore({ version: 1, events: [...Array.from({ length: 7 }, (_, i) => exercise(`s${i}`)), boss('boss-1')] }), null);
@@ -78,14 +78,14 @@ test('the final checkpoint stays gated until its boss is resolved, then marks th
   let state = adventure.createState();
   for (let i = 1; i <= adventure.BOARD_SIZE; i += 1) {
     state = adventure.record(state, adventure.EXERCISES[(i - 1) % adventure.EXERCISES.length].id, '2026-10-31', `step-${i}`);
-    if (i % 6 === 0) {
+    if (adventure.BOSSES.some(boss => boss.position === i)) {
       const boss = adventure.BOSSES.find((item) => item.position === i);
       assert.equal(adventure.progress(state).pendingBoss.id, boss.id);
       assert.equal(adventure.progress(state).finished, false);
       state = adventure.resolveBoss(state, boss.id, boss.choices[0].id, '2026-10-31', `boss-${i}`);
     }
   }
-  assert.equal(adventure.progress(state).position, 36);
+  assert.equal(adventure.progress(state).position, 60);
   assert.equal(adventure.progress(state).bossesDefeated, 6);
   assert.equal(adventure.progress(state).finished, true);
   assert.throws(() => adventure.record(state, 'squats', '2026-10-31', 'extra'));
@@ -119,7 +119,7 @@ test('both old A/B save histories migrate without losing progress, while new com
     });
     const original = JSON.stringify(raw);
     const migrated = adventure.restore(original);
-    assert.equal(adventure.progress(migrated).position, 36);
+    assert.equal(adventure.progress(migrated).position, 60);
     assert.equal(adventure.progress(migrated).bossesDefeated, 6);
     assert.equal(adventure.progress(migrated).finished, true);
     assert.deepEqual(migrated.events.filter(event => event.type === 'boss').map(event => event.choiceId), adventure.BOSSES.map(boss => boss.choices[0].id));
@@ -157,7 +157,7 @@ test('the first five bosses block scoring; arriving at the castle unlocks it wit
     state = adventure.resolveBoss(state, boss.id, boss.choices[0].id, '2026-10-26');
   }
   assert.equal(adventure.canScore(state, '2026-10-26'), false);
-  state = reachCheckpoint(state, 36);
+  state = reachCheckpoint(state, 60);
   assert.equal(adventure.progress(state).pendingBoss.id, 'final');
   assert.equal(adventure.progress(state).finished, false);
   assert.equal(adventure.progress(state).pointsUnlocked, true);
@@ -172,10 +172,10 @@ test('post-arrival exercise units award one point while the final boss is still 
   for (const exercise of adventure.SCORING_EXERCISES) state = adventure.recordScore(state, exercise.id, '2026-10-26', 'point-' + exercise.id);
   assert.deepEqual(adventure.scoreTotals(state), { points: 4, squats: 15, pushups: 10, pullups: 5, running: 1 });
   assert.deepEqual(adventure.totals(state), journeyTotals);
-  assert.equal(adventure.progress(state).position, 36);
+  assert.equal(adventure.progress(state).position, 60);
   assert.equal(adventure.progress(state).bossesDefeated, 5);
   assert.equal(adventure.progress(state).pendingBoss.id, 'final');
-  assert.equal(state.events.length, 45);
+  assert.equal(state.events.length, 69);
   assert.deepEqual(adventure.restore(JSON.stringify(state)), state);
 });
 
@@ -235,10 +235,10 @@ test('undoing arrival relocks scoring, while undoing points leaves the pawn at t
   let state = adventure.recordScore(reachCastle(), 'running', '2026-10-27', 'p1');
   state = adventure.undo(state);
   assert.equal(adventure.scoreTotals(state).points, 0);
-  assert.equal(adventure.progress(state).position, 36);
+  assert.equal(adventure.progress(state).position, 60);
   assert.equal(adventure.canScore(state, '2026-10-27'), true);
   state = adventure.undo(state);
-  assert.equal(adventure.progress(state).position, 35);
+  assert.equal(adventure.progress(state).position, 59);
   assert.equal(adventure.progress(state).pointsUnlocked, false);
   assert.equal(adventure.canScore(state, '2026-10-27'), false);
   assert.throws(() => adventure.recordScore(state, 'squats', '2026-10-27'), /Reach the castle/);
@@ -248,18 +248,19 @@ test('undoing arrival relocks scoring, while undoing points leaves the pawn at t
 });
 
 test('old early-final saves reopen the final and preserve arrival, exercises and points', () => {
-  const old = JSON.parse(JSON.stringify(reachCastle())); old.version = 1;
+  const old = { version:1,events:[] };
+  adventure.BOSSES.forEach((boss,index)=>{for(let n=0;n<6;n++)old.events.push({id:'legacy-step-'+old.events.length,type:'exercise',exerciseId:['squats','pushups','pullups','running'][n%4],date:'2026-10-26',...(n%4===3?{distanceKm:1}:{})});if(index<5)old.events.push({id:'legacy-boss-'+index,type:'boss',bossId:boss.id,choiceId:boss.choices[0].id,date:'2026-10-26'});});
   old.events.push({ id: 'old-final', type: 'boss', bossId: 'final', choiceId: 'breathing', date: '2026-10-26' });
   old.events.push({ id: 'p1', type: 'score', exerciseId: 'squats', date: '2026-10-27' });
   old.events.push({ id: 'p2', type: 'score', exerciseId: 'running', date: '2026-10-28' });
   const original = JSON.stringify(old);
   const migrated = adventure.restore(original);
-  assert.equal(migrated.version, 2);
-  assert.equal(adventure.progress(migrated).position, 36);
+  assert.equal(migrated.version, 3);
+  assert.equal(adventure.progress(migrated).position, 60);
   assert.equal(adventure.progress(migrated).pendingBoss.id, 'final');
   assert.equal(adventure.progress(migrated).bossesDefeated, 5);
   assert.equal(adventure.scoreTotals(migrated).points, 2);
-  assert.deepEqual(adventure.totals(migrated), adventure.totals(reachCastle()));
+  assert.equal(adventure.totals(migrated).steps, 36);
   assert.equal(JSON.stringify(old), original);
   assert.deepEqual(adventure.restore(JSON.stringify(migrated)), migrated);
 });
@@ -287,4 +288,25 @@ test('new running steps are 1 km while old 2 km and 2.5 km save entries keep the
   assert.equal(adventure.progress(state).position, 2);
   assert.equal(adventure.scoreTotals(state).points, 0);
   assert.deepEqual(adventure.restore(JSON.stringify(state)), state);
+});
+
+
+test('route upgrade preserves partial progress and completed checkpoints without inventing exercises or points',()=>{
+ for(const count of [0,6,12,15,18,24,30,36]){
+  const old={version:2,events:[]};
+  for(let i=1;i<=count;i++){old.events.push({id:'step-'+i,type:'exercise',exerciseId:'squats',date:'2026-10-26'});if(i%6===0&&i<36){const b=adventure.BOSSES[i/6-1];old.events.push({id:'boss-'+i,type:'boss',bossId:b.id,choiceId:b.choices[0].id,date:'2026-10-26'});}}
+  const upgraded=adventure.restore(old);assert(upgraded);
+  assert.deepEqual(upgraded.events,old.events);assert.equal(adventure.totals(upgraded).steps,count);assert.equal(adventure.scoreTotals(upgraded).points,0);
+  assert.equal(adventure.progress(upgraded).position,count+6*[18,24,30,36].filter(n=>n<=count).length);
+  assert.deepEqual(adventure.restore(JSON.stringify(upgraded)),upgraded);
+ }
+});
+
+test('map credits are bounded, tied to existing exercise checkpoints and removed with undo',()=>{
+ const e={id:'step',type:'exercise',exerciseId:'squats',date:'2026-10-26'};
+ for(const credits of [{missing:6},{step:5},{step:6},[]])assert.equal(adventure.restore({version:3,events:[e],stepCredits:credits}),null);
+ let old={version:2,events:[]};for(let i=1;i<=18;i++){old.events.push({...e,id:'s'+i});if(i===6||i===12){const b=adventure.BOSSES[i/6-1];old.events.push({id:'b'+i,type:'boss',bossId:b.id,choiceId:b.choices[0].id,date:e.date});}}
+ let state=adventure.restore(old);assert.equal(adventure.progress(state).pendingBoss.id,'dragon');
+ state=adventure.undo(state);assert.equal(adventure.progress(state).position,17);assert.deepEqual(state.stepCredits,{});
+ for(let i=0;i<7;i++)state=adventure.record(state,'squats',e.date,'new'+i);assert.equal(adventure.progress(state).pendingBoss.id,'dragon');
 });

@@ -3,11 +3,11 @@
   if (typeof module === 'object' && module.exports) module.exports = api;
   if (root) root.SoberAdventure = api;
 }(typeof globalThis !== 'undefined' ? globalThis : this, function createSoberAdventure() {
-  const BOARD_SIZE = 36;
+  const BOARD_SIZE = 60;
   const START_DATE = '2026-10-26';
   const END_DATE = '2026-10-31';
   const FINAL_BOSS_DATE = END_DATE;
-  const SAVE_VERSION = 2;
+  const SAVE_VERSION = 3;
   // Bound local save size while leaving ample room for the scoring phase.
   const MAX_EVENTS = 10000;
   const EXERCISES = Object.freeze([
@@ -43,7 +43,7 @@
       choices: [['handstand', 'Vänd upp och ner på Sexiga vin-gnomen!', 'Dags att se världen från ett nyktert perspektiv — upp och ner! Gör ditt bästa försök att stå på händer, gärna med stöd. Filma försöket och skicka klippet i gruppen. Hjältemodet sitter i försöket!']]
     },
     {
-      id: 'dragon', position: 18, name: 'Shotsdraken', title: 'Den lilla skålen',
+      id: 'dragon', position: 24, name: 'Shotsdraken', title: 'Den lilla skålen',
       story: "Du har precis tagit dig igenom Ravine of shots när marken skakar och Shotsdraken landar framför utgången med en bricka glödande shots.",
       dialogue: [
         "Stopp, lilla benmänniska – här betalar man tullen med en shot.",
@@ -53,7 +53,7 @@
       choices: [['morning-walk', 'Morgonpigg drakdräpare!', 'Medan Shotsdraken fortfarande snarkar tar du täten. Ge dig ut på en tidig morgonpromenad och skicka en bild eller ett klipp i gruppen. Morgonfrilla uppmuntras!']]
     },
     {
-      id: 'sphinx', position: 24, name: 'Proseccohäxan', title: 'Spegelgrottan',
+      id: 'sphinx', position: 36, name: 'Proseccohäxan', title: 'Spegelgrottan',
       story: "Efter klättringen genom The prosecco mountains når du ett bergspass där Proseccohäxan svävar framför dig och fyller luften med gyllene bubblor.",
       dialogue: [
         "Utsikten är gratis, älskling, men vägen vidare kostar ett glas prosecco.",
@@ -63,7 +63,7 @@
       choices: [['ball-juggling', 'Tio kickar mot bubbelmagin!', 'Fram med bollen — nu ska Proseccohäxan få se på bollkänsla! Kicka bollen 10 gånger, filma din uppvisning och skicka klippet i gruppen. Låt jublet börja!']]
     },
     {
-      id: 'kraken', position: 30, name: 'Nattklubbsgollum', title: 'Dansgolvets dimma',
+      id: 'kraken', position: 48, name: 'Nattklubbsgollum', title: 'Dansgolvets dimma',
       story: "Du har dansat dig igenom The last dance och ser äntligen utgången, men Nattklubbsgollum sitter på huk framför dörren och kramar sitt dyrbara drinkglas.",
       dialogue: [
         "Inte gå än, nej nej, festen har ju precis börjat, min dyrbaraste.",
@@ -73,7 +73,7 @@
       choices: [['bottle-flip', 'En bottle flip från en annan värld!', 'Fram med en vattenflaska! Sätt den coolaste bottle flip du kan hitta på, filma mästerverket och skicka klippet i gruppen. Nattklubbsgollum ska tappa hakan!']]
     },
     {
-      id: 'final', position: 36, name: 'Bakrusbaronen', title: 'Sista frestelsen', opensOn: FINAL_BOSS_DATE,
+      id: 'final', position: 60, name: 'Bakrusbaronen', title: 'Sista frestelsen', opensOn: FINAL_BOSS_DATE,
       story: "Till sist står du framför portarna till Hangover castle, där Bakrusbaronen kliver ner från sin tron och höjer ett glas whisky framför mållinjen.",
       dialogue: [
         "Se där, en äkta soktoberian som nästan har klarat hela riket.",
@@ -109,9 +109,9 @@
     if (typeof globalThis.crypto?.randomUUID === 'function') return globalThis.crypto.randomUUID();
     return `adv-${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
   }
-  function freezeState(events) { return Object.freeze({ version: SAVE_VERSION, events: Object.freeze(events) }); }
+  function freezeState(events, stepCredits = {}) { const kept = Object.fromEntries(Object.entries(stepCredits).filter(([id]) => events.some(e => e.id === id))); return Object.freeze({ version: SAVE_VERSION, events: Object.freeze(events), stepCredits: Object.freeze(kept) }); }
   function createState() { return freezeState([]); }
-  function applySequence(events) {
+  function applySequence(events, stepCredits = {}) {
     let position = 0;
     let pendingBoss = null;
     let pointsUnlockedOn = null;
@@ -119,7 +119,9 @@
     for (const event of events) {
       if (event.type === 'exercise') {
         if (pendingBoss || position >= BOARD_SIZE) return null;
-        position += 1;
+        const credit = Object.hasOwn(stepCredits, event.id) ? stepCredits[event.id] : 0;
+        position += 1 + credit;
+        if (credit && !BOSSES.slice(2).some(boss => boss.position === position)) return null;
         const checkpoint = BOSSES.find((boss) => boss.position === position);
         if (checkpoint) pendingBoss = checkpoint;
         if (position === BOARD_SIZE) pointsUnlockedOn = event.date;
@@ -138,9 +140,19 @@
   function restore(raw) {
     let value = raw;
     if (typeof raw === 'string') { try { value = JSON.parse(raw); } catch (_) { return null; } }
-    if (!value || typeof value !== 'object' || Array.isArray(value) || (value.version !== 1 && value.version !== SAVE_VERSION)
+    if (!value || typeof value !== 'object' || Array.isArray(value) || ![1, 2, SAVE_VERSION].includes(value.version)
       || !Array.isArray(value.events) || value.events.length > MAX_EVENTS) return null;
     const ids = new Set(); const events = [];
+    let stepCredits = {};
+    if (value.version === SAVE_VERSION) {
+      if (value.stepCredits !== undefined && (!value.stepCredits || typeof value.stepCredits !== 'object' || Array.isArray(value.stepCredits))) return null;
+      stepCredits = Object.fromEntries(Object.entries(value.stepCredits || {}));
+      if (Object.entries(stepCredits).some(([id, steps]) => steps !== 6 || !value.events.some(e => e?.id === id && e.type === 'exercise'))) return null;
+    } else {
+      // Preserve already reached checkpoints from the original 36-tile route.
+      let steps = 0;
+      stepCredits = Object.fromEntries(value.events.filter(e => e?.type === 'exercise' && [18,24,30,36].includes(++steps)).map(e => [e.id, 6]));
+    }
     for (const event of value.events) {
       if (!event || typeof event !== 'object' || Array.isArray(event) || !validId(event.id)
         || ids.has(event.id) || !validDate(event.date)) return null;
@@ -159,7 +171,7 @@
         if (!choice && !LEGACY_CHOICES[boss.id].includes(event.choiceId)) return null;
         if (value.version === 1 && boss.id === 'final' && event.date < FINAL_BOSS_DATE) {
           // Reopen an early final from the old demo without discarding its earned points.
-          const arrived = applySequence(events);
+          const arrived = applySequence(events, stepCredits);
           if (!arrived || arrived.pendingBoss?.id !== 'final') return null;
         } else {
           events.push(Object.freeze({ id: event.id, type: 'boss', bossId: event.bossId, choiceId: choice ? choice.id : boss.choices[0].id, date: event.date }));
@@ -167,8 +179,8 @@
       } else return null;
       ids.add(event.id);
     }
-    if (!applySequence(events)) return null;
-    return freezeState(events);
+    if (!applySequence(events, stepCredits)) return null;
+    return freezeState(events, stepCredits);
   }
   function checked(state) { const result = restore(state); if (!result) throw new TypeError('Invalid adventure state'); return result; }
   function append(state, event) {
@@ -176,8 +188,8 @@
     if (current.events.length >= MAX_EVENTS) throw new RangeError('Event limit reached');
     if (!validId(event.id) || current.events.some((item) => item.id === event.id)) throw new TypeError('Event id must be unique and non-empty');
     const candidate = [...current.events, Object.freeze(event)];
-    if (!applySequence(candidate)) throw new TypeError('Event is not allowed in the current adventure state');
-    return freezeState(candidate);
+    if (!applySequence(candidate, current.stepCredits)) throw new TypeError('Event is not allowed in the current adventure state');
+    return freezeState(candidate, current.stepCredits);
   }
   function record(state, exerciseId, date, id = freshId()) {
     if (!EXERCISE_BY_ID.has(exerciseId)) throw new TypeError('Unknown exercise');
@@ -195,7 +207,7 @@
   function resolveBoss(state, bossId, choiceId, date, id = freshId()) {
     if (!validDate(date)) throw new TypeError('Date must be a valid YYYY-MM-DD date');
     if (!isBossOpen(bossId, date)) throw new TypeError('The final boss opens on 31 October');
-    const current = checked(state); const p = applySequence(current.events);
+    const current = checked(state); const p = applySequence(current.events, current.stepCredits);
     if (!p.pendingBoss || p.pendingBoss.id !== bossId || !p.pendingBoss.choices.some((choice) => choice.id === choiceId)) {
       throw new TypeError('Boss or choice is not available');
     }
@@ -215,10 +227,10 @@
   }
   function undo(state) {
     const current = checked(state);
-    return freezeState(current.events.slice(0, -1));
+    return freezeState(current.events.slice(0, -1), current.stepCredits);
   }
   function progress(state) {
-    const current = checked(state); const p = applySequence(current.events);
+    const current = checked(state); const p = applySequence(current.events, current.stepCredits);
     return Object.freeze({ position: p.position, completedBossIds: Object.freeze(p.completedBossIds), pendingBoss: p.pendingBoss, finished: p.position === BOARD_SIZE && !p.pendingBoss, pointsUnlocked: p.position === BOARD_SIZE, pointsUnlockedOn: p.pointsUnlockedOn, steps: p.position, bossesDefeated: p.completedBossIds.length });
   }
   function totals(state, date) {

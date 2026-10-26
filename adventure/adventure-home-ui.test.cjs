@@ -102,7 +102,7 @@ const { browserOptions } = require('../qa/browser.cjs');
     await page.locator('#defeat-boss').click(); await page.locator('#continue-journey').click();
     await page.evaluate(()=>{
       const G=SoberAdventure;let state=G.createState();
-      for(let n=1;n<=36;n++){state=G.record(state,'squats','2026-10-26');const boss=G.progress(state).pendingBoss;if(boss&&n<36)state=G.resolveBoss(state,boss.id,boss.choices[0].id,'2026-10-26');}
+      for(let n=1;n<=G.BOARD_SIZE;n++){state=G.record(state,'squats','2026-10-26');const boss=G.progress(state).pendingBoss;if(boss&&n<G.BOARD_SIZE)state=G.resolveBoss(state,boss.id,boss.choices[0].id,'2026-10-26');}
       localStorage.setItem('soberoktober:final-adventure:v1',JSON.stringify(state));
     });
     await page.reload();assert.equal(await page.locator('#pawn-welcome-dialog').isVisible(),false);
