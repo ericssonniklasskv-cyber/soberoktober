@@ -204,7 +204,10 @@ const { browserOptions } = require('../qa/browser.cjs');
     await page.locator('#defeat-boss').click();
     await page.locator('#continue-journey').click();
     for (let boss = 1; boss < 5; boss++) {
-      for (let step = 0; step < (boss < 2 ? 6 : 12); step++) await page.locator('[data-exercise=' + ['squats', 'pushups', 'pullups', 'running'][step % 4] + ']').click();
+      for (let step = 0; step < (boss < 2 ? 6 : 12); step++) {
+        await page.locator('[data-exercise=' + ['squats', 'pushups', 'pullups', 'running'][step % 4] + ']').click();
+        if(boss===2&&step===5){await page.locator('#icecream-dialog').waitFor({state:'visible'});assert.equal(await positionLabel(),'Ruta 18');assert.equal(await page.locator('#score-summary').isVisible(),false);assert.equal(await page.locator('#treat-rider svg').count(),1);await page.locator('#treat-continue').click();}
+      }
       await page.locator('#boss-dialog').waitFor({ state: 'visible' });
       assert.equal(await page.locator('.encounter-enemy svg').getAttribute('data-boss-sprite'), ['troll', 'witch', 'dragon', 'sphinx', 'kraken'][boss]);
       assert.equal(await page.locator('#challenge-panel').getAttribute('data-challenge'), ['somersault', 'handstand', 'morning-walk', 'ball-juggling', 'bottle-flip'][boss]);

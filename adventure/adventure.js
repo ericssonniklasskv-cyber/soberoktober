@@ -33,7 +33,8 @@
   let audioGeneration = 0;
   let state = G.createState(), mountIndex = 0, participantId = 'guest', testDay = G.START_DATE, crowd = false;
   let geometry = null, selectedChoice = null, currentBoss = null;
-  let bossPopupTimeout = 0, animationFrame = 0;
+  let bossPopupTimeout = 0, animationFrame = 0, treatCheckTimer = 0;
+  const treatsShownThisVisit = new Set();
   const reducedMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
   const esc = text => String(text).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const element = (tag, className, text) => {
@@ -321,7 +322,7 @@
       $('quick-gate').disabled ||= R.busy || !R.data.active;
       const defeat = $('defeat-boss'); if(defeat) defeat.disabled = R.busy || !R.data.active || R.data.profile.status !== 'active';
     }
-    renderMap();
+    renderMap(); scheduleTreatCheck();
   }
   function showCastleArrival() {
     const content = detail('Du är framme vid slottet!', 'POÄNGJAKTEN ÄR UPPLÅST');
@@ -642,6 +643,23 @@
     state = restored; render(); feedback('Din resa och dina testpoäng uppdaterades från en annan flik.');
   });
   function homeSnapshot() { return { state, participantId, date: testDay, players: players() }; }
+  function scheduleTreatCheck(){
+    clearTimeout(treatCheckTimer);
+    treatCheckTimer=setTimeout(()=>{
+      const position=G.progress(state).position;
+      const identity=R?R.data.profile.id:participantId;
+      if(position<18||(!R&&position!==18)||R?.busy||!window.AdventureTreat||document.querySelector('dialog[open]'))return;
+      if(R&&(!Object.hasOwn(R.data.profile,'icecream_seen')||R.data.profile.icecream_seen))return;
+      const key='soberoktober:icecream-discovery:2026-10-26:'+identity;
+      if(treatsShownThisVisit.has(key))return;
+      if(!R){try{if(localStorage.getItem(key)==='seen')return;}catch{}}
+      const shown=window.AdventureTreat.show({renderPawn:node=>{node.innerHTML=pawnMarkup(ownMount(),'',300);},label:R?R.data.profile.name:(ownProfile()?.username||'Din pjäs'),onClose:resumePendingBoss});
+      if(!shown)return;
+      treatsShownThisVisit.add(key);
+      if(R)R.markTreatSeen?.();else{try{localStorage.setItem(key,'seen');}catch{}}
+    },100);
+  }
+  document.addEventListener('close',event=>{if(event.target instanceof HTMLDialogElement)scheduleTreatCheck();},true);
   function resumePendingBoss() {
     clearTimeout(bossPopupTimeout);
     if (G.progress(state).pendingBoss?.id === 'final') return;

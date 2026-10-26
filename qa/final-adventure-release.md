@@ -82,3 +82,9 @@ Godkänt av användaren för direkt livepublicering: sex extra rutor i vart och 
 Ändringen genomförs mot production enligt användarens förtydligande. Docker och lokal databas används inte för denna release. Enhets-/webbläsartester körs mot koden; databasändringen kontrolleras i production med tillfälliga, återställda transaktioner. Efter att nya steg har registrerats ska en eventuell återgång göras med datakompatibel kod, inte genom att återställa den gamla 36-rutorslogiken.
 
 Banförlängningens riktade production-migration registrerades som `20261026101514_extend_final_adventure_after_second_boss.sql`. Befintlig produktionshistorik var oförändrad efter körningen: 20 övningar, två bossar och noll poängregistreringar.
+
+## Glassfynd på ruta 18
+
+Godkänt för livepublicering av användaren. Samma godkända design som den isolerade previewen används med spelarens verkliga tilldelade pjäs. Popupen köas efter andra öppna dialoger och visas efter ruta 18; deltagare som redan passerat får den vid nästa besök. Visningsstatus sparas per konto. Den kosmetiska kvitteringen ändrar inga övningar, poäng eller spelrevisioner och använder inte träningsregistreringens återförsökskö. Ett nätverksfel i kvitteringen hindrar inte nästa övning. Inga ljud spelas av popupen. Fokus, Escape, stängknapp och mobilstorlekar är kontrollerade.
+
+Glassfyndet: riktad production-migration `20261026140345_add_icecream_discovery_at_tile_eighteen.sql` installerad. Den återställda production-kontrollen verifierar spärr före ruta 18, sparad visningsstatus, idempotens, oförändrade händelser/poäng/revision och nästa övning med samma revision. 139 enhetstester samt ruta-18- och hela 60-rutorsflödet passerar i webbläsaren.

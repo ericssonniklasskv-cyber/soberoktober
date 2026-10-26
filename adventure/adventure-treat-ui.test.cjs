@@ -1,0 +1,30 @@
+/* Real page/component assets; account state is an isolated fixture, never a service. */
+const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
+const {chromium}=require('playwright'),{browserOptions}=require('../qa/browser.cjs');
+const root=path.resolve(__dirname,'..'),published=process.argv.includes('--published');
+const fixture=`
+const TG=window.SoberAdventure,options=new URLSearchParams(location.search);let apply,acks=0;
+let state=TG.createState();for(let n=1;n<=Number(options.get('position')||17);n++){state=TG.record(state,'squats','2026-10-26','s'+n);const b=TG.progress(state).pendingBoss;if(b)state=TG.resolveBoss(state,b.id,b.choices[0].id,'2026-10-26','b'+n);}
+const data={state,today:'2026-10-26',active:true,enabled:true,revision:20,profile:{id:'fixture-account',name:'Testaren',pawn_id:options.get('pawn')||'nillebae',mount_index:2,status:'active',welcome_seen:true,icecream_seen:options.get('seen')==='1'},players:[]};
+function sync(){data.players=[{id:data.profile.id,name:data.profile.name,pawn_id:data.profile.pawn_id,mount_index:2,position:TG.progress(data.state).position}];apply?.(data);}
+const R={data,busy:false,bind:fn=>apply=fn,welcome:()=>false,home:{init(){},render(){},resetParticipant(){}},async commit(action,p={}){if(action==='exercise')data.state=TG.record(data.state,p.exercise_id,data.today);else if(action==='undo')data.state=TG.undo(data.state);data.revision++;sync();return true;},async markTreatSeen(){acks++;await new Promise(r=>setTimeout(r,600));data.profile.icecream_seen=true;return true;}};
+sync();window.AdventureConnection=Promise.resolve(R);window.treatQA={data,get acks(){return acks;}};
+`;
+(async()=>{const b=await chromium.launch({headless:true,...browserOptions(),args:['--mute-audio']});try{
+ const p=await b.newPage({reducedMotion:'reduce'}),errors=[],cache=new Map();p.on('pageerror',e=>errors.push(e.message));
+ await p.route('**/*',async route=>{const url=new URL(route.request().url());assert.equal(url.hostname,'treat-fixture.invalid');assert.equal(route.request().method(),'GET');if(url.pathname==='/adventure/adventure-live.js')return route.fulfill({contentType:'text/javascript',body:fixture});if(url.pathname==='/favicon.ico')return route.fulfill({status:204});const filePath=url.pathname.endsWith('/')?url.pathname+'index.html':url.pathname;
+ if(published){const key=filePath+url.search;if(!cache.has(key)){const r=await route.fetch({url:'https://www.soberoktober.se'+key});assert(r.ok(),'Published '+filePath);const body=await r.body();assert.deepEqual(body,fs.readFileSync(path.join(root,filePath)));cache.set(key,{contentType:r.headers()['content-type'],body});}return route.fulfill(cache.get(key));}
+ return route.fulfill({contentType:filePath.endsWith('.html')?'text/html':filePath.endsWith('.css')?'text/css':filePath.endsWith('.js')?'text/javascript':filePath.endsWith('.webp')?'image/webp':'audio/mp4',body:fs.readFileSync(path.join(root,filePath))});});
+ for(const width of [320,390,768,1440]){
+  await p.setViewportSize({width,height:900});await p.goto('https://treat-fixture.invalid/adventure/?live=1');await p.locator('.map-tile').first().waitFor();assert(!await p.locator('#icecream-dialog').isVisible());
+  await p.locator('[data-exercise=squats]').click();await p.locator('#icecream-dialog').waitFor({state:'visible'});assert.equal(await p.evaluate(()=>treatQA.acks),1);assert.equal(await p.evaluate(()=>SoberAdventure.progress(treatQA.data.state).position),18);assert.equal(await p.evaluate(()=>SoberAdventure.scoreTotals(treatQA.data.state).points),0);
+  assert.match(await p.locator('#treat-rider img').getAttribute('src'),/nillebae.webp$/);await p.locator('#treat-rider img').evaluate(i=>i.decode());assert(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));assert((await p.locator('#treat-continue').boundingBox()).height>=44);
+  await p.locator('#icecream-dialog').screenshot({path:'/private/tmp/icecream-live-'+width+'.png'});await p.locator('#treat-continue').click();await p.locator('[data-exercise=running]').click();assert.equal(await p.evaluate(()=>SoberAdventure.progress(treatQA.data.state).position),19);await p.waitForTimeout(650);assert(!await p.locator('#icecream-dialog').isVisible());assert.equal(await p.evaluate(()=>treatQA.acks),1);
+ }
+ // Saved account acknowledgement suppresses revisits; late arrivals get their discovery.
+ await p.goto('https://treat-fixture.invalid/adventure/?live=1&position=18&seen=1');await p.locator('.map-tile').first().waitFor();await p.waitForTimeout(160);assert(!await p.locator('#icecream-dialog').isVisible());assert.equal(await p.evaluate(()=>treatQA.acks),0);
+ for(const pawn of ['mikeb','jerka','zellmani','elliott-da-bomb','nillebae','guest']){await p.goto('https://treat-fixture.invalid/adventure/?live=1&position=20&pawn='+pawn);await p.locator('#icecream-dialog').waitFor({state:'visible'});if(pawn==='guest')assert.equal(await p.locator('#treat-rider svg').count(),1);else assert.match(await p.locator('#treat-rider img').getAttribute('src'),new RegExp(pawn+'\\.webp$'));await p.keyboard.press('Escape');assert(!await p.locator('#icecream-dialog').isVisible());}
+ // An existing dialog finishes before the discovery opens.
+ await p.goto('https://treat-fixture.invalid/adventure/?live=1');await p.locator('.map-tile').first().waitFor();await p.locator('[data-exercise=squats]').click();await p.evaluate(()=>document.querySelector('#detail-dialog').showModal());await p.waitForTimeout(170);assert(!await p.locator('#icecream-dialog').isVisible());await p.evaluate(()=>document.querySelector('#detail-dialog').close());await p.locator('#icecream-dialog').waitFor({state:'visible'});await p.locator('#treat-close').click();
+ assert.deepEqual(errors,[]);console.log('PASS icecream discovery: tile 18, one acknowledgement, all personal/standard pawns, next exercise before acknowledgement completes, reload suppression, late arrival, dialog queue, Escape/X, 320/390/768/1440, zero points. '+(published?'Published assets verified.':'Fixtures only.'));
+}finally{await b.close();}})().catch(e=>{console.error(e);process.exitCode=1});

@@ -40,7 +40,11 @@
     $('feedback').textContent=error.message+(pending?' Klicka samma knapp igen för att kontrollera registreringen. Den räknas bara en gång.':'');return false;
    }finally{setBusy(false);}
   }
-  const R={get data(){return data;},get busy(){return busy;},commit,refresh,
+  async function markTreatSeen(){
+   const actor=data.profile.id;
+   try{const result=await request('treat_seen',{request_id:crypto.randomUUID()});if(data.profile.id===actor&&result.profile.id===actor)data.profile.icecream_seen=true;return true;}catch{return false;}
+  }
+  const R={get data(){return data;},get busy(){return busy;},commit,refresh,markTreatSeen,
    bind(callback){apply=callback;},
    welcome(profile,force,onClose){
     if(!profile||(!force&&data.profile.welcome_seen))return false;
