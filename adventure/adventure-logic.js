@@ -109,20 +109,20 @@
     if (typeof globalThis.crypto?.randomUUID === 'function') return globalThis.crypto.randomUUID();
     return `adv-${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
   }
-  function freezeState(events, stepCredits = {}, shortcutChoice = null) { const kept = Object.fromEntries(Object.entries(stepCredits).filter(([id]) => events.some(e => e.id === id))); return Object.freeze({ version: SAVE_VERSION, events: Object.freeze(events), stepCredits: Object.freeze(kept), ...(shortcutChoice ? { shortcutChoice } : {}) }); }
+  function freezeState(events, stepCredits = {}, shortcutChoice = null, rideChoice = null) { const kept = Object.fromEntries(Object.entries(stepCredits).filter(([id]) => events.some(e => e.id === id))); return Object.freeze({ version: SAVE_VERSION, events: Object.freeze(events), stepCredits: Object.freeze(kept), ...(shortcutChoice ? { shortcutChoice } : {}), ...(rideChoice ? { rideChoice } : {}) }); }
   function createState() { return freezeState([]); }
   function applySequence(events, stepCredits = {}) {
     let position = 0;
     let pendingBoss = null;
     let pointsUnlockedOn = null;
-    const completedBossIds = [];
+    const completedBossIds = [], bonusPositions = [];
     for (const event of events) {
       if (event.type === 'exercise') {
         if (pendingBoss || position >= BOARD_SIZE) return null;
         const credit = Object.hasOwn(stepCredits, event.id) ? stepCredits[event.id] : 0;
         position += 1 + credit;
         if (credit === 6 && !BOSSES.slice(2).some(boss => boss.position === position)) return null;
-        if (credit === 1 && position !== 22) return null;
+        if (credit === 1) { if (![22, 29].includes(position)) return null; bonusPositions.push(position); }
         const checkpoint = BOSSES.find((boss) => boss.position === position);
         if (checkpoint) pendingBoss = checkpoint;
         if (position === BOARD_SIZE) pointsUnlockedOn = event.date;
@@ -136,7 +136,7 @@
           || event.date < pointsUnlockedOn || event.date < START_DATE || event.date > END_DATE) return null;
       } else return null;
     }
-    return { position, pendingBoss, completedBossIds, pointsUnlockedOn };
+    return { position, pendingBoss, completedBossIds, pointsUnlockedOn, bonusPositions };
   }
   function restore(raw) {
     let value = raw;
@@ -144,19 +144,20 @@
     if (!value || typeof value !== 'object' || Array.isArray(value) || ![1, 2, SAVE_VERSION].includes(value.version)
       || !Array.isArray(value.events) || value.events.length > MAX_EVENTS) return null;
     const ids = new Set(); const events = [];
-    const shortcutChoice = value.shortcutChoice ?? null;
+    const shortcutChoice = value.shortcutChoice ?? null, rideChoice = value.rideChoice ?? null;
+    if (rideChoice !== null && !['take', 'keep'].includes(rideChoice)) return null;
     if (shortcutChoice !== null && !['take', 'keep'].includes(shortcutChoice)) return null;
     let stepCredits = {};
     if (value.version === SAVE_VERSION) {
       if (value.stepCredits !== undefined && (!value.stepCredits || typeof value.stepCredits !== 'object' || Array.isArray(value.stepCredits))) return null;
       stepCredits = Object.fromEntries(Object.entries(value.stepCredits || {}));
-      if (Object.entries(stepCredits).some(([id, steps]) => ![1, 6].includes(steps) || (steps === 1 && shortcutChoice !== 'take') || !value.events.some(e => e?.id === id && e.type === 'exercise'))) return null;
+      if (Object.entries(stepCredits).some(([id, steps]) => ![1, 6].includes(steps) || (steps === 1 && shortcutChoice !== 'take' && rideChoice !== 'take') || !value.events.some(e => e?.id === id && e.type === 'exercise'))) return null;
     } else {
       // Preserve already reached checkpoints from the original 36-tile route.
       let steps = 0;
       stepCredits = Object.fromEntries(value.events.filter(e => e?.type === 'exercise' && [18,24,30,36].includes(++steps)).map(e => [e.id, 6]));
     }
-    if (Object.values(stepCredits).filter(steps => steps === 1).length > 1) return null;
+    if (Object.values(stepCredits).filter(steps => steps === 1).length > 2) return null;
     for (const event of value.events) {
       if (!event || typeof event !== 'object' || Array.isArray(event) || !validId(event.id)
         || ids.has(event.id) || !validDate(event.date)) return null;
@@ -183,8 +184,9 @@
       } else return null;
       ids.add(event.id);
     }
-    if (!applySequence(events, stepCredits)) return null;
-    return freezeState(events, stepCredits, shortcutChoice);
+    const sequence = applySequence(events, stepCredits);
+    if (!sequence || sequence.bonusPositions.some(tile => tile === 22 ? shortcutChoice !== 'take' : rideChoice !== 'take')) return null;
+    return freezeState(events, stepCredits, shortcutChoice, rideChoice);
   }
   function checked(state) { const result = restore(state); if (!result) throw new TypeError('Invalid adventure state'); return result; }
   function append(state, event) {
@@ -195,9 +197,9 @@
     const stepCredits = { ...current.stepCredits };
     // Undoing an exercise never resets the one-time decision. Restore the same
     // single bonus when its arrival exercise is recorded again, without stacking.
-    if (event.type === 'exercise' && current.shortcutChoice === 'take' && progress(current).position === 20) stepCredits[event.id] = 1;
+    if (event.type === 'exercise' && ((current.shortcutChoice === 'take' && progress(current).position === 20) || (current.rideChoice === 'take' && progress(current).position === 27))) stepCredits[event.id] = 1;
     if (!applySequence(candidate, stepCredits)) throw new TypeError('Event is not allowed in the current adventure state');
-    return freezeState(candidate, stepCredits, current.shortcutChoice);
+    return freezeState(candidate, stepCredits, current.shortcutChoice, current.rideChoice);
   }
   function record(state, exerciseId, date, id = freshId()) {
     if (!EXERCISE_BY_ID.has(exerciseId)) throw new TypeError('Unknown exercise');
@@ -216,7 +218,17 @@
     if (progress(current).position !== 21 || progress(current).pendingBoss) throw new TypeError('Shortcut is only available at tile 21');
     const credits = { ...current.stepCredits };
     if (choice === 'take') credits[current.events.findLast(event => event.type === 'exercise').id] = 1;
-    return checked(freezeState(current.events, credits, choice));
+    return checked(freezeState(current.events, credits, choice, current.rideChoice));
+  }
+  function chooseRide(state, choice, date) {
+    const current = checked(state);
+    if (!validDate(date) || date < START_DATE || date > END_DATE) throw new TypeError('Ride is only available during the theme');
+    if (!['take', 'keep'].includes(choice)) throw new TypeError('Unknown ride choice');
+    if (current.rideChoice) throw new TypeError('Ride choice is already saved');
+    if (progress(current).position !== 28 || progress(current).pendingBoss) throw new TypeError('Ride is only available at tile 28');
+    const credits = { ...current.stepCredits };
+    if (choice === 'take') credits[current.events.findLast(event => event.type === 'exercise').id] = 1;
+    return checked(freezeState(current.events, credits, current.shortcutChoice, choice));
   }
   function isBossOpen(bossId, date) {
     const boss = BOSS_BY_ID.get(bossId);
@@ -245,7 +257,7 @@
   }
   function undo(state) {
     const current = checked(state);
-    return freezeState(current.events.slice(0, -1), current.stepCredits, current.shortcutChoice);
+    return freezeState(current.events.slice(0, -1), current.stepCredits, current.shortcutChoice, current.rideChoice);
   }
   function progress(state) {
     const current = checked(state); const p = applySequence(current.events, current.stepCredits);
@@ -288,5 +300,5 @@
     const slot = Number.isInteger(index) && index >= 0 ? index : hash;
     return Object.freeze({ animal: ANIMALS[slot % ANIMALS.length], color: COLORS[Math.floor(slot / ANIMALS.length) % COLORS.length], name: `Äventyraren ${slot + 1}` });
   }
-  return Object.freeze({ BOARD_SIZE, START_DATE, END_DATE, FINAL_BOSS_DATE, SAVE_VERSION, MAX_EVENTS, EXERCISES, SCORING_EXERCISES, BOSSES, createState, record, chooseShortcut, recordScore, canScore, isBossOpen, resolveBoss, undo, restore, progress, totals, scoreTotals, stableHash, avatarFor });
+  return Object.freeze({ BOARD_SIZE, START_DATE, END_DATE, FINAL_BOSS_DATE, SAVE_VERSION, MAX_EVENTS, EXERCISES, SCORING_EXERCISES, BOSSES, createState, record, chooseShortcut, chooseRide, recordScore, canScore, isBossOpen, resolveBoss, undo, restore, progress, totals, scoreTotals, stableHash, avatarFor });
 }));

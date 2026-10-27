@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="sv">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'none'; media-src 'none'; base-uri 'none'; form-action 'none'">
+  <meta name="theme-color" content="#f6efdf">
+  <title>En mycket märklig skjuts · Preview på ruta 28</title>
+  <link rel="stylesheet" href="/adventure/ride-preview.css">
+  <script src="/adventure/adventure-sprites.js" defer></script>
+  <script src="/adventure/adventure-personal-pawns.js" defer></script>
+  <script src="/adventure/ride-characters.js" defer></script>
+  <script src="/adventure/ride-preview.js" defer></script>
+</head>
+<body>
+  <header class="preview-toolbar">
+    <a class="preview-brand" href="/adventure/ride-preview.html">SO<span>FRESTELSERNAS<br>RIKE</span></a>
+    <div class="preview-controls">
+      <span class="preview-label">DESIGNPREVIEW · RUTA 28</span>
+      <label for="preview-pawn">Visa med pjäs</label>
+      <select id="preview-pawn"></select>
+    </div>
+  </header>
+  <main class="preview-map">
+    <p class="eyebrow">EN FRÄMLING. ETT ERBJUDANDE.</p>
+    <h1>En märklig typ.<br><em>Ett lockande erbjudande.</em></h1>
+    <p>I The prosecco mountains väntar ett högst oväntat sällskap.</p>
+    <div class="preview-track" aria-label="Förhandsvisning av kartan kring ruta 28">
+      <span class="track-tile" data-tile="26">26</span>
+      <span class="track-tile" data-tile="27">27</span>
+      <button class="track-tile" type="button" data-tile="28" id="preview-open" aria-label="Visa erbjudandet på ruta 28"><strong>28</strong><i aria-hidden="true">✦</i></button>
+      <span class="track-tile" data-tile="29">29</span>
+      <span class="track-tile" data-tile="30">30</span>
+    </div>
+    <p class="preview-status" id="preview-status" role="status">Din pjäs står på ruta 28.</p>
+    <button type="button" class="preview-replay" id="preview-replay">Prova mötet igen ↗</button>
+    <p class="preview-note">Separat förhandsvisning. Riktiga poäng och din spelresa påverkas inte.</p>
+  </main>
+
+  <dialog id="shortcut-dialog" class="shortcut-dialog ride-dialog" aria-labelledby="shortcut-title" aria-describedby="shortcut-description">
+    <button type="button" class="shortcut-close" id="shortcut-close" aria-label="Stäng mötet">×</button>
+    <div class="shortcut-scene" role="img" aria-label="Din pjäs möter en skum gubbe med en lustig varelse vid ett solbelyst bergspass">
+      <div class="ride-landscape" id="ride-landscape" aria-hidden="true"></div>
+      <div class="ride-strangers" id="ride-strangers" aria-hidden="true"></div>
+      <span class="discovery-badge"><span aria-hidden="true">✦</span> ETT MÖTE <span class="badge-divider">/</span> RUTA 28</span>
+      <div class="shortcut-pawn" id="shortcut-pawn" aria-hidden="true"></div>
+      <span class="scene-whisper" id="scene-whisper" aria-hidden="true">Hoppa upp, vetja!</span>
+      <span class="bonus-stamp" id="bonus-stamp" hidden><b>+1</b> EXTRA RUTA</span>
+    </div>
+    <div class="shortcut-copy">
+      <p class="eyebrow" id="shortcut-kicker">ETT ERBJUDANDE FÖR TRÖTTA HJÄLTEBEN</p>
+      <h2 id="shortcut-title">Vill herrn<br><em>ha skjuts?</em></h2>
+      <p class="shortcut-description" id="shortcut-description">Vid vägkanten står en skum gubbe med en mycket lustig varelse. Han lyfter på hatten, ler lite för brett och klappar den lediga platsen på sadeln.</p>
+      <div class="shortcut-choices" id="shortcut-choices">
+        <button type="button" class="primary-choice" id="accept-ride"><span>Ja tack, gärna skjuts!</span><span aria-hidden="true">↗</span></button>
+        <button type="button" class="secondary-choice" id="decline-ride">Nej tack, jag går vidare <span aria-hidden="true">→</span></button>
+      </div>
+      <div class="shortcut-result" id="shortcut-result" hidden>
+        <div class="ride-chat" id="ride-chat" hidden aria-label="Ett utomordentligt trevligt samtal"><p><span>GUBBEN</span>”Visst är det trevligt att slippa gå?”</p><p><span>DU</span>”Utomordentligt trevligt.”</p></div>
+        <div class="route-reward" id="shortcut-reward" aria-label="Du flyttas från ruta 28 till ruta 29, en extra ruta">
+          <span class="from-tile">28</span><span class="route-arrow" aria-hidden="true">⟶</span><span class="to-tile">29</span>
+          <strong>En extra ruta.<br>Och en ny bekantskap.</strong>
+        </div>
+        <div class="route-reward kept-reward" id="kept-reward" hidden>
+          <span class="from-tile">28</span><strong>Du missade en gratis extraruta.<br>Du står kvar på ruta 28.</strong>
+        </div>
+        <button type="button" class="primary-choice" id="shortcut-done"><span>Tillbaka till äventyret</span><span aria-hidden="true">→</span></button>
+      </div>
+    </div>
+  </dialog>
+</body>
+</html>

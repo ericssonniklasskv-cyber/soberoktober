@@ -1,0 +1,98 @@
+.ride-dialog{width:min(680px,calc(100% - 28px));padding:0;border:1px solid #d2bb8e;border-radius:27px;max-height:calc(100dvh - 28px);overflow:auto;background:var(--paper);color:var(--forest);box-shadow:0 30px 100px #233c2b40}
+.ride-dialog::backdrop{background:#263e3266;backdrop-filter:blur(5px)}
+.ride-close{position:absolute;right:15px;top:15px;z-index:5;display:grid;place-items:center;width:44px;height:44px;padding:0;border:1px solid #d5c5a2;border-radius:50%;background:#fffaf0f0;color:var(--forest);font:400 28px/1 var(--body)}
+.ride-scene{position:relative;overflow:hidden;isolation:isolate;height:300px;background:#9b9e6d;border-bottom:1px solid #e2d5b6}
+.ride-landscape{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 56%}
+.ride-scene:after{content:'';position:absolute;z-index:1;inset:60% 0 0;background:linear-gradient(transparent,#3345293d);pointer-events:none}
+.discovery-badge{position:absolute;z-index:3;top:21px;left:23px;display:flex;align-items:center;gap:9px;max-width:calc(100% - 90px);min-height:31px;padding:9px 12px;border:1px solid #e6d2a1cc;border-radius:7px;background:#fff5dceb;box-shadow:0 2px 12px #28392022;color:#4c5733;font:850 9px/1.4 var(--body);letter-spacing:1.25px}
+.discovery-badge>span:first-child{color:#b45e26;font-size:12px}
+.badge-divider{color:#ac9566;font-size:13px}
+.ride-pawn{position:absolute;z-index:2;left:24px;bottom:3px;width:43%;height:210px;filter:drop-shadow(0 8px 5px #192a2b50);transform-origin:50% 100%}
+.ride-pawn img,.ride-pawn svg{display:block;width:100%;height:100%;object-fit:contain;object-position:center bottom}
+.scene-whisper{position:absolute;z-index:3;left:40%;bottom:103px;max-width:180px;border:1px solid #dfcfa7;border-radius:12px 12px 12px 2px;padding:9px 12px;background:#fff8e7ee;color:var(--forest);font:italic 16px/1.3 var(--editorial);box-shadow:0 4px 12px #263c2c20;transform:rotate(-4deg)}
+.bonus-stamp{position:absolute;z-index:3;right:28px;bottom:28px;width:88px;height:88px;padding:12px 5px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;border:1px solid #d8ad68;border-radius:50%;background:#fff1cdeF;color:var(--forest);box-shadow:0 0 0 6px #fff4d840,0 6px 15px #183c2e25;font:850 9px/1.4 var(--body);letter-spacing:1px;transform:rotate(8deg)}
+.bonus-stamp b{font:italic 39px/1 var(--editorial);letter-spacing:-2px}
+.ride-copy{padding:28px 36px 32px}
+.ride-copy>.eyebrow{margin:0 0 12px;font-size:9px;letter-spacing:1.5px}
+.ride-copy h2{font:400 43px/1.06 var(--editorial);letter-spacing:-1.4px;margin:0 0 17px;text-wrap:balance}
+.ride-copy h2 em{color:var(--rust);font-weight:400}
+.ride-description{font:400 17px/1.65 var(--body);margin:0;color:#435c45}
+.ride-choices{display:grid;gap:11px;margin-top:24px}
+.primary-choice,.secondary-choice{width:100%;min-height:55px;padding:14px 18px;border-radius:12px;display:flex;align-items:center;justify-content:space-between;gap:12px;font:800 16px/1.4 var(--body);transition:background .16s,transform .16s}
+.primary-choice{border:1px solid var(--deep);background:var(--forest);color:var(--paper);box-shadow:0 4px 0 #163b2a}
+.primary-choice>span:last-child{font-size:24px;line-height:1}
+.secondary-choice{background:#f4eedb;border:1px solid #bdc4a6;color:var(--forest);font-size:14px;min-height:49px}
+.primary-choice:hover,.preview-replay:hover{background:#30614a}
+.secondary-choice:hover{background:#ebe6d1}
+.primary-choice:active{transform:translateY(2px);box-shadow:0 2px 0 #163b2a}
+.ride-result{margin-top:22px}
+.route-reward{display:flex;align-items:center;gap:11px;margin:0 0 25px;padding:14px;border:1px solid #d5d8bf;background:#eff0df;border-radius:12px}
+.route-reward .from-tile,.route-reward .to-tile{display:grid;place-items:center;flex:none;width:44px;height:44px;border:1px solid #b8c1a4;border-radius:50%;color:#6c795c;font:italic 24px var(--editorial)}
+.route-reward .to-tile{background:var(--forest);border-color:var(--forest);color:var(--paper);box-shadow:0 0 0 4px #c4cbab40}
+.route-arrow{color:var(--rust);font-size:23px}
+.route-reward strong{margin-left:4px;font-size:13px;line-height:1.55}
+.ride-dialog:is([data-state=won],[data-state=kept]) .ride-copy h2{font-size:39px}
+.ride-dialog[data-state=won] .ride-pawn{left:38%;bottom:18px;width:32%;height:167px;transition:left 1s cubic-bezier(.25,.7,.3,1),bottom 1s,width 1s,height 1s}
+.ride-dialog[data-state=won] .bonus-stamp{animation:reward-pop .5s .2s both}
+@keyframes reward-pop{from{opacity:0;scale:.6}to{opacity:1;scale:1}}
+@media(max-width:600px){
+ .ride-dialog{border-radius:23px}.ride-scene{height:239px}.ride-close{top:12px;right:12px}
+ .discovery-badge{top:20px;left:17px;padding:8px;gap:6px;font-size:7px;letter-spacing:.8px;min-height:28px}
+ .ride-pawn{left:0;bottom:0;width:54%;height:166px}.scene-whisper{left:38%;bottom:103px;padding:8px 10px;font-size:14px;max-width:143px}
+ .ride-copy{padding:25px 23px 29px}.ride-copy>.eyebrow{font-size:8px;letter-spacing:1px;line-height:1.6}
+ .ride-copy h2{font-size:36px;letter-spacing:-1.2px}.ride-description{font-size:16px;line-height:1.6}
+ .ride-choices{margin-top:21px}.primary-choice{font-size:15px;min-height:55px}.secondary-choice{font-size:13px;min-height:49px}
+ .ride-dialog:is([data-state=won],[data-state=kept]) .ride-copy h2{font-size:34px}.ride-dialog[data-state=won] .ride-pawn{left:34%;width:40%;height:140px;bottom:14px}
+ .bonus-stamp{right:18px;bottom:18px;width:70px;height:70px;font-size:7px}.bonus-stamp b{font-size:32px}.route-reward{gap:8px;padding:12px}.route-reward strong{font-size:12px}
+}
+@media(max-width:350px){
+ .ride-copy{padding:23px 19px 27px}.ride-scene{height:212px}.ride-copy h2{font-size:31px}.ride-description{font-size:15px}
+ .discovery-badge{left:14px;font-size:6px;gap:5px}.ride-pawn{height:148px}.scene-whisper{font-size:13px;bottom:89px;max-width:125px;left:37%}
+ .ride-dialog:is([data-state=won],[data-state=kept]) .ride-copy h2{font-size:30px}.route-reward{padding:11px;gap:7px}.route-reward .from-tile,.route-reward .to-tile{width:38px;height:38px;font-size:21px}.route-reward strong{font-size:11px}
+}
+@media(prefers-reduced-motion:reduce){.ride-dialog *,.ride-dialog *:before,.ride-dialog *:after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+.ride-dialog button:disabled{cursor:wait;opacity:.55}.ride-dialog :focus-visible{outline:3px solid var(--orange);outline-offset:4px}.ride-error{font:600 14px/1.6 var(--body);color:var(--rust);margin:20px 0 0}.ride-dialog [hidden]{display:none!important}
+
+/* Native game sprites and scenery; isolated preview, never loaded by the live game. */
+.ride-dialog .ride-scene{height:330px;background:linear-gradient(#e4e6ce 0%,#e9dcb4 100%)}
+.ride-dialog .ride-scene:after{inset:85% 0 0;background:linear-gradient(transparent,#b4be8a55)}
+.ride-landscape{position:absolute;inset:0;z-index:0}
+.ride-landscape svg{display:block;width:100%;height:100%}
+.ride-strangers{position:absolute;right:0;bottom:18px;width:64%;height:265px;z-index:2;filter:drop-shadow(0 7px 4px #38462f20)}
+.ride-strangers svg{width:100%;height:100%;display:block;overflow:visible}
+.ride-dialog .ride-pawn{left:1%;bottom:11px;width:38%;height:205px}
+.ride-dialog[data-state=won] .ride-pawn{left:12%;bottom:11px;width:36%;height:197px}
+.ride-dialog .scene-whisper{display:none}
+.ride-dialog .ride-copy h2{font-size:46px}
+.ride-dialog:is([data-state=won],[data-state=kept]) .ride-copy h2{font-size:40px}
+.ride-dialog .bonus-stamp{right:16px;bottom:16px;z-index:4;white-space:nowrap;font-size:7px;letter-spacing:.5px}
+.ride-dialog .kept-reward{border-color:#d5b68a;background:#f5e8ce}
+.ride-dialog .kept-reward strong{color:#954821}
+.ride-chat{display:grid;gap:9px;margin:0 0 20px}
+.ride-chat p{max-width:92%;margin:0;padding:11px 15px;border:1px solid #d4cdb5;border-radius:12px 12px 12px 2px;background:#f4eedf;font:italic 16px/1.5 var(--editorial)}
+.ride-chat p span{display:block;font:850 8px/1.4 var(--body);letter-spacing:1.2px;color:var(--rust);margin-bottom:4px}
+.ride-chat p:nth-child(2){justify-self:end;background:#e8eddb;border-color:#c5cdb1;border-radius:12px 12px 2px 12px;padding-right:24px}
+@media(max-width:600px){
+ .ride-dialog .ride-scene{height:265px}
+ .ride-strangers{width:68%;height:200px;bottom:22px}
+ .ride-dialog .ride-pawn{left:0;bottom:19px;width:43%;height:149px}
+ .ride-dialog[data-state=won] .ride-pawn{left:12%;bottom:19px;width:40%;height:141px}
+ .ride-dialog .ride-copy h2{font-size:39px}
+ .ride-dialog:is([data-state=won],[data-state=kept]) .ride-copy h2{font-size:35px}
+ .ride-dialog .ride-description{font-size:16px;line-height:1.6}
+ .ride-dialog .primary-choice{font-size:15px}.ride-dialog .secondary-choice{font-size:14px}
+ .ride-dialog .route-reward{gap:8px}.ride-dialog .route-reward strong{font-size:12px;line-height:1.6}
+ .ride-chat p{font-size:15px;padding:10px 13px}
+ .ride-dialog .bonus-stamp{width:65px;height:65px;bottom:14px;right:13px;font-size:6px;letter-spacing:.3px}
+}
+@media(max-width:350px){
+ .ride-dialog .ride-scene{height:235px}
+ .ride-strangers{height:177px;bottom:20px}
+ .ride-dialog .ride-pawn{height:130px;bottom:17px}
+ .ride-dialog[data-state=won] .ride-pawn{height:123px;bottom:17px}
+ .ride-dialog .ride-copy h2{font-size:34px}
+ .ride-dialog:is([data-state=won],[data-state=kept]) .ride-copy h2{font-size:30px}
+ .ride-dialog .ride-description{font-size:15px}.ride-dialog .primary-choice{font-size:14px}.ride-dialog .secondary-choice{font-size:12px}
+ .ride-dialog .route-reward strong{font-size:11px}.ride-dialog .route-reward{gap:6px;padding:11px}
+ .ride-dialog .bonus-stamp{width:59px;height:59px;font-size:6px}.ride-dialog .bonus-stamp b{font-size:29px}
+}

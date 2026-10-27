@@ -32,3 +32,13 @@ playwright-report/
 /adventure/shortcut-preview.css
 /adventure/shortcut-preview.js
 /adventure/shortcut-preview.md
+
+# Tile-28 design preview is separate from the live game.
+/adventure/ride-preview.html
+/adventure/ride-preview.css
+/adventure/ride-preview.js
+/adventure/ride-preview.md
+
+
+# Retired first-preview illustration; current encounter uses native sprites.
+/adventure/assets/strange-traveller.webp
