@@ -33,12 +33,14 @@
   let audioGeneration = 0;
   let state = G.createState(), mountIndex = 0, participantId = 'guest', testDay = G.START_DATE, crowd = false;
   let geometry = null, selectedChoice = null, currentBoss = null;
-  let bossPopupTimeout = 0, animationFrame = 0, treatCheckTimer = 0, shortcutCheckTimer = 0, rideCheckTimer = 0;
+  let bossPopupTimeout = 0, animationFrame = 0, treatCheckTimer = 0, shortcutCheckTimer = 0, rideCheckTimer = 0, trapCheckTimer = 0;
   const treatsShownThisVisit = new Set();
   const shortcutsShownThisVisit = new Set(), ridesShownThisVisit = new Set();
   const awaitingShortcut = () => G.progress(state).position === 21 && !state.shortcutChoice;
   const awaitingRide = () => G.progress(state).position === 28 && !state.rideChoice;
-  const awaitingEncounter = () => awaitingShortcut() || awaitingRide();
+  const awaitingIcecream = () => G.progress(state).position === 33 && !state.icecreamChoice;
+  const trapsShownThisVisit = new Set();
+  const awaitingEncounter = () => awaitingShortcut() || awaitingRide() || awaitingIcecream();
   const reducedMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
   const esc = text => String(text).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const element = (tag, className, text) => {
@@ -295,6 +297,12 @@
       $('open-ride').disabled = !!R && (R.busy || !R.data.active || R.data.profile.status !== 'active');
       $('open-ride').onclick = showRide;
     }
+    if (awaitingIcecream()) {
+      gate.hidden = false;
+      gate.innerHTML = '<h3>En glass ligger på stigen.</h3><p>Ta glassen eller låt den ligga innan du fortsätter.</p><button type="button" id="open-icecream-trap">Titta på glassfyndet ↗</button>';
+      $('open-icecream-trap').disabled = !!R && (R.busy || !R.data.active || R.data.profile.status !== 'active');
+      $('open-icecream-trap').onclick = showIcecreamTrap;
+    }
     $('exercise-title').innerHTML = progress.pointsUnlocked ? progress.finished ? 'Du stod emot.<br>Fortsätt samla poäng.' : 'Samla poäng<br>inför finalen.' : progress.pendingBoss ? 'Nu prövas <br>ditt pannben.' : 'Vad blir ditt <br>nästa steg?';
     $('exercise-intro').textContent = progress.pointsUnlocked
       ? scoringAllowed ? progress.finished ? 'Alla bossar är besegrade. Nya övningar ger 1 poäng per registrering fram till temats slut den 31 oktober.' : finalOpen ? 'Det är finaldag! Gör ditt sista bossuppdrag och fortsätt samla poäng fram till temats slut.' : 'Du har nått Hangover castle och poängjakten är upplåst. Nya övningar ger 1 poäng per registrering – resans övningar räknas inte in.'
@@ -318,6 +326,7 @@
     $('quick-gate').textContent = awaitingFinal ? finalOpen ? 'Möt Bakrusbaronen ✦' : 'Finalen öppnar 31 oktober' : 'Möt frestelsen ↗';
     if (awaitingShortcut()) { $('quick-gate').textContent = 'Välj din väg på ruta 21 ↗'; $('exercise-title').innerHTML = 'Du har hittat<br>en hemlig stig.'; $('exercise-intro').textContent = 'Ett vägskäl väntar. Välj din väg innan du tar nästa steg.'; }
     if (awaitingRide()) { $('quick-gate').textContent = 'Prata med gubben på ruta 28 ↗'; $('exercise-title').innerHTML = 'Någon erbjuder<br>dig skjuts.'; $('exercise-intro').textContent = 'Tacka ja eller nej innan du tar nästa steg.'; }
+    if (awaitingIcecream()) { $('quick-gate').textContent = 'Titta på glassen på ruta 33 ↗'; $('exercise-title').innerHTML = 'En glass till.<br>Ska herrn unna sig?'; $('exercise-intro').textContent = 'Ett fynd väntar på ditt beslut innan nästa steg.'; }
     const nextBoss = G.BOSSES.find(boss => boss.position > progress.position);
     $('quick-status').textContent = progress.pointsUnlocked ? (progress.finished ? 'Finalen är klar · ' : 'Vid slottet · ') + today.points + ' poäng i dag' : progress.pendingBoss ? progress.pendingBoss.name + ' blockerar vägen.' : (progress.position ? 'Ruta ' + progress.position + ' · ' : '') + (nextBoss.position - progress.position) + ' steg till nästa boss.';
     $('undo-last').disabled = !state.events.length || !!R && (R.busy || !R.data.active || R.data.profile.status !== 'active');
@@ -346,7 +355,7 @@
       $('quick-gate').disabled ||= R.busy || !R.data.active;
       const defeat = $('defeat-boss'); if(defeat) defeat.disabled = R.busy || !R.data.active || R.data.profile.status !== 'active';
     }
-    renderMap(); scheduleTreatCheck(); scheduleShortcutCheck(); scheduleRideCheck();
+    renderMap(); scheduleTreatCheck(); scheduleShortcutCheck(); scheduleRideCheck(); scheduleIcecreamTrapCheck();
   }
   function showCastleArrival() {
     const content = detail('Du är framme vid slottet!', 'POÄNGJAKTEN ÄR UPPLÅST');
@@ -571,13 +580,14 @@
         const exercise = (scoring ? G.SCORING_EXERCISES : G.EXERCISES).find(item => item.id === event.exerciseId);
         title = formatAmount(event.distanceKm ? { ...exercise, distanceKm: event.distanceKm } : exercise) + (scoring ? ' · +1 poäng' : ' · 0 poäng');
         badge = scoring ? '+1' : step;
-        if (!scoring) { step -= 1 + (state.stepCredits[event.id] || 0); if (state.stepCredits[event.id] === 1) title += Number(badge) === 29 ? ' · skjuts +1 ruta' : ' · genväg +1 ruta'; }
+        if (!scoring) { step -= 1 + (state.stepCredits[event.id] || 0); if (state.stepCredits[event.id] === 1) title += Number(badge) === 29 ? ' · skjuts +1 ruta' : ' · genväg +1 ruta'; if (state.stepCredits[event.id] === -1) title += ' · glassfälla −1 ruta'; }
       }
       row.append(element('i', '', badge), element('span', '', title), element('small', '', Number(event.date.slice(8)) + ' okt')); list.append(row);
     }
     content.append(list);
   }
   async function record(exerciseId) {
+    if (awaitingIcecream()) { showIcecreamTrap(); return; }
     clearTimeout(bossPopupTimeout);
     if (R) {
       if (!await R.commit('exercise',{exercise_id:exerciseId})) return;
@@ -617,7 +627,7 @@
   $('find-me').innerHTML = S.iconSVG('compass');
   $('show-chapters').innerHTML = S.iconSVG('flag');
   $('find-me').addEventListener('click', () => centerMap());
-  $('quick-gate').addEventListener('click', () => { if (awaitingShortcut()) { showShortcut(); return; } if (awaitingRide()) { showRide(); return; } const pending = G.progress(state).pendingBoss; if (pending) showBoss(pending); });
+  $('quick-gate').addEventListener('click', () => { if (awaitingShortcut()) { showShortcut(); return; } if (awaitingRide()) { showRide(); return; } if (awaitingIcecream()) { showIcecreamTrap(); return; } const pending = G.progress(state).pendingBoss; if (pending) showBoss(pending); });
   $('show-chapters').addEventListener('click', showChapters);
   $('choose-avatar').addEventListener('click', showAvatars);
   for (const profile of A.PROFILES) {
@@ -724,6 +734,43 @@
       if (showRide()) ridesShownThisVisit.add(identity);
     }, 150);
   }
+  function showIcecreamTrap() {
+    if (!awaitingIcecream() || !window.AdventureIcecreamTrap || (R && (R.busy || !R.data.active || R.data.profile.status !== 'active'))) return false;
+    return window.AdventureIcecreamTrap.show({
+      label: R ? R.data.profile.name : (ownProfile()?.username || 'Din pjäs'),
+      renderPawn: node => { node.innerHTML = pawnMarkup(ownMount(), '', 300); },
+      lockedChoice: R?.pendingIcecream,
+      async onChoose(choice) {
+        if (R) {
+          const saved = await R.commit('icecream', {choice});
+          const actual = R.data.state.icecreamChoice;
+          if (!saved && !actual) return null;
+          centerMap(); feedback(actual === 'take' ? 'Glassfällan är sparad. Tillbaka till ruta 32 – din träning finns kvar.' : 'Phew! Du står kvar på ruta 33. Ditt val är sparat.');
+          return {choice:actual};
+        }
+        // A different local tab may have already saved the permanent choice.
+        const raw = localStorage.getItem(KEY), latest = raw && G.restore(raw);
+        if (latest?.icecreamChoice) { state = latest; render(); centerMap(); return {choice:latest.icecreamChoice}; }
+        if (latest) state = latest;
+        const next = G.chooseIcecream(state, choice, testDay);
+        // Persist before applying the result; unavailable storage cannot create an unsaved setback.
+        try { localStorage.setItem(KEY, JSON.stringify(next)); }
+        catch { throw new Error('Valet kunde inte sparas i webbläsaren. Inget baksteg har registrerats.'); }
+        state = next; render();
+        feedback(choice === 'take' ? 'Glassen var förtrollad. Tillbaka till ruta 32 – träningen finns kvar.' : 'Phew! Du står kvar på ruta 33.');
+        centerMap(); return {choice:next.icecreamChoice};
+      },
+      onClose: resumePendingBoss,
+    });
+  }
+  function scheduleIcecreamTrapCheck() {
+    clearTimeout(trapCheckTimer);
+    trapCheckTimer = setTimeout(() => {
+      const identity = R ? R.data.profile.id : participantId;
+      if (!awaitingIcecream() || trapsShownThisVisit.has(identity) || document.querySelector('dialog[open]')) return;
+      if (showIcecreamTrap()) trapsShownThisVisit.add(identity);
+    }, 170);
+  }
   function scheduleTreatCheck(){
     clearTimeout(treatCheckTimer);
     treatCheckTimer=setTimeout(()=>{
@@ -740,7 +787,7 @@
       if(R)R.markTreatSeen?.();else{try{localStorage.setItem(key,'seen');}catch{}}
     },100);
   }
-  document.addEventListener('close',event=>{if(event.target instanceof HTMLDialogElement){scheduleTreatCheck();scheduleShortcutCheck();scheduleRideCheck();}},true);
+  document.addEventListener('close',event=>{if(event.target instanceof HTMLDialogElement){scheduleTreatCheck();scheduleShortcutCheck();scheduleRideCheck();scheduleIcecreamTrapCheck();}},true);
   function resumePendingBoss() {
     clearTimeout(bossPopupTimeout);
     if (G.progress(state).pendingBoss?.id === 'final') return;

@@ -50,9 +50,10 @@
     const entries = snapshot.state.events.map((event, index) => {
       let title, detail, icon;
       if (event.type === 'exercise') {
-        position++; const exercise = G.EXERCISES.find(item => item.id === event.exerciseId);
+        position += 1 + (snapshot.state.stepCredits[event.id] || 0); const exercise = G.EXERCISES.find(item => item.id === event.exerciseId);
         const amount = exercise.reps ? exercise.reps + ' ' + exercise.label.toLowerCase() : event.distanceKm + ' km löpning';
-        title = ownName() + ' gick fram en ruta'; detail = amount + ' · Ruta ' + position + ' · 0 poäng'; icon = '↗';
+        const setback = snapshot.state.stepCredits[event.id] === -1;
+        title = ownName() + (setback ? ' upptäckte en glassfälla' : ' tränade sig framåt'); detail = amount + ' · Ruta ' + position + (setback ? ' · glassfälla −1 ruta' : '') + ' · 0 poäng'; icon = setback ? '↶' : '↗';
       } else if (event.type === 'boss') {
         const boss = G.BOSSES.find(item => item.id === event.bossId);
         title = ownName() + ' besegrade ' + boss.name; detail = 'Stod emot frestelsen · 0 poäng'; icon = '✦';

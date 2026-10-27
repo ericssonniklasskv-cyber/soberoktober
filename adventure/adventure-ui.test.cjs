@@ -209,6 +209,7 @@ const { browserOptions } = require('../qa/browser.cjs');
         if(boss===2&&step===5){await page.locator('#icecream-dialog').waitFor({state:'visible'});assert.equal(await positionLabel(),'Ruta 18');assert.equal(await page.locator('#score-summary').isVisible(),false);assert.equal(await page.locator('#treat-rider svg').count(),1);await page.locator('#treat-continue').click();}
         if(boss===2&&step===8){await page.locator('#shortcut-dialog').waitFor({state:'visible'});await page.locator('#keep-path').click();await page.locator('#shortcut-done').click();}
         if(boss===3&&step===3){await page.locator('#ride-dialog').waitFor({state:'visible'});await page.locator('#decline-ride').click();await page.locator('#ride-done').click();}
+        if(boss===3&&step===8){await page.locator('#icecream-trap-dialog').waitFor({state:'visible'});await page.locator('#leave-icecream').click();await page.locator('#trap-done').click();}
       }
       await page.locator('#boss-dialog').waitFor({ state: 'visible' });
       assert.equal(await page.locator('.encounter-enemy svg').getAttribute('data-boss-sprite'), ['troll', 'witch', 'dragon', 'sphinx', 'kraken'][boss]);

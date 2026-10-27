@@ -42,3 +42,9 @@ playwright-report/
 
 # Retired first-preview illustration; current encounter uses native sprites.
 /adventure/assets/strange-traveller.webp
+
+# Tile-33 experiment stays local until separately approved.
+/adventure/icecream-trap-preview.html
+/adventure/icecream-trap-preview.css
+/adventure/icecream-trap-preview.js
+/adventure/icecream-trap-preview.md
