@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="sv">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'none'; media-src 'none'; base-uri 'none'; form-action 'none'">
+<meta name="theme-color" content="#f6efdf">
+<title>Den sista sträckan · Frestelsernas rike · Preview</title>
+<link rel="stylesheet" href="/adventure/final-approach-preview.css">
+<script src="/adventure/adventure-logic.js" defer></script>
+<script src="/adventure/adventure-sprites.js" defer></script>
+<script src="/adventure/adventure-personal-pawns.js" defer></script>
+<script src="/adventure/adventure-bosses.js" defer></script>
+<script src="/adventure/adventure-salutes.js" defer></script>
+<script src="/adventure/final-approach-preview.js" defer></script>
+</head>
+<body>
+<header class="toolbar">
+<a class="wordmark" href="/adventure/">SO<span>FRESTELSERNAS<br>RIKE</span></a>
+<div class="toolbar-controls"><span class="preview-label">LOKAL PREVIEW</span><label for="pawn-picker">Din pjäs</label><select id="pawn-picker"></select></div>
+</header>
+<main>
+<section class="intro"><p class="eyebrow">HANGOVER CASTLE · DEN SISTA STRÄCKAN</p><h1>De som frestade dig.<br><em>Hejar på dig nu.</em></h1><p>Fem gamla motståndare väntar längs vägen till slottet.<br class="wide-only"> Den här gången har de något annat att säga.</p></section>
+<section class="journey" aria-labelledby="journey-heading">
+<header class="board-heading"><div><p class="eyebrow">FEM BESEGRADE BOSSAR · FEM HÄLSNINGAR</p><h2 id="journey-heading">En sista hälsning på vägen.</h2></div><span class="position-pill" id="position-pill">RUTA 55 / 60</span></header>
+<div class="map" id="map">
+<div class="map-landscape" id="map-landscape" aria-hidden="true"></div>
+<svg class="trail" viewBox="0 0 1000 700" preserveAspectRatio="none" aria-hidden="true"><path d="M130 570H740Q870 570 870 445V360Q870 335 770 335H235Q130 335 170 245L480 120"/><path class="trail-center" d="M130 570H740Q870 570 870 445V360Q870 335 770 335H235Q130 335 170 245L480 120"/></svg>
+<div id="map-stops"></div>
+<span class="map-caption">HANGOVER CASTLE</span>
+</div>
+<footer class="board-footer"><p id="journey-status" role="status" aria-live="polite"></p><div class="progress-dots" id="progress-dots" aria-label="Lästa hälsningar"></div></footer>
+</section>
+<div class="test-controls"><button type="button" class="primary" id="next-step">Testa nästa ruta →</button><button type="button" class="secondary" id="replay">Börja om från ruta 54 ↺</button></div>
+<p class="preview-note">Du kan också klicka på bossarna för att läsa deras hälsningar. Detta är en separat preview med en testpjäs. Inga riktiga rutor eller poäng ändras.</p>
+</main>
+<dialog id="greeting-dialog" aria-labelledby="greeting-title" aria-describedby="greeting-intro">
+<button type="button" class="close" id="greeting-close" aria-label="Stäng hälsningen">×</button>
+<div class="greeting-scene" id="greeting-scene">
+<div class="scene-landscape" id="scene-landscape" aria-hidden="true"></div>
+<span class="scene-badge" id="scene-badge">EN GAMMAL MOTSTÅNDARE · RUTA 55</span>
+<div class="scene-pawn" id="scene-pawn" aria-hidden="true"></div>
+<span class="scene-spark" aria-hidden="true">✦</span>
+<div class="scene-boss" id="scene-boss" aria-hidden="true"></div>
+<span class="scene-friendship" aria-hidden="true">FRÅN MOTSTÅNDARE TILL HEJARKLACK</span>
+</div>
+<div class="greeting-copy">
+<p class="eyebrow" id="greeting-name"></p>
+<h2 id="greeting-title" tabindex="-1"></h2>
+<p class="greeting-intro" id="greeting-intro"></p>
+<blockquote id="greeting-speech"></blockquote>
+<div class="greeting-footer"><span class="salute-seal" aria-hidden="true">✓</span><p>Du har redan besegrat den här frestelsen.<br><strong>Nu är det bara framåt som gäller.</strong></p></div>
+<button type="button" class="primary" id="greeting-continue">Mot slottet →</button>
+<p class="greeting-count" id="greeting-count"></p>
+</div>
+</dialog>
+</body></html>

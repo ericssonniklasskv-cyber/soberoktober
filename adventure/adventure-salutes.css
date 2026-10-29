@@ -1,0 +1,82 @@
+#greeting-dialog p{margin:0}
+#greeting-dialog .primary{min-height:52px;border-radius:11px;padding:13px 22px;font-weight:800;font-size:14px}
+#greeting-dialog .primary{background:var(--forest);border:1px solid var(--deep);color:var(--paper);box-shadow:0 4px 0 #102f23}
+#greeting-dialog .primary:hover{background:#315d48}
+#greeting-dialog{width:min(890px,calc(100% - 28px));padding:0;border:1px solid #b8bc9b;border-radius:24px;background:var(--paper);color:var(--forest);max-height:calc(100dvh - 28px);overflow:auto;overscroll-behavior:contain;box-shadow:0 30px 100px #183c2e55}
+#greeting-dialog::backdrop{background:#192f24b8;backdrop-filter:blur(5px)}
+#greeting-dialog .close{position:absolute;right:18px;top:18px;width:48px;height:48px;border:1px solid #c8bb99;border-radius:50%;color:var(--forest);background:var(--paper);font-size:28px;line-height:1;z-index:5}
+#greeting-dialog .greeting-scene{height:330px;position:relative;isolation:isolate;background:linear-gradient(#dfe2c5,#eee1b9);overflow:hidden}
+#greeting-dialog .scene-landscape,#greeting-dialog .scene-landscape>svg{position:absolute;inset:0;width:100%;height:100%;z-index:-1}
+#greeting-dialog .greeting-scene:after{content:'';position:absolute;bottom:-1px;left:0;right:0;height:40px;z-index:3;background:linear-gradient(transparent,var(--paper))}
+#greeting-dialog .scene-badge{position:absolute;top:27px;left:29px;max-width:calc(100% - 114px);font-size:9px;letter-spacing:1.1px;font-weight:850;background:#fff7e3e0;border:1px solid #cebd92;border-radius:8px;padding:8px 12px;z-index:3}
+#greeting-dialog .scene-pawn{position:absolute;left:5%;bottom:45px;width:43%;height:230px;display:flex;align-items:flex-end;justify-content:center;z-index:2;filter:drop-shadow(0 7px 2px #63704a33)}
+#greeting-dialog .scene-pawn img,#greeting-dialog .scene-pawn svg{width:100%;height:100%;object-fit:contain;object-position:center bottom}
+#greeting-dialog .scene-boss{position:absolute;right:8%;bottom:41px;width:33%;height:250px;display:flex;align-items:flex-end;justify-content:center;z-index:1;filter:drop-shadow(0 7px 2px #63704a22)}
+#greeting-dialog .scene-boss svg{width:100%;height:100%;transform:scaleX(-1)}
+#greeting-dialog .scene-spark{position:absolute;left:49%;top:46%;font:400 48px/1 var(--editorial);color:#ad7937;text-shadow:0 2px #fff4d0;z-index:3}
+#greeting-dialog .scene-friendship{position:absolute;bottom:19px;left:50%;transform:translateX(-50%);padding:8px 13px;border:1px solid #b7bf97;border-radius:7px;background:#f5edcf;font-weight:850;font-size:8px;letter-spacing:1.5px;z-index:4;white-space:nowrap}
+#greeting-dialog .greeting-copy{padding:26px 40px 27px}
+#greeting-dialog .greeting-copy>.eyebrow{font-size:10px;letter-spacing:1.8px;margin-bottom:12px}
+#greeting-dialog .greeting-copy h2{font:400 clamp(35px,4.5vw,50px)/1.07 var(--editorial);letter-spacing:-.8px;margin-bottom:18px;outline-offset:7px}
+#greeting-dialog .greeting-intro{font-size:15px;color:#5e7159;line-height:1.8;margin-bottom:20px}
+#greeting-dialog .greeting-copy blockquote{position:relative;font-size:21px;line-height:1.65;margin:0 0 25px;padding:0 0 0 21px;border-left:3px solid var(--orange);font-weight:550;letter-spacing:-.15px}
+#greeting-dialog .greeting-copy blockquote p+p{margin-top:12px}
+#greeting-dialog .greeting-footer{display:flex;gap:12px;align-items:center;padding-top:17px;border-top:1px solid #d5d7bd;margin-bottom:21px}
+#greeting-dialog .salute-seal{width:32px;height:32px;border-radius:50%;background:#e4e9d3;color:var(--forest);display:grid;place-items:center;font-weight:850;flex:none}
+#greeting-dialog .greeting-footer p{font-size:12px;color:#60715a;line-height:1.6}
+#greeting-dialog .greeting-footer strong{color:var(--forest);font-weight:650}
+#greeting-dialog .greeting-copy>.primary{width:100%;background:var(--orange);border-color:#bc6b30;color:var(--deep);box-shadow:0 4px 0 #b96b36;font-size:16px}
+#greeting-dialog .greeting-copy>.primary:hover{background:#f3914e}
+#greeting-dialog .greeting-count{text-align:center;font-size:10px;letter-spacing:1px;color:#708064;margin-top:17px}
+@media(min-width:900px) and (min-height:850px){#greeting-dialog{display:none}
+#greeting-dialog[open]{display:grid;grid-template-columns:36% 64%}
+#greeting-dialog .greeting-scene{height:100%;min-height:650px;background:linear-gradient(#d6ddbd,#e9ddb3)}
+#greeting-dialog .scene-badge{top:27px;left:20px;max-width:calc(100% - 40px);font-size:8px;padding:8px}
+#greeting-dialog .scene-pawn{width:95%;height:190px;left:-4%;bottom:41%}
+#greeting-dialog .scene-boss{width:78%;height:205px;right:5%;bottom:7%}
+#greeting-dialog .scene-spark{top:53%;left:55%;font-size:39px}
+#greeting-dialog .scene-friendship{bottom:22px;font-size:7px;letter-spacing:.7px;padding:7px;max-width:96%}
+#greeting-dialog .greeting-copy{padding:40px 36px 27px}
+#greeting-dialog .greeting-copy h2{font-size:43px;padding-right:23px}
+#greeting-dialog .greeting-copy blockquote{font-size:20px}
+#greeting-dialog .greeting-scene:after{height:100%;width:24px;left:auto;right:-1px;background:linear-gradient(90deg,transparent,var(--paper))}
+#greeting-dialog .scene-landscape svg{width:200%;max-width:none;left:-50%}
+#greeting-dialog .close{right:14px;top:14px}
+}
+@media(max-width:600px){#greeting-dialog .primary{min-height:49px;font-size:13px}
+#greeting-dialog{border-radius:18px;width:calc(100% - 20px);max-height:calc(100dvh - 20px)}
+#greeting-dialog .greeting-scene{height:245px}
+#greeting-dialog .close{width:44px;height:44px;right:12px;top:12px}
+#greeting-dialog .scene-badge{font-size:7px;letter-spacing:.8px;top:18px;left:16px;max-width:calc(100% - 80px);padding:6px 9px}
+#greeting-dialog .scene-pawn{left:1%;width:48%;height:172px;bottom:41px}
+#greeting-dialog .scene-boss{right:4%;width:36%;height:175px;bottom:37px}
+#greeting-dialog .scene-spark{font-size:32px;top:44%;left:49%}
+#greeting-dialog .scene-friendship{font-size:6px;letter-spacing:.9px;bottom:17px;padding:7px 9px}
+#greeting-dialog .greeting-copy{padding:22px 23px}
+#greeting-dialog .greeting-copy>.eyebrow{font-size:8px;letter-spacing:1.2px;margin-bottom:10px}
+#greeting-dialog .greeting-copy h2{font-size:35px;line-height:1.08;letter-spacing:-.7px;margin-bottom:15px}
+#greeting-dialog .greeting-intro{font-size:13px;line-height:1.75;margin-bottom:19px}
+#greeting-dialog .greeting-copy blockquote{font-size:18px;line-height:1.65;padding-left:15px;margin-bottom:22px}
+#greeting-dialog .greeting-footer{margin-bottom:20px;padding-top:15px;gap:10px}
+#greeting-dialog .greeting-footer p{font-size:11px}
+#greeting-dialog .greeting-copy>.primary{font-size:14px}
+#greeting-dialog .greeting-count{font-size:9px}
+}
+@media(max-width:350px){#greeting-dialog .greeting-copy{padding:20px}
+#greeting-dialog .greeting-copy h2{font-size:32px}
+#greeting-dialog .greeting-copy blockquote{font-size:17px}
+#greeting-dialog .greeting-scene{height:220px}
+#greeting-dialog .scene-badge{font-size:6px}
+#greeting-dialog .scene-friendship{font-size:5px;letter-spacing:.8px}
+}
+@media(prefers-reduced-motion:no-preference){#greeting-dialog .greeting-scene .scene-boss{animation:salute-in .45s ease-out both}
+#greeting-dialog .greeting-scene .scene-pawn{animation:salute-in .4s ease-out both}
+@keyframes salute-in{from{opacity:0;translate:0 10px}to{opacity:1;translate:0 0}}
+}
+#greeting-title:focus{outline:none}
+
+.map-tile.salute-tile{overflow:visible}
+.salute-map-figure{position:absolute;left:34px;bottom:10px;width:50px;height:50px;pointer-events:none;filter:drop-shadow(0 3px 1px #394b3533)}
+.salute-map-figure svg{width:100%;height:100%}
+.map-tile[data-salute-side="left"] .salute-map-figure{left:auto;right:34px}
+.salute-map-figure:after{content:'✓';position:absolute;right:-3px;top:4px;background:#214b3b;color:#fffaf0;border:1px solid #fffaf0;border-radius:50%;width:14px;height:14px;font:800 9px/13px var(--body)}

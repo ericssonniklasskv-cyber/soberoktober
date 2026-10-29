@@ -48,3 +48,19 @@ playwright-report/
 /adventure/icecream-trap-preview.css
 /adventure/icecream-trap-preview.js
 /adventure/icecream-trap-preview.md
+
+# Tile-44 design preview is separate from production.
+/adventure/ride-return-preview.html
+/adventure/ride-return-preview.css
+/adventure/ride-return-preview.js
+/adventure/ride-return-preview.md
+
+# Finder metadata is never part of a release.
+**/.DS_Store
+/.DS_Store
+
+# Final approach greeting design preview remains local.
+/adventure/final-approach-preview.html
+/adventure/final-approach-preview.css
+/adventure/final-approach-preview.js
+/adventure/final-approach-preview.md

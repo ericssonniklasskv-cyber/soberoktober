@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="sv"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'none'; media-src 'none'; base-uri 'none'; form-action 'none'">
+<meta name="theme-color" content="#f6efdf"><title>Gubbens återkomst · Preview på ruta 44</title>
+<link rel="stylesheet" href="/adventure/ride-preview.css"><link rel="stylesheet" href="/adventure/ride-return-preview.css">
+<script src="/adventure/adventure-sprites.js" defer></script><script src="/adventure/adventure-personal-pawns.js" defer></script><script src="/adventure/ride-characters.js" defer></script><script src="/adventure/ride-return-preview.js" defer></script>
+</head><body>
+<header class="preview-toolbar"><a class="preview-brand" href="/adventure/ride-return-preview.html">SO<span>FRESTELSERNAS<br>RIKE</span></a><div class="preview-controls"><span class="preview-label">DESIGNPREVIEW · RUTA 44</span><label for="preview-pawn">Visa med pjäs</label><select id="preview-pawn"></select></div></header>
+<main class="preview-map"><p class="eyebrow">ETT ÅTERSEENDE I THE LAST DANCE</p><h1>Gammal bekant.<br><em>Nya baktankar.</em></h1><p>Samma hatt. Samma varelse. En skjuts till, kanske?</p>
+<div class="preview-track" aria-label="Testkarta med rutorna 42 till 46"><span class="track-tile" data-tile="42">42</span><span class="track-tile" data-tile="43">43</span><button class="track-tile" type="button" id="preview-open" data-tile="44" aria-label="Visa mötet på ruta 44"><strong>44</strong><i aria-hidden="true">✦</i></button><span class="track-tile" data-tile="45">45</span><span class="track-tile" data-tile="46">46</span></div>
+<p class="preview-status" id="preview-status" role="status"></p>
+<div class="return-test-actions"><button class="preview-replay" type="button" id="preview-view">Visa mötet</button><button class="preview-next" type="button" id="preview-step" disabled>Testa nästa träningssteg</button><button class="preview-reset" type="button" id="preview-replay">Prova från början ↺</button></div>
+<p class="preview-note">Separat lokal preview. Riktiga konton, poäng och spelresor påverkas inte.</p></main>
+
+<dialog class="shortcut-dialog ride-dialog return-ride-dialog" id="return-ride-dialog" aria-labelledby="return-title" aria-describedby="return-description">
+<button type="button" class="shortcut-close" id="return-close" aria-label="Stäng mötet">×</button>
+<div class="shortcut-scene" id="return-scene" role="img" aria-label="Din pjäs möter samma gubbe och varelse som på ruta 28">
+<div class="ride-landscape" id="return-landscape" aria-hidden="true"></div>
+<div class="return-forest" id="return-forest" hidden aria-hidden="true"><svg viewBox="0 0 680 330" preserveAspectRatio="xMidYMax slice"><rect width="680" height="330" fill="#c7cfad"/><circle cx="335" cy="94" r="78" fill="#f2ebc9"/><path d="M0 228q163-100 338-33t342-25v160H0Z" fill="#9aae89"/><path d="M0 300q209-74 380-17t300-2v49H0Z" fill="#bec391"/><path d="m373 330-21-52 85-34-22-25 30-31-3 39 31 22-79 44 50 37Z" fill="#e6d6ad"/><g stroke="#405a44" stroke-width="5" stroke-linejoin="round"><path d="M40-20 34 330h23L70-20Z" fill="#6e7253"/><path d="M69 21 99-10m-61 123-32-23m53 75 37-25" fill="none"/><path d="M598-20 624 330h24L624-20Z" fill="#6e7253"/><path d="m609 62-46-44m74 151 44-24" fill="none"/></g><g fill="#637f5b"><path d="m-20 170 91-193 72 193h-49l54 63H-38l58-63Zm524-21L560 2l63 147h-33l39 52H487l42-52Z"/><path d="m130 128 41-110 47 110h-27l31 42H108l37-42Zm490-32 42-125 56 125h-29l30 39H596l40-39Z"/></g><g fill="#e7cf91"><ellipse cx="94" cy="309" rx="18" ry="5"/><ellipse cx="570" cy="298" rx="13" ry="4"/></g></svg></div>
+<span class="discovery-badge"><span aria-hidden="true">✦</span> ETT ÅTERSEENDE <span class="badge-divider">/</span> RUTA 44</span>
+<div class="ride-strangers" id="return-strangers" aria-hidden="true"></div><div class="shortcut-pawn" id="return-pawn" aria-hidden="true"></div>
+<span class="scene-whisper return-whisper" id="return-whisper" aria-hidden="true">Hoppa upp igen, herrn!</span>
+<span class="return-scene-label" id="return-scene-label" hidden aria-hidden="true">DET HÄR VAR INGEN GENVÄG.</span>
+<span class="bonus-stamp return-setback" id="return-setback" hidden aria-hidden="true"><b>−1</b> RUTA</span>
+</div>
+<div class="shortcut-copy">
+<p class="eyebrow" id="return-kicker">ETT VÄLDIGT BEKANT ERBJUDANDE</p>
+<h2 id="return-title" tabindex="-1">Men se där.<br><em>En gammal bekant!</em></h2>
+<p class="shortcut-description" id="return-description">Du rollade högt på ruta 44 och får träffa gubben som erbjuder skjuts igen. Samma krokiga hatt, samma lustiga varelse och samma breda leende.</p>
+<div class="shortcut-choices" id="return-choices"><button type="button" class="primary-choice" id="return-take"><span>Ta skjuts</span><span aria-hidden="true">↗</span></button><button type="button" class="secondary-choice" id="return-decline"><span>Fortsätt utan skjuts</span><span aria-hidden="true">→</span></button></div>
+<div class="return-mission" id="return-mission" hidden><div class="return-mission-top"><span class="return-mission-icon" id="return-mission-icon" aria-hidden="true"></span><div><p class="eyebrow">DITT FLYKTUPPDRAG</p><h3>15 squats.<br>Sen är du fri.</h3></div><span class="return-mission-tag">EXTRA<br>UPPDRAG</span></div><p>Gör 15 extra squats för att ta dig loss. Efter fighten är du så trött att du hamnar på <strong>ruta 43</strong>. Uppdraget ger inga poäng.</p><button type="button" class="primary-choice return-escape" id="return-escape"><span>Jag har gjort 15 squats – ta mig härifrån!</span><span aria-hidden="true">↗</span></button></div>
+<div class="shortcut-result" id="return-result" hidden><div class="route-reward return-loss" id="return-loss" hidden><span class="from-tile">44</span><span class="route-arrow" aria-hidden="true">⟶</span><span class="to-tile">43</span><strong>Slut i låren.<br>En ruta tillbaka.</strong></div><div class="route-reward return-safe" id="return-safe" hidden><span class="to-tile">44</span><strong>Du står kvar på ruta 44.<br>Ingen fight. Inga extrasquats.</strong></div><p class="return-once">Mötet är avklarat. Gubben får inte lura dig igen när du passerar ruta 44.</p><button type="button" class="primary-choice" id="return-done"><span>Tillbaka till äventyret</span><span aria-hidden="true">→</span></button></div>
+</div></dialog>
+</body></html>

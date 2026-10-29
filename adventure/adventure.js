@@ -33,14 +33,18 @@
   let audioGeneration = 0;
   let state = G.createState(), mountIndex = 0, participantId = 'guest', testDay = G.START_DATE, crowd = false;
   let geometry = null, selectedChoice = null, currentBoss = null;
-  let bossPopupTimeout = 0, animationFrame = 0, treatCheckTimer = 0, shortcutCheckTimer = 0, rideCheckTimer = 0, trapCheckTimer = 0;
+  let bossPopupTimeout = 0, animationFrame = 0, treatCheckTimer = 0, shortcutCheckTimer = 0, rideCheckTimer = 0, trapCheckTimer = 0, returnRideCheckTimer = 0, saluteCheckTimer = 0;
   const treatsShownThisVisit = new Set();
   const shortcutsShownThisVisit = new Set(), ridesShownThisVisit = new Set();
   const awaitingShortcut = () => G.progress(state).position === 21 && !state.shortcutChoice;
   const awaitingRide = () => G.progress(state).position === 28 && !state.rideChoice;
   const awaitingIcecream = () => G.progress(state).position === 33 && !state.icecreamChoice;
   const trapsShownThisVisit = new Set();
-  const awaitingEncounter = () => awaitingShortcut() || awaitingRide() || awaitingIcecream();
+  const returnMissionPending=()=>state.returnRideChoice==='take'&&!state.returnRideEscaped;
+  const awaitingReturnRide=()=>G.progress(state).position===44&&!state.returnRideChoice || returnMissionPending();
+  const returnRidesShownThisVisit=new Set();
+  const salutesShownThisVisit=new Set();
+  const awaitingEncounter = () => awaitingShortcut() || awaitingRide() || awaitingIcecream() || awaitingReturnRide();
   const reducedMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
   const esc = text => String(text).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const element = (tag, className, text) => {
@@ -193,6 +197,8 @@
       } else if (position === 0) {
         button.classList.add('start-tile'); button.textContent = 'START';
       } else button.textContent = position;
+      const salute=window.AdventureSalutes?.forTile(position);
+      if(salute){button.classList.add('salute-tile');button.dataset.saluteSide=coords[position].x>width-110?'left':'right';const figure=element('span','salute-map-figure');figure.setAttribute('aria-hidden','true');figure.innerHTML=B.bossSVG(salute.id,'',72);button.append(figure);}
       button.addEventListener('click', () => showTile(position));
       $('map-tiles').append(button);
     }
@@ -217,7 +223,9 @@
         const locked = !G.isBossOpen(boss.id, testDay);
         button.dataset.locked = locked; button.dataset.number = locked ? '31 OKT' : 'BOSS ' + (G.BOSSES.indexOf(boss) + 1);
       }
-      button.setAttribute('aria-label', `${position ? 'Ruta ' + position : 'Start'}${boss ? ', ' + boss.name : ''}${position === progress.position ? ', du är här' : ''}. ${allPlayers.filter(player => player.position === position).length} spelare.`);
+      const salute=window.AdventureSalutes?.forTile(position),figure=button.querySelector('.salute-map-figure');
+      if(figure)figure.hidden=!progress.completedBossIds.includes(salute.id);
+      button.setAttribute('aria-label', `${position ? 'Ruta ' + position : 'Start'}${boss ? ', ' + boss.name : salute && progress.completedBossIds.includes(salute.id) ? ', en hälsning från ' + G.BOSSES.find(b=>b.id===salute.id).name : ''}${position === progress.position ? ', du är här' : ''}. ${allPlayers.filter(player => player.position === position).length} spelare.`);
     }
     $('map-travelled').setAttribute('d', pathFor(geometry.coords.slice(0, progress.position + 1)));
     document.querySelectorAll('.crowd-badge').forEach(button => button.remove());
@@ -303,6 +311,7 @@
       $('open-icecream-trap').disabled = !!R && (R.busy || !R.data.active || R.data.profile.status !== 'active');
       $('open-icecream-trap').onclick = showIcecreamTrap;
     }
+    if(awaitingReturnRide()){gate.hidden=false;gate.innerHTML='<h3>'+ (returnMissionPending()?'Du är fast i skogen.':'Gubben är tillbaka.')+'</h3><p>'+(returnMissionPending()?'Klara flyktuppdraget: 15 extra squats. Sedan hamnar du på ruta 43.':'Ett bekant erbjudande väntar på ruta 44.')+'</p><button type="button" id="open-return-ride">'+(returnMissionPending()?'Fortsätt flyktuppdraget ↗':'Möt gubben igen ↗')+'</button>';$('open-return-ride').disabled=!!R&&(R.busy||!R.data.active||R.data.profile.status!=='active');$('open-return-ride').onclick=showReturnRide;}
     $('exercise-title').innerHTML = progress.pointsUnlocked ? progress.finished ? 'Du stod emot.<br>Fortsätt samla poäng.' : 'Samla poäng<br>inför finalen.' : progress.pendingBoss ? 'Nu prövas <br>ditt pannben.' : 'Vad blir ditt <br>nästa steg?';
     $('exercise-intro').textContent = progress.pointsUnlocked
       ? scoringAllowed ? progress.finished ? 'Alla bossar är besegrade. Nya övningar ger 1 poäng per registrering fram till temats slut den 31 oktober.' : finalOpen ? 'Det är finaldag! Gör ditt sista bossuppdrag och fortsätt samla poäng fram till temats slut.' : 'Du har nått Hangover castle och poängjakten är upplåst. Nya övningar ger 1 poäng per registrering – resans övningar räknas inte in.'
@@ -327,9 +336,10 @@
     if (awaitingShortcut()) { $('quick-gate').textContent = 'Välj din väg på ruta 21 ↗'; $('exercise-title').innerHTML = 'Du har hittat<br>en hemlig stig.'; $('exercise-intro').textContent = 'Ett vägskäl väntar. Välj din väg innan du tar nästa steg.'; }
     if (awaitingRide()) { $('quick-gate').textContent = 'Prata med gubben på ruta 28 ↗'; $('exercise-title').innerHTML = 'Någon erbjuder<br>dig skjuts.'; $('exercise-intro').textContent = 'Tacka ja eller nej innan du tar nästa steg.'; }
     if (awaitingIcecream()) { $('quick-gate').textContent = 'Titta på glassen på ruta 33 ↗'; $('exercise-title').innerHTML = 'En glass till.<br>Ska herrn unna sig?'; $('exercise-intro').textContent = 'Ett fynd väntar på ditt beslut innan nästa steg.'; }
+    if(awaitingReturnRide()){$('quick-gate').textContent=returnMissionPending()?'Fortsätt flyktuppdraget ↗':'Möt gubben på ruta 44 ↗';$('exercise-title').innerHTML=returnMissionPending()?'Ta dig ur<br>skogen.':'En gammal<br>bekant väntar.';$('exercise-intro').textContent=returnMissionPending()?'Gör 15 extra squats och bekräfta uppdraget för att fortsätta.':'Ta ställning till skjutsen innan du fortsätter.';}
     const nextBoss = G.BOSSES.find(boss => boss.position > progress.position);
     $('quick-status').textContent = progress.pointsUnlocked ? (progress.finished ? 'Finalen är klar · ' : 'Vid slottet · ') + today.points + ' poäng i dag' : progress.pendingBoss ? progress.pendingBoss.name + ' blockerar vägen.' : (progress.position ? 'Ruta ' + progress.position + ' · ' : '') + (nextBoss.position - progress.position) + ' steg till nästa boss.';
-    $('undo-last').disabled = !state.events.length || !!R && (R.busy || !R.data.active || R.data.profile.status !== 'active');
+    $('undo-last').disabled = returnMissionPending() || !state.events.length || !!R && (R.busy || !R.data.active || R.data.profile.status !== 'active');
     const chapter = Math.max(0, G.BOSSES.findIndex(boss => boss.position >= progress.position));
     $('chapter-nav').replaceChildren(...G.BOSSES.map((boss, index) => {
       const button = element('button', '', ROMAN[index] + ' · ' + CHAPTERS[index]);
@@ -355,7 +365,7 @@
       $('quick-gate').disabled ||= R.busy || !R.data.active;
       const defeat = $('defeat-boss'); if(defeat) defeat.disabled = R.busy || !R.data.active || R.data.profile.status !== 'active';
     }
-    renderMap(); scheduleTreatCheck(); scheduleShortcutCheck(); scheduleRideCheck(); scheduleIcecreamTrapCheck();
+    renderMap(); scheduleTreatCheck(); scheduleShortcutCheck(); scheduleRideCheck(); scheduleIcecreamTrapCheck(); scheduleReturnRideCheck(); scheduleSaluteCheck();
   }
   function showCastleArrival() {
     const content = detail('Du är framme vid slottet!', 'POÄNGJAKTEN ÄR UPPLÅST');
@@ -519,6 +529,8 @@
     row.append(copy); container.append(row);
   }
   function showTile(position) {
+    const salute=window.AdventureSalutes?.forTile(position);
+    if(salute&&G.progress(state).position>=position&&G.progress(state).completedBossIds.includes(salute.id)){showSalute(position);return;}
     const boss = G.BOSSES.find(item => item.position === position), occupants = players().filter(player => player.position === position);
     const content = detail(position ? 'Ruta ' + position : 'Vid äventyrets början', boss ? boss.name : 'HÄR PÅ KARTAN');
     if (occupants.length) {
@@ -580,13 +592,14 @@
         const exercise = (scoring ? G.SCORING_EXERCISES : G.EXERCISES).find(item => item.id === event.exerciseId);
         title = formatAmount(event.distanceKm ? { ...exercise, distanceKm: event.distanceKm } : exercise) + (scoring ? ' · +1 poäng' : ' · 0 poäng');
         badge = scoring ? '+1' : step;
-        if (!scoring) { step -= 1 + (state.stepCredits[event.id] || 0); if (state.stepCredits[event.id] === 1) title += Number(badge) === 29 ? ' · skjuts +1 ruta' : ' · genväg +1 ruta'; if (state.stepCredits[event.id] === -1) title += ' · glassfälla −1 ruta'; }
+        if (!scoring) { step -= 1 + (state.stepCredits[event.id] || 0); if (state.stepCredits[event.id] === 1) title += Number(badge) === 29 ? ' · skjuts +1 ruta' : ' · genväg +1 ruta'; if (state.stepCredits[event.id] === -1) title += Number(badge)===43?' · flyktuppdrag: 15 extra squats · −1 ruta':' · glassfälla −1 ruta'; }
       }
       row.append(element('i', '', badge), element('span', '', title), element('small', '', Number(event.date.slice(8)) + ' okt')); list.append(row);
     }
     content.append(list);
   }
   async function record(exerciseId) {
+    if (awaitingReturnRide()) { showReturnRide(); return; }
     if (awaitingIcecream()) { showIcecreamTrap(); return; }
     clearTimeout(bossPopupTimeout);
     if (R) {
@@ -627,7 +640,7 @@
   $('find-me').innerHTML = S.iconSVG('compass');
   $('show-chapters').innerHTML = S.iconSVG('flag');
   $('find-me').addEventListener('click', () => centerMap());
-  $('quick-gate').addEventListener('click', () => { if (awaitingShortcut()) { showShortcut(); return; } if (awaitingRide()) { showRide(); return; } if (awaitingIcecream()) { showIcecreamTrap(); return; } const pending = G.progress(state).pendingBoss; if (pending) showBoss(pending); });
+  $('quick-gate').addEventListener('click', () => { if (awaitingShortcut()) { showShortcut(); return; } if (awaitingRide()) { showRide(); return; } if (awaitingIcecream()) { showIcecreamTrap(); return; } if (awaitingReturnRide()) { showReturnRide(); return; } const pending = G.progress(state).pendingBoss; if (pending) showBoss(pending); });
   $('show-chapters').addEventListener('click', showChapters);
   $('choose-avatar').addEventListener('click', showAvatars);
   for (const profile of A.PROFILES) {
@@ -771,6 +784,41 @@
       if (showIcecreamTrap()) trapsShownThisVisit.add(identity);
     }, 170);
   }
+  function showReturnRide(){
+    if(!awaitingReturnRide()||!window.AdventureReturnRide||(R&&(R.busy||!R.data.active||R.data.profile.status!=='active')))return false;
+    const savedState=()=>({choice:state.returnRideChoice,escaped:!!state.returnRideEscaped});
+    async function persistAction(action,choice){
+      if(R){const saved=await R.commit(action,choice?{choice}:{});if(!saved&&(!state.returnRideChoice||(action==='return_escape'&&!state.returnRideEscaped)))return null;centerMap();return savedState();}
+      const raw=localStorage.getItem(KEY),latest=raw&&G.restore(raw);if(latest)state=latest;
+      if(action==='return_ride'&&state.returnRideChoice || action==='return_escape'&&state.returnRideEscaped){render();return savedState();}
+      const next=action==='return_ride'?G.chooseReturnRide(state,choice,testDay):G.completeReturnRide(state,testDay);
+      try{localStorage.setItem(KEY,JSON.stringify(next));}catch{throw new Error('Kunde inte spara. Din sparade resa är oförändrad.');}
+      state=next;render();centerMap();return savedState();
+    }
+    return window.AdventureReturnRide.show({label:R?R.data.profile.name:(ownProfile()?.username||'Din pjäs'),renderPawn:node=>{node.innerHTML=pawnMarkup(ownMount(),'',300);},choice:state.returnRideChoice,escaped:!!state.returnRideEscaped,lockedChoice:R?.pendingReturnRide,
+      onChoose:choice=>persistAction('return_ride',choice),onEscape:()=>persistAction('return_escape'),onClose:resumePendingBoss});
+  }
+  function scheduleReturnRideCheck(){
+    clearTimeout(returnRideCheckTimer);returnRideCheckTimer=setTimeout(()=>{const identity=R?R.data.profile.id:participantId;if(!awaitingReturnRide()||returnRidesShownThisVisit.has(identity)||document.querySelector('dialog[open]'))return;if(showReturnRide())returnRidesShownThisVisit.add(identity);},190);
+  }
+  function showSalute(tile){
+    if(!window.AdventureSalutes || document.querySelector('dialog[open]'))return false;
+    const identity=R?R.data.profile.id:participantId;
+    const shown=window.AdventureSalutes.show({tile,name:R?R.data.profile.name:(ownProfile()?.username||'Äventyraren'),renderPawn:node=>{node.innerHTML=pawnMarkup(ownMount(),'',300);},onClose:resumePendingBoss});
+    if(!shown)return false;salutesShownThisVisit.add(identity+':'+tile);
+    if(R)R.markSaluteSeen?.(tile);else{try{localStorage.setItem('soberoktober:salute:2026-10-26:'+identity+':'+tile,'seen');}catch{}}
+    return true;
+  }
+  function scheduleSaluteCheck(){
+    clearTimeout(saluteCheckTimer);saluteCheckTimer=setTimeout(()=>{
+      if(!window.AdventureSalutes||R?.busy||document.querySelector('dialog[open]'))return;
+      if(R&&!Array.isArray(R.data.profile.salutes_seen))return;
+      const tile=window.AdventureSalutes.eligible(state,R?.data.profile.salutes_seen||[]);if(!tile)return;
+      const identity=R?R.data.profile.id:participantId;if(salutesShownThisVisit.has(identity+':'+tile))return;
+      if(!R){try{if(localStorage.getItem('soberoktober:salute:2026-10-26:'+identity+':'+tile)==='seen')return;}catch{}}
+      showSalute(tile);
+    },220);
+  }
   function scheduleTreatCheck(){
     clearTimeout(treatCheckTimer);
     treatCheckTimer=setTimeout(()=>{
@@ -787,7 +835,7 @@
       if(R)R.markTreatSeen?.();else{try{localStorage.setItem(key,'seen');}catch{}}
     },100);
   }
-  document.addEventListener('close',event=>{if(event.target instanceof HTMLDialogElement){scheduleTreatCheck();scheduleShortcutCheck();scheduleRideCheck();scheduleIcecreamTrapCheck();}},true);
+  document.addEventListener('close',event=>{if(event.target instanceof HTMLDialogElement){scheduleTreatCheck();scheduleShortcutCheck();scheduleRideCheck();scheduleIcecreamTrapCheck();scheduleReturnRideCheck();scheduleSaluteCheck();}},true);
   function resumePendingBoss() {
     clearTimeout(bossPopupTimeout);
     if (G.progress(state).pendingBoss?.id === 'final') return;

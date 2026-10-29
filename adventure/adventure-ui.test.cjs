@@ -210,6 +210,7 @@ const { browserOptions } = require('../qa/browser.cjs');
         if(boss===2&&step===8){await page.locator('#shortcut-dialog').waitFor({state:'visible'});await page.locator('#keep-path').click();await page.locator('#shortcut-done').click();}
         if(boss===3&&step===3){await page.locator('#ride-dialog').waitFor({state:'visible'});await page.locator('#decline-ride').click();await page.locator('#ride-done').click();}
         if(boss===3&&step===8){await page.locator('#icecream-trap-dialog').waitFor({state:'visible'});await page.locator('#leave-icecream').click();await page.locator('#trap-done').click();}
+        if(boss===4&&step===7){await page.locator('#return-ride-dialog').waitFor({state:'visible'});await page.locator('#return-decline').click();await page.locator('#return-done').click();}
       }
       await page.locator('#boss-dialog').waitFor({ state: 'visible' });
       assert.equal(await page.locator('.encounter-enemy svg').getAttribute('data-boss-sprite'), ['troll', 'witch', 'dragon', 'sphinx', 'kraken'][boss]);
@@ -222,7 +223,10 @@ const { browserOptions } = require('../qa/browser.cjs');
       assert.equal(await page.locator('.finale-shell').count(), 0, 'Normal bosses never trigger the month finale');
       await page.locator('#continue-journey').click();
     }
-    for (let step = 0; step < 12; step++) await page.locator('[data-exercise=squats]').click();
+    for (let step = 0; step < 12; step++) {
+      await page.locator('[data-exercise=squats]').click();
+      if(step>=6&&step<=10){await page.locator('#greeting-dialog').waitFor({state:'visible'});assert.equal(await positionLabel(),'Ruta '+(49+step));assert.match(await page.locator('.greeting-copy').textContent(),/Mästare Äventyraren/);await page.locator('#greeting-continue').click();}
+    }
     await page.locator('#start-scoring').waitFor({ state: 'visible' });
     assert.match(await page.locator('#detail-title').textContent(), /framme vid slottet/);
     assert.equal(await page.locator('#boss-dialog').isVisible(), false);
